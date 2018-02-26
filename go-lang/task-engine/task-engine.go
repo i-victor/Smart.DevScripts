@@ -120,9 +120,15 @@ func tasks(maxParallelThreads int, LoopId int) {
 			}
 			res.Body.Close()
 			var status = ""
-			if(res.StatusCode >= 200) && (res.StatusCode <= 299) {
+			if(res.StatusCode == 200) {
 				status = color.GreenString(strconv.Itoa(res.StatusCode))
-			} else if(res.StatusCode >= 400) && (res.StatusCode <= 499) {
+			} else if(res.StatusCode == 202) {
+				status = color.HiCyanString(strconv.Itoa(res.StatusCode))
+			} else if(res.StatusCode == 203) {
+				status = color.YellowString(strconv.Itoa(res.StatusCode))
+			} else if(res.StatusCode == 208) {
+				status = color.HiMagentaString(strconv.Itoa(res.StatusCode))
+			} else if(res.StatusCode == 429) || (res.StatusCode == 502) || (res.StatusCode == 503) || (res.StatusCode == 504) {
 				status = color.HiRedString(strconv.Itoa(res.StatusCode))
 			} else {
 				status = color.RedString(strconv.Itoa(res.StatusCode))
