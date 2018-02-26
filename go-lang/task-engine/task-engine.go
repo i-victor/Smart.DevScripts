@@ -34,7 +34,7 @@ var iniFile = "task-engine.ini"
 var UrlBatchList = "https://localhost/test-batch.txt"
 var UrlTaskCall = "https://localhost/task?TaskID="
 
-var threadsPerCpuCore = 1
+var parallelWorkers = 2
 
 func tasks(maxParallelThreads int, LoopId int) {
 
@@ -181,9 +181,9 @@ func main() {
 		fmt.Println(color.RedString("ERROR :: Invalid key [URLs/tasks-url] in INI File: " + iniFile))
 		return
 	}
-	threadsPerCpuCore = getIniIntVal(file, "Tunnings", "workers-per-cpu-core")
-	if (threadsPerCpuCore <= 0) || (threadsPerCpuCore > 128) {
-		threadsPerCpuCore = 1
+	parallelWorkers = getIniIntVal(file, "Tunnings", "parallel-workers")
+	if (parallelWorkers < 2) || (parallelWorkers > 16384) {
+		parallelWorkers = runtime.NumCPU()
 	}
 
 	c := make(chan os.Signal, 2)
@@ -196,7 +196,7 @@ func main() {
 
 	fmt.Println(color.HiBlackString("\n" + "##### Parallel Tasks Manager [ " + uxmScriptVersion + " ] :: Running on #CPUs: " + strconv.Itoa(runtime.NumCPU()) + " #####"))
 
-	var maxParallelThreads = runtime.NumCPU() * threadsPerCpuCore
+	var maxParallelThreads = parallelWorkers
 
 	runtime.GOMAXPROCS(maxParallelThreads)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
