@@ -28,7 +28,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var uxmScriptVersion = "r.180225"
+var uxmScriptVersion = "r.180227"
 
 var iniFile = "task-engine.ini"
 var UrlBatchList = "https://localhost/test-batch.txt"
@@ -134,9 +134,10 @@ func tasks(maxParallelThreads int, LoopId int) {
 				status = color.RedString(strconv.Itoa(res.StatusCode))
 			}
 			fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:")  + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
-			time.Sleep(time.Duration(100) * time.Millisecond)
 			wg.Done()
 		}(LoopId, i, TaskId)
+		// just add a random pause in milliseconds for give a small breath ... (important for spread of threads in time !!!)
+		time.Sleep(time.Duration(rand.Int31n(3) * 25) * time.Millisecond)
 	}
 
 	wg.Wait()
