@@ -296,8 +296,7 @@ WEBVIEW_API int webview_init(struct webview *w) {
   gtk_window_set_title(GTK_WINDOW(w->priv.window), w->title);
 
   if (w->resizable) {
-    gtk_window_set_default_size(GTK_WINDOW(w->priv.window), w->width,
-                                w->height);
+    gtk_window_set_default_size(GTK_WINDOW(w->priv.window), w->width, w->height);
   } else {
     gtk_widget_set_size_request(w->priv.window, w->width, w->height);
   }
@@ -309,24 +308,42 @@ WEBVIEW_API int webview_init(struct webview *w) {
 
   WebKitUserContentManager *m = webkit_user_content_manager_new();
   webkit_user_content_manager_register_script_message_handler(m, "external");
-  g_signal_connect(m, "script-message-received::external",
-                   G_CALLBACK(external_message_received_cb), w);
+  g_signal_connect(m, "script-message-received::external", G_CALLBACK(external_message_received_cb), w);
 
   w->priv.webview = webkit_web_view_new_with_user_content_manager(m);
-  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv.webview),
-                           webview_check_url(w->url));
+  //-- unixman
+  webkit_web_context_set_tls_errors_policy(webkit_web_view_get_context(WEBKIT_WEB_VIEW(w->priv.webview)), WEBKIT_TLS_ERRORS_POLICY_IGNORE);
+  //-- #unixman
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv.webview), webview_check_url(w->url));
   g_signal_connect(G_OBJECT(w->priv.webview), "load-changed",
                    G_CALLBACK(webview_load_changed_cb), w);
   gtk_container_add(GTK_CONTAINER(w->priv.scroller), w->priv.webview);
 
+  //-- unixman
+  WebKitSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
+  webkit_settings_set_default_charset(settings, "UTF-8");
+  webkit_settings_set_user_agent(settings, webkit_settings_get_user_agent(settings));
+  webkit_settings_set_enable_plugins(settings, false);
+  webkit_settings_set_enable_java(settings, false);
+  webkit_settings_set_javascript_can_access_clipboard(settings, false);
+  webkit_settings_set_javascript_can_open_windows_automatically(settings, false);
+  webkit_settings_set_allow_modal_dialogs(settings, true);
+  //webkit_settings_set_enable_private_browsing(settings, false); // deprecated
+  webkit_settings_set_enable_page_cache(settings, false);
+  webkit_settings_set_enable_smooth_scrolling(settings, false);
+  webkit_settings_set_enable_webgl(settings, false);
+  webkit_settings_set_enable_accelerated_2d_canvas(settings, false);
+  webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER); // WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND
+  //-- #unixman
+
   if (w->debug) {
-    WebKitSettings *settings =
-        webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
+    //-- unixman
+    //WebKitSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
+    //-- #unixman
     webkit_settings_set_enable_write_console_messages_to_stdout(settings, true);
     webkit_settings_set_enable_developer_extras(settings, true);
   } else {
-    g_signal_connect(G_OBJECT(w->priv.webview), "context-menu",
-                     G_CALLBACK(webview_context_menu_cb), w);
+    g_signal_connect(G_OBJECT(w->priv.webview), "context-menu", G_CALLBACK(webview_context_menu_cb), w);
   }
 
   gtk_widget_show_all(w->priv.window);
@@ -1381,7 +1398,7 @@ WEBVIEW_API void webview_set_fullscreen(struct webview *w, int fullscreen) {
 
 WEBVIEW_API void webview_set_color(struct webview *w, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   HBRUSH brush = CreateSolidBrush(RGB(r, g, b));
-  SetClassLongPtr(w->priv.hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);  
+  SetClassLongPtr(w->priv.hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
 }
 
 /* These are missing parts from MinGW */
