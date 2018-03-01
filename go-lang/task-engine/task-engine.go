@@ -28,7 +28,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var uxmScriptVersion = "r.180227"
+var uxmScriptVersion = "r.180301"
 
 var iniFile = "task-engine.ini"
 var UrlBatchList = "https://localhost/test-batch.txt"
@@ -114,24 +114,26 @@ func tasks(maxParallelThreads int, LoopId int) {
 		}
 		wg.Add(1)
 		go func(LoopId int, i int, TaskId string) {
+			var status = ""
 			res, err := http.Get(UrlTaskCall + url.QueryEscape(TaskId))
 			if err != nil {
 				fmt.Println(err.Error())
-			}
-			res.Body.Close()
-			var status = ""
-			if(res.StatusCode == 200) {
-				status = color.GreenString(strconv.Itoa(res.StatusCode))
-			} else if(res.StatusCode == 202) {
-				status = color.HiCyanString(strconv.Itoa(res.StatusCode))
-			} else if(res.StatusCode == 203) {
-				status = color.YellowString(strconv.Itoa(res.StatusCode))
-			} else if(res.StatusCode == 208) {
-				status = color.HiMagentaString(strconv.Itoa(res.StatusCode))
-			} else if(res.StatusCode == 429) || (res.StatusCode == 502) || (res.StatusCode == 503) || (res.StatusCode == 504) {
-				status = color.HiRedString(strconv.Itoa(res.StatusCode))
+				status = color.RedString("000")
 			} else {
-				status = color.RedString(strconv.Itoa(res.StatusCode))
+				res.Body.Close()
+				if(res.StatusCode == 200) {
+					status = color.GreenString(strconv.Itoa(res.StatusCode))
+				} else if(res.StatusCode == 202) {
+					status = color.HiCyanString(strconv.Itoa(res.StatusCode))
+				} else if(res.StatusCode == 203) {
+					status = color.YellowString(strconv.Itoa(res.StatusCode))
+				} else if(res.StatusCode == 208) {
+					status = color.HiMagentaString(strconv.Itoa(res.StatusCode))
+				} else if(res.StatusCode == 429) || (res.StatusCode == 502) || (res.StatusCode == 503) || (res.StatusCode == 504) {
+					status = color.HiRedString(strconv.Itoa(res.StatusCode))
+				} else {
+					status = color.RedString(strconv.Itoa(res.StatusCode))
+				}
 			}
 			fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:")  + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
 			wg.Done()
