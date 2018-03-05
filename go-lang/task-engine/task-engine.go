@@ -28,7 +28,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var uxmScriptVersion = "r.180301"
+var uxmScriptVersion = "r.180305"
 
 var iniFile = "task-engine.ini"
 var UrlBatchList = "https://localhost/test-batch.txt"
@@ -199,13 +199,11 @@ func main() {
 
 	fmt.Println(color.HiBlackString("\n" + "##### Parallel Tasks Manager [ " + uxmScriptVersion + " ] :: Running on #CPUs: " + strconv.Itoa(runtime.NumCPU()) + " #####"))
 
-	var maxParallelThreads = parallelWorkers
-
-	runtime.GOMAXPROCS(maxParallelThreads)
+	runtime.GOMAXPROCS(parallelWorkers)
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	for i := 0; i >= 0; i++ { // infinite loop
-		tasks(maxParallelThreads, i)
+		tasks(parallelWorkers, i)
 		time.Sleep(time.Duration(rand.Int31n(2)) * time.Second)
 	}
 
