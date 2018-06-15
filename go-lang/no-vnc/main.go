@@ -2,6 +2,7 @@
 // GO Lang
 // go-bindata -o assets.go -prefix assets assets/...
 // go build main.go assets.go
+// on openbsd may need to: CGO_LDFLAGS_ALLOW='-Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib' go build main.go assets.go
 
 // noVNC Viewer
 // (c) 2018 unix-world.org
