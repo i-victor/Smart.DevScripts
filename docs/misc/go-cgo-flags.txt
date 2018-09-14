@@ -1,0 +1,11 @@
+
+# Fix for GO >= 1.9.4 / 1.10 to allow extra flags (sample)
+CGO_CXXFLAGS_ALLOW='-ansi|-finline-functions'
+
+export CGO_CXXFLAGS_ALLOW=".*" 
+export CGO_LDFLAGS_ALLOW=".*" 
+export CGO_CFLAGS_ALLOW=".*"
+
+# this may function with any LD flag
+CGO_LDFLAGS_ALLOW='.*' go build main.go assets.go
+

@@ -1,0 +1,286 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!-- If you make edits to any FAQ documents, please start each sentence
+     on a new line, and try to keep the general formatting consistent
+     with the rest of the pages -->
+
+<title>OpenBSD PF: Shortcuts For Creating Rulesets</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="../../openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/faq/pf/shortcuts.html">
+</head>
+
+<!--
+Copyright (c) 2003, 2004 Joel Knight <enabled@myrealbox.com>
+
+Permission to use, copy, modify, and distribute this documentation for
+any purpose with or without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in all copies.
+
+THE DOCUMENTATION IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+WARRANTIES WITH REGARD TO THIS DOCUMENTATION INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS DOCUMENTATION
+-->
+
+<body bgcolor="#ffffff" text="#000000">
+
+<h2>
+<a href="../../index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">PF - Shortcuts For Creating Rulesets</font>
+<small>
+<a href="index.html" style="font-weight:normal; float:right">[Contents]</a>
+</small>
+</h2>
+<hr>
+
+<ul>
+  <li><a href="#intro"      >Introduction</a>
+  <li><a href="#macros"     >Using macros</a>
+  <li><a href="#lists"      >Using lists</a>
+  <li><a href="#grammar"    >PF grammar</a>
+    <ul>
+      <li><a href="#elim"   >Elimination of keywords</a>
+      <li><a href="#return" ><tt>Return</tt> simplification</a>
+      <li><a href="#order"  >Keyword ordering</a>
+    </ul>
+</ul>
+<hr>
+
+<h2 id="intro">Introduction</h2>
+
+PF offers many ways in which a ruleset can be simplified.
+Some good examples are by using
+<a href="macros.html#macros">macros</a>
+and <a href="macros.html#lists">lists</a>.
+In addition, the ruleset language, or grammar, also offers some shortcuts
+for making a ruleset simpler.
+As a general rule of thumb, the simpler a ruleset is, the easier it is to
+understand and to maintain.
+
+<h2 id="macros">Using macros</h2>
+
+Macros are useful because they provide an alternative to hard-coding
+addresses, port numbers, interfaces names, etc., into a ruleset.
+Did a server's IP address change? No problem, just update the macro; no need
+to mess around with the filter rules that you've spent time and energy
+perfecting for your needs.
+
+<p>
+A common convention in PF rulesets is to define a macro for each network
+interface.
+If a network card ever needs to be replaced with one that uses a different
+driver, the macro can be updated and the filter rules will function as before.
+Another benefit is when installing the same ruleset on multiple machines.
+Certain machines may have different network cards in them, and using macros
+to define the network interfaces allows the rulesets to be installed with
+minimal editing.
+Using macros to define information in a ruleset that is subject to change,
+such as port numbers, IP addresses, and interface names, is recommended
+practice.
+
+<blockquote><pre>
+# define macros for each network interface
+IntIF = "dc0"
+ExtIF = "fxp0"
+DmzIF = "fxp1"
+</pre></blockquote>
+
+Another common convention is using macros to define IP addresses and
+network blocks.
+This can greatly reduce the maintenance of a ruleset when IP addresses change.
+
+<blockquote><pre>
+# define our networks
+IntNet = "192.168.0.0/24"
+ExtAdd = "192.0.2.4"
+DmzNet = "10.0.0.0/24"
+</pre></blockquote>
+
+If the internal network ever expanded or was renumbered into a different
+IP block, the macro can be updated:
+
+<blockquote><pre>
+IntNet = "{ 192.168.0.0/24, 192.168.1.0/24 }"
+</pre></blockquote>
+
+Once the ruleset is reloaded, everything will work as before.
+
+<h2 id="lists">Using lists</h2>
+
+Let's look at a good set of rules to have in your ruleset to handle
+<a href="https://tools.ietf.org/html/rfc1918">RFC 1918</a> addresses that
+just shouldn't be floating around the Internet, and when they are, are
+usually trying to cause trouble:
+
+<blockquote><pre>
+block in  quick on egress inet from 127.0.0.0/8 to any
+block in  quick on egress inet from 192.168.0.0/16 to any
+block in  quick on egress inet from 172.16.0.0/12 to any
+block in  quick on egress inet from 10.0.0.0/8 to any
+block out quick on egress inet from any to 127.0.0.0/8
+block out quick on egress inet from any to 192.168.0.0/16
+block out quick on egress inet from any to 172.16.0.0/12
+block out quick on egress inet from any to 10.0.0.0/8
+</pre></blockquote>
+
+Now look at the following simplification:
+
+<blockquote><pre>
+block in quick  on egress inet from { 127.0.0.0/8, 192.168.0.0/16, \
+   172.16.0.0/12, 10.0.0.0/8 } to any
+block out quick on egress inet from any to { 127.0.0.0/8, \
+   192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8 }
+</pre></blockquote>
+
+The ruleset has been reduced from eight lines down to two.
+Things get even better when macros are used in conjunction with a list:
+
+<blockquote><pre>
+NoRouteIPs = "{ 127.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8 }"
+
+block in  quick on egress from $NoRouteIPs to any
+block out quick on egress from any to $NoRouteIPs
+</pre></blockquote>
+
+Note that macros and lists simplify the <tt>pf.conf</tt> file, but the lines
+are actually expanded by <a href="http://man.openbsd.org/pfctl">pfctl(8)</a>
+into multiple rules.
+So, the above example actually expands to the following rules:
+
+<blockquote><pre>
+block in  quick on egress inet from 127.0.0.0/8 to any
+block in  quick on egress inet from 192.168.0.0/16 to any
+block in  quick on egress inet from 172.16.0.0/12 to any
+block in  quick on egress inet from 10.0.0.0/8 to any
+block out quick on egress inet from any to 10.0.0.0/8
+block out quick on egress inet from any to 172.16.0.0/12
+block out quick on egress inet from any to 192.168.0.0/16
+block out quick on egress inet from any to 127.0.0.0/8
+</pre></blockquote>
+
+As you can see, the PF expansion is purely a convenience for the writer
+and maintainer of the <tt>pf.conf</tt> file, not an actual simplification
+of the rules processed by <a href="http://man.openbsd.org/pf">pf(4)</a>.
+
+<p>
+Macros can be used to define more than just addresses and ports; they
+can be used anywhere in a PF rules file:
+
+<blockquote><pre>
+pre  = "pass in quick on ep0 inet proto tcp from "
+post = "to any port { 80, 6667 }"
+
+$pre 198.51.100.80 $post
+$pre 203.0.113.79  $post
+$pre 203.0.113.178 $post
+</pre></blockquote>
+
+Expands to:
+
+<blockquote><pre>
+pass in quick on ep0 inet proto tcp from 198.51.100.80 to any port = 80
+pass in quick on ep0 inet proto tcp from 198.51.100.80 to any port = 6667
+pass in quick on ep0 inet proto tcp from 203.0.113.79  to any port = 80
+pass in quick on ep0 inet proto tcp from 203.0.113.79  to any port = 6667
+pass in quick on ep0 inet proto tcp from 203.0.113.178 to any port = 80
+pass in quick on ep0 inet proto tcp from 203.0.113.178 to any port = 6667
+</pre></blockquote>
+
+<h2 id="grammar">PF grammar</h2>
+
+PF's grammar is quite flexible which, in turn, allows for great flexibility
+in a ruleset.
+PF is able to infer certain keywords which means that they don't have to be
+explicitly stated in a rule, and keyword ordering is relaxed such that it
+isn't necessary to memorize strict syntax.
+
+<h3 id="elim">Elimination of keywords</h3>
+
+To define a "default deny" policy, two rules are used:
+
+<blockquote><pre>
+block in  all
+block out all
+</pre></blockquote>
+
+This can now be reduced to:
+
+<blockquote><pre>
+block
+</pre></blockquote>
+
+When no direction is specified, PF will assume the rule applies to
+packets moving in both directions.
+
+<p>
+Similarly, the "<tt>from any to any</tt>" and "<tt>all</tt>" clauses can
+be left out of a rule, for example:
+
+<blockquote><pre>
+block in on rl0 all
+pass  in quick log on rl0 proto tcp from any to any port 22
+</pre></blockquote>
+
+can be simplified as:
+
+<blockquote><pre>
+block in on rl0
+pass  in quick log on rl0 proto tcp to port 22
+</pre></blockquote>
+
+The first rule blocks all incoming packets from anywhere to anywhere on
+rl0, and the second rule passes in TCP traffic on rl0 to port 22.
+
+<h3 id="return"><tt>Return</tt> simplification</h3>
+
+A ruleset used to block packets and reply with a TCP RST or ICMP
+Unreachable response could look like this:
+
+<blockquote><pre>
+block in all
+block return-rst  in proto tcp all
+block return-icmp in proto udp all
+block out all
+block return-rst  out proto tcp all
+block return-icmp out proto udp all
+</pre></blockquote>
+
+This can be simplified as:
+
+<blockquote><pre>
+block return
+</pre></blockquote>
+
+When PF sees the <tt>return</tt> keyword, it's smart enough to send the
+proper response, or no response at all, depending on the protocol of the
+packet being blocked.
+
+<h3 id="order">Keyword ordering</h3>
+
+The order in which keywords are specified is flexible in most cases.
+For example, a rule written as:
+
+<blockquote><pre>
+pass in log quick on rl0 proto tcp to port 22 flags S/SA queue ssh label ssh
+</pre></blockquote>
+
+can also be written as:
+
+<blockquote><pre>
+pass in quick log on rl0 proto tcp to port 22 queue ssh label ssh flags S/SA
+</pre></blockquote>
+
+Other, similar variations will also work.
+
+<p>
+</body>
+</html>

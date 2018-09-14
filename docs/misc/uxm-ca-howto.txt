@@ -1,0 +1,7 @@
+
+# generate the CA key:
+openssl genrsa -out uxm-ca.key 4096
+
+# generate the Certificate:
+/opt/unixw/bin/openssl req -new -x509 -days 3650 -subj '/C=UK/ST=LONDON/L=London/CN=*/O=Unix-World.org' -key uxm-ca.key -out uxm-ca.crt -config /opt/unixw/etc/openssl/openssl.cnf
+

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Qtemu Manager
+GenericName=Qemu Manager
+Comment=QT Frontend to QEmu
+Exec=qtemu
+Icon=/etc/xdg/uxm-icons/qemu.png
+Type=Application
+Categories=System;Utility;

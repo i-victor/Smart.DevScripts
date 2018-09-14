@@ -1,0 +1,20 @@
+
+##### OpenBSD Routing
+
+# To turn ON routing for IPV4 (add the following in sysctl.conf)
+net.inet.ip.forwarding=1
+net.inet.ip.mforwarding=1 # just if multicasting is needed
+
+# To turn ON routing for IPV6 (add the following in sysctl.conf)
+net.inet6.ip6.forwarding=1
+net.inet6.ip6.mforwarding=1 # just if multicasting is needed
+
+# Add a static route (sample) # nano /etc/hostname.em0 (just add the !route add line to the desired network interface config, em0 in this case)
+
+inet 169.254.100.1 255.255.0.0
+        inet alias 169.254.101.1 255.255.0.0
+
+# the gateway is 169.254.1.1 in this example
+!route add -net 169.254.0.0/16 169.254.1.1
+
+# END

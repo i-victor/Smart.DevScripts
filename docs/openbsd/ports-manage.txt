@@ -1,0 +1,120 @@
+
+##### OpenBSD Ports HowTo
+
+### Installing ports sources: ports.tar.gz will be unarchived into /usr to have /usr/ports
+su -
+cp ports.tar.gz /usr
+cd /usr
+tar -xzf ports.tar.gz
+#rm ports.tar.gz
+chown -R admin:wheel /usr/ports
+
+##### Ports Fetch from CVS: Stable - OpenBSD 6.2, as alternative to using the ports.tar.gz as above
+cvs -qd anoncvs@anoncvs2.ca.openbsd.org:/cvs get -rOPENBSD_6_2 -P src
+cvs -qd anoncvs@anoncvs2.ca.openbsd.org:/cvs get -rOPENBSD_6_2 -P ports
+
+##### Ports Fetch from CVS: LATEST, as alternative to using the ports.tar.gz as above
+cvs -qd anoncvs@anoncvs2.ca.openbsd.org:/cvs get -P src
+cvs -qd anoncvs@anoncvs2.ca.openbsd.org:/cvs get -P ports
+
+### Ports Pre-Build
+echo "SUDO=/usr/bin/doas" >> /etc/mk.conf
+echo "#SUDO=/usr/local/bin/sudo" >> /etc/mk.conf
+echo "LDFLAGS += -m64 -O3" >> /etc/mk.conf
+echo "CFLAGS += -m64 -O3" >> /etc/mk.conf
+echo "CXXFLAGS += -m64 -O3" >> /etc/mk.conf
+
+### Compile ports (example: compiling midnight commander from ports: sysutils/mc)
+# to build ports require to run make as unprivileged user (ex: admin) in group wheel but set in doas ; see above that all ports dirs and files were # chown -R admin:wheel /usr/ports
+cd /usr/ports/sysutils/mc
+make clean
+make package BULK=Yes
+# the compiled package binary will be located into /usr/ports/packages/amd64/all as mc-x.y.z.tgz
+cd /usr/ports/some/otherport
+FLAVOR="no_gnome3" make package BULK=Yes
+SUBPACKAGE="-gtk2" make package BULK=Yes
+SUBPACKAGE="-utils" make package BULK=Yes
+#libreoffice (5.2 must compile as non-root)
+cd /usr/ports/editors/libreoffice
+SUBPACKAGE="-main" FLAVOR="no_java no_lang" make package BULK=Yes
+SUBPACKAGE="-main" FLAVOR="no_lang" make package BULK=Yes
+# evince
+cd /usr/ports/graphics/evince
+FLAVOR="light" make package BULK=Yes
+
+# Installing a port: if the port was not previous installed will install it if all dependencies are met: all required packages were built ... some packages depends on other packages
+# Updating a port: if the port was previous installed and the current version x.y.z is greated than previous detected version will be updated
+cd /usr/ports/packages/amd64/all
+pkg_add -D unsigned mc-x.y.z.tgz
+
+#! Install or update newer ports
+pkg_add -D unsigned *.tgz
+#! Mark all installed packages as automated
+pkg_add -D unsigned -aa *.tgz
+#! After, force replace all packages, without replacing etc/%pkg-configs% (may be needed as after upgrading a package others were built on it - different version)
+pkg_add -D unsigned -rU *.tgz
+
+# Force installing many ports at once
+pkg_add -aa -D unsigned -I *.tgz
+
+# Force replacing many ports at once
+pkg_add -r -D unsigned -I *.tgz
+
+# Removing a port (if other ports depend on it they will be also removed)
+pkg_delete mc-x.y.z
+
+# Removing all installed ports
+pkg_delete -X
+
+# Checking port source checksums:
+make checksum
+
+# Updating port source checksums (if version was upgraded in Makefile of the port)
+make makesum
+
+# Cleaning a port after make
+make clean
+
+# Display port flavors:
+make show=FLAVORS
+
+# Display current selected port flavors:
+make show=FLAVOR
+
+# Display port sub-packages:
+make show=PKGNAMES
+
+# Display current selected port sub-packages:
+make show=PKGNAME
+
+# Sample Fixes:
+# comment out some dependencies in file-roller (Makefile) before make: gcpio, unrar, cdrtools
+
+# Help on ports add, update, delete:
+man pkg_add
+man pkg_delete
+
+### Ports Signify
+# If you want to build your own signed packages, you'll first need to create keys for signing
+# Note the names: keys for signing packages should be in the following format {something}-pkg.*
+signify -Gns /etc/signify/my-pkg.sec -p /etc/signify/my-pkg.pub
+# How to sign existing packages after building them with pkg_sign(1).
+cd /usr/ports/packages/$(uname -p)
+pkg_sign -s signify -s /etc/signify/my-pkg.sec -o signed -S all
+# Alternative, we may add the following line to /etc/mk.conf to directly build signed packages by default when we build ports from source:
+SIGNING_PARAMETERS=-s signify -s /etc/signify/my-pkg.sec
+
+### Sample Hints on Building PHP XDebug extension
+cd /home/admin/sources
+tar xzf xdebug-2.4.1.tar.gz
+cd xdebug-2.4.1
+AUTOCONF_VERSION=2.65 AUTOMAKE_VERSION=1.15 phpize-5.6
+AUTOCONF_VERSION=2.65 AUTOMAKE_VERSION=1.15 ./configure --with-php-config=/usr/local/bin/php-config-5.6
+
+### Generate checksum hashes for distfiles
+cd distfiles
+find . -type f -exec md5 '{}' \; > /__distfiles-openbsd-unixw-xxyyzz.CHECKSUM
+find . -type f -exec sha256 '{}' \; >> /__distfiles-openbsd-unixw-xxyyzz.CHECKSUM
+find . -type f -exec sha512 '{}' \; >> /__distfiles-openbsd-unixw-xxyyzz.CHECKSUM
+
+#END

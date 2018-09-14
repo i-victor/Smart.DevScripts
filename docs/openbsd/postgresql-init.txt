@@ -1,0 +1,19 @@
+
+##### PostgreSQL initialize
+
+## run as root
+mkdir /var/postgresql
+#mkdir /var/postgresql/data
+chown -R admin:wheel /var/postgresql
+chmod 0775 /var/postgresql
+
+## run as admin (will prompt for a password, ussualy: postgres)
+initdb --pgdata=/var/postgresql/data --no-locale --username=postgres --pwprompt
+
+## run as root
+chown -R _postgresql:_postgresql /var/postgresql
+rcctl enable postgresql
+rcctl restart postgresql
+
+## Hints: if the above setup was correct, can login to postgresql on 127.0.0.1 port 5432 with: username=postgres ; password=postgres
+

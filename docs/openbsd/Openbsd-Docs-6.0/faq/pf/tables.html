@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!-- If you make edits to any FAQ documents, please start each sentence
+     on a new line, and try to keep the general formatting consistent
+     with the rest of the pages -->
+
+<title>OpenBSD PF: Tables</title>
+<meta http-equiv="Content-type" content="text/html; charset=ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="../../openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/faq/pf/tables.html">
+</head>
+
+<!--
+Copyright (c) 2003, 2004 Joel Knight <enabled@myrealbox.com>
+
+Permission to use, copy, modify, and distribute this documentation for
+any purpose with or without fee is hereby granted, provided that the
+above copyright notice and this permission notice appear in all copies.
+
+THE DOCUMENTATION IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+WARRANTIES WITH REGARD TO THIS DOCUMENTATION INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS DOCUMENTATION
+-->
+
+<body bgcolor="#ffffff" text="#000000">
+
+<h2>
+<a href="../../index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">PF - Tables</font>
+<small>
+<a href="index.html" style="font-weight:normal; float:right">[Contents]</a>
+</small>
+</h2>
+<hr>
+
+<ul>
+  <li><a href="#intro" >Introduction</a>
+  <li><a href="#config">Configuration</a>
+  <li><a href="#manip" >Manipulating with <tt>pfctl</tt></a>
+  <li><a href="#addr"  >Specifying addresses</a>
+  <li><a href="#match" >Address matching</a>
+</ul>
+<hr>
+
+<h2 id="intro">Introduction</h2>
+
+A table is used to hold a group of IPv4 and/or IPv6 addresses.
+Lookups against a table are very fast and consume less memory and processor
+time than <a href="macros.html#lists">lists</a>.
+For this reason, a table is ideal for holding a large group of addresses as
+the lookup time on a table holding 50,000 addresses is only slightly more
+than for one holding 50 addresses.
+Tables can be used in the following ways:
+
+<ul>
+  <li>Source and/or destination address in rules.
+  <li>Translation and redirection addresses <tt>nat-to</tt> and <tt>rdr-to</tt>
+      rule options, respectively.
+  <li>Destination address in <tt>route-to</tt>, <tt>reply-to</tt> and
+      <tt>dup-to</tt> rule options.
+</ul>
+
+<p>
+Tables are created either in
+<a href="http://man.openbsd.org/pf.conf">pf.conf(5)</a>
+or by using <a href="http://man.openbsd.org/pfctl">pfctl(8)</a>.
+
+<h2 id="config">Configuration</h2>
+
+In <tt>pf.conf</tt>, tables are created using the <tt>table</tt> directive.
+The following attributes may be specified for each table:
+
+<ul>
+  <li><tt>const</tt> - the contents of the table cannot be changed once the
+      table is created.
+      When this attribute is not specified,
+      <a href="http://man.openbsd.org/pfctl">pfctl(8)</a> may be used to add
+      or remove addresses from the table at any time, even when running with a
+      <a href="http://man.openbsd.org/securelevel">securelevel(7)</a> of two
+      or greater.
+  <li><tt>persist</tt> - causes the kernel to keep the table in memory even
+      when no rules refer to it.
+      Without this attribute, the kernel will automatically remove the table
+      when the last rule referencing it is flushed.
+</ul>
+
+Example:
+
+<blockquote><pre>
+table &lt;goodguys&gt; { 192.0.2.0/24 }
+table &lt;rfc1918&gt;  const { 192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8 }
+table &lt;spammers&gt; persist
+block in on fxp0 from { &lt;rfc1918&gt;, &lt;spammers&gt; } to any
+pass  in on fxp0 from &lt;goodguys&gt; to any
+</pre></blockquote>
+
+Addresses can also be specified using the negation (or "not") modifier,
+such as:
+
+<blockquote><pre>
+table &lt;goodguys&gt; { 192.0.2.0/24, !192.0.2.5 }
+</pre></blockquote>
+
+The <tt>goodguys</tt> table will now match all addresses in the 192.0.2.0/24
+network except for 192.0.2.5.
+
+<p>
+Note that table names are always enclosed in &lt; &gt; angled brackets.
+
+<p>
+Tables can also be populated from text files containing a list of IP
+addresses and networks:
+
+<blockquote><pre>
+table &lt;spammers&gt; persist file "/etc/spammers"
+block in on fxp0 from &lt;spammers&gt; to any
+</pre></blockquote>
+
+The file <tt>/etc/spammers</tt> would contain a list of IP addresses
+and/or
+<a href="https://web.archive.org/web/20150213012421/http://public.swbell.net/dedicated/cidr.html">CIDR</a>
+network blocks, one per line.
+
+<h2 id="manip">Manipulating with <tt>pfctl</tt></h2>
+
+Tables can be manipulated on the fly by using
+<a href="http://man.openbsd.org/pfctl">pfctl(8)</a>.
+For instance, to add entries to the &lt;spammers&gt; table created above:
+
+<blockquote><pre>
+# <b>pfctl -t spammers -T add 203.0.113.0/24</b>
+</pre></blockquote>
+
+This will also create the &lt;spammers&gt; table if it doesn't already exist.
+To list the addresses in a table:
+
+<blockquote><pre>
+# <b>pfctl -t spammers -T show</b>
+</pre></blockquote>
+
+The <tt>-v</tt> argument can also be used with <tt>-T show</tt> to
+display statistics for each table entry.
+To remove addresses from a table:
+
+<blockquote><pre>
+# <b>pfctl -t spammers -T delete 203.0.113.0/24</b>
+</pre></blockquote>
+
+For more information on manipulating tables with <tt>pfctl</tt>, please read
+the <a href="http://man.openbsd.org/pfctl">pfctl(8)</a> man page.
+
+<h2 id="addr">Specifying addresses</h2>
+
+In addition to being specified by IP address, hosts may also be specified by
+their hostname.
+When the hostname is resolved to an IP address, all resulting IPv4 and IPv6
+addresses are placed into the table.
+IP addresses can also be entered into a table by specifying a valid interface
+name, interface group, or the <tt>self</tt> keyword.
+The table will then contain all IP addresses assigned to that interface
+or group, or to the machine (including loopback addresses), respectively.
+
+<p>
+One limitation when specifying addresses is that <tt>0.0.0.0/0</tt> and
+<tt>0/0</tt> will not work in tables.
+The alternative is to hard code that address or use a
+<a href="macros.html#macros">macro</a>.
+
+<h2 id="match">Address matching</h2>
+
+An address lookup against a table will return the most narrowly matching entry.
+This allows for the creation of tables such as:
+
+<blockquote><pre>
+table &lt;goodguys&gt; { 172.16.0.0/16, !172.16.1.0/24, 172.16.1.100 }
+
+block in on dc0
+pass &nbsp;in on dc0 from &lt;goodguys&gt;
+</pre></blockquote>
+
+Any packet coming in through <tt>dc0</tt> will have its source address matched
+against the table <tt>&lt;goodguys&gt;</tt>:
+
+<ul>
+  <li>172.16.50.5 - narrowest match is 172.16.0.0/16; packet matches the
+      table and will be passed
+  <li>172.16.1.25 - narrowest match is !172.16.1.0/24; packet matches an
+      entry in the table but that entry is negated (uses the "!" modifier);
+      packet does not match the table and will be blocked
+  <li>172.16.1.100 - exactly matches 172.16.1.100; packet matches the
+      table and will be passed
+  <li>10.1.4.55 - does not match the table and will be blocked
+</ul>
+
+<p>
+</body>
+</html>

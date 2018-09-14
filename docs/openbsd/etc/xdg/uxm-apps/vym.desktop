@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Vym Mindmap
+GenericName=Mindmap
+Comment=Open Source Mindmap application
+Exec=vym
+Icon=/etc/xdg/uxm-icons/mindmap.png
+Terminal=false
+Type=Application
+Categories=Viewer;Office;
+MimeType=text/x-vimoutliner;

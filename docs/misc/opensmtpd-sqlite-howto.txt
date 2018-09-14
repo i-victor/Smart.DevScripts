@@ -1,0 +1,430 @@
+# OpenSMTPD SQlite HowTo #
+
+OpenSMTPD virtual users using SQLite
+2014-06-09 03:00
+
+To get virtual users with username@domain.tld to work with OpenSMTPD, follow these steps:
+
+Prereqs:
+
+    This assumes you already have virtual users setup for your selected LDA/MDA/IMAP/etc server and it understands how to deal with a blowfish password since OpenSMTPD is really just acting as an MTA.
+    SQLite3, I may do an LDAP and postgresql one down the line but for this I made an executive call and used SQLite since that backend was the most stable at the time I started this oddessy.
+    A Working knowledge of computers.
+
+So there are a few basic parts to getting this working, the first part that is beyond the scope of this is getting dovecot to accept your virtual users using SQLite and do user@domain.tld for auth. The second part of it is setting up the database, below is the schema I have for mine, It needs to be tuned a lot but this works.
+SQLite Database Schema
+
+    CREATE TABLE users (username VARCHAR(128) NOT NULL, domain VARCHAR(128) NOT NULL, home VARCHAR(256) NOT NULL,password VARCHAR(64) NOT NULL, uid INTEGER NOT NULL, gid INTEGER, active CHAR(1) DEFAULT 'Y' NOT NULL);
+    CREATE TABLE alias (user VARCHAR NOT NULL, alias VARCHAR NOT NULL);
+    CREATE TABLE domains (domain VARCHAR(256) NOT NULL, active CHAR(1) DEFAULT 'Y' NOT NULL);
+
+Each of the tables handle different things,
+
+    users: All users, passwords, and user info are stored here.
+    alias: Just like it sounds its a replacement for the alias file anything in user will be resolved to alias
+    domains: a list of domains that are accepted for delivery
+
+So the other moving part is telling OpenSMTPD how to create the tables which is done in a simple flat configuration file.
+SQLiteTables.conf
+
+dbpath                  /etc/mail/authdb.sqlite;
+query_alias             select alias from alias where user=?;
+query_domain            select domain from domains where domain=? and active="Y";
+query_userinfo          select uid,gid,home from users where username=? and active="Y";
+query_credentials       select username, password, from users where (username||'@'||domain)=? and active="Y";
+
+So lets take it line by line and explain it:
+
+dbpath /etc/mail/authdb.sqlite
+This line tells you simply where the sqlite database is going to be.
+
+query_alias select alias from alias where user=?;
+This will respond when SMTPD does look up call for ALIAS. It will run the SQL command replacing ? with the left hand side of the SMTP address. so if you look up foo@bar.com and it is aliased to bar@bar.com the query will be select alias from where user='foo'; and return bar@bar.com. it expects 1 field to be returned as a varchar.
+
+query_domain select domain from domains where domain=? and active="Y";
+This will be run when SMTPD does a lookup call for DOMAIN. It will replace the ? with the right hand side of the SMTP address, so if you have foo@bar.com it will become select domain from domains where domain='bar.com' and active="Y"; and if both conditions are met in the query it will return bar.com. This expects 1 field to be returned as a varchar. Now you will notice I have a static value at the end of the query active="Y", That is completely optional, what it allows me to do is disable a domain without removing it from the table. In theory with that and a comments column I could keep track of why a domain was removed from the default domains table.
+
+query_userinfo select uid,gid,home from users where username=? and active="Y"; This will be run when SMTPD does a lookup call for USERINFO. It will replace the ? with the left hand side of the SMTP address to produce a valid user, if it returns 0 or -1 the look up will fail. So the query becomes select uid,gid,home from users where username=foo and active="Y"; and it expects 3 fields to be returned the first is an int which will be used as a UID, the second is an int to be used as a gid, and the third is a varchar to be used as the path to the users mail home. This also has the active="Y" for the same reason as domain and it is completely optional.
+
+query_credentials select username, password from users where (username||'@'||domain)=? and active="Y";
+This will be run when SMTPD does a lookup call for CREDENTIALS. This replaces ? with whatever is given as the username. This does have 2 required fields a varchar for username and a varchar for password. But this is where some of the magic comes in, if you have a virtual setup that requires users login as user@domain.com you will need to concatenate 2 of the columns together to get the log on name as user@domain.com, (username||'@'||domain)=? will do this.
+
+The last moving part is the SMTPD.conf
+SMTPD.CONF
+
+so near the top of the config define all your table declarations or at least the auth one, but I like to keep them together. The defs would look like:
+
+table domains sqlite:/etc/mail/sqlite
+table users sqlite:/etc/mail/sqlite
+table sqalias sqlite:/etc/mail/sqlite
+
+the next part to deal with is getting auth with your selected port, I require auth on submission and I also try to hide the clients IP address, it looks somthing like:
+
+listen on all port submission tls auth pki mail.serversave.us mask-source
+
+then you have to tell your server to accept mail for the virtual user base:
+
+accept from any for domain alias userbase deliver to mbox
+
+and with all that in place you should be authing and delivering to virtual users.
+
+############################## Other scenarios
+
+homersssearch
+November 20, 2014
+OpenSMTPD Tutorial
+setting up OpenSMTPd on FreeBSD, smtpd.conf
+History of OpenSMTPD
+
+OpenSMTPD is a mail daemon currently developed by Gilles Chehade (gilles@), Pierre-Yves Ritschard (pyr@), Jacek Masiulaniec (jacekm@) and others for the OpenBSD operating system. Its goal is to be a secure mailing daemon without the licensing restrictions of Postfix and without the added complexity of sendmail. It is stable, fast, secure, and easy to configure and use.
+
+OpenSMTPD is a FREE, easy to use implementation of the Simple Mail Transfer Protocol. It provides the ability to send and receive emails, as well as act as a relaying host. It aims to be as reliable as possible and to respect RFC and standard behaviors when they don't reduce the overall security of system.
+
+
+
+
+The setup of OpenSMTPD for FreeBSD
+
+OpenSMTPD is included in FreeBSD as a package or port. We will be going through a few fully working examples for FreeBSD; each config will also work for the newest version of OpenBSD, but the paths of the file will be different. At the end of this tutorial you will have a functional and very secure mail transfer agent (MTA). Let's take a look at the setup.
+
+
+The mailwrapper configuration file
+
+The mailer.conf is a configuration file for mailwrapper. This config file tells any program which would like to send mail what program to use. The FreeBSD port or package will update the /etc/mail/mailer.conf file with the full paths of the opensmtpd binaries. This is what the /etc/mail/mailer.conf looks like after install. You should not need to edit this file, but we included a copy for reference in case you have any issues.
+
+# $FreeBSD: release/10.0.0/etc/mail/mailer.conf 93858 2020-01-01 01:10:10Z gshapiro $
+#
+# Execute the "real" sendmail program, named /usr/libexec/sendmail/sendmail
+#
+### smtpd: sendmail     /usr/libexec/sendmail/sendmail
+### smtpd: send-mail    /usr/libexec/sendmail/sendmail
+### smtpd: mailq        /usr/libexec/sendmail/sendmail
+### smtpd: newaliases   /usr/libexec/sendmail/sendmail
+### smtpd: hoststat     /usr/libexec/sendmail/sendmail
+### smtpd: purgestat    /usr/libexec/sendmail/sendmail
+sendmail        /usr/local/sbin/smtpctl
+send-mail       /usr/local/sbin/smtpctl
+mailq           /usr/local/sbin/smtpctl
+makemap         /usr/local/libexec/opensmtpd/makemap
+newaliases      /usr/local/libexec/opensmtpd/makemap
+
+
+
+Update the aliases file
+
+The aliases file is used to map email names to local user names. For example, if we accepted mail for webmaster@example.com we could setup an alias to deliver the mail to the username calomel on this system. Add the external email address followed by a colon ":" followed by the local user name. After editing the file run "newaliases" to update the /usr/local/etc/mail/aliases.db file.
+
+root@machine# cat /usr/local/etc/mail/aliases
+root:       calomel
+webmaster:  calomel
+freebsd:    calomel
+
+root@machine# newaliases
+/usr/local/etc/mail/aliases: 3 aliases
+
+
+
+Fix permissions for /var/spool/smtpd/ if needed
+
+After installing the OpenSMTPd package or port you may have to do some cleanup on the /var/spool/smtpd/ permissions and ownership. The following commands should help you out if this the first time installing.
+
+
+mkdir /var/spool/smtpd
+mkdir /var/spool/smtpd/corrupt
+mkdir /var/spool/smtpd/incoming
+mkdir /var/spool/smtpd/purge
+mkdir /var/spool/smtpd/queue
+mkdir /var/spool/smtpd/temporary
+
+chmod 755 /var/spool/smtpd
+chmod 700 /var/spool/smtpd/corrupt
+chmod 700 /var/spool/smtpd/incoming
+chmod 700 /var/spool/smtpd/purge
+chmod 700 /var/spool/smtpd/queue
+chmod 700 /var/spool/smtpd/temporary
+
+chown _smtpq /var/spool/smtpd/corrupt
+chown _smtpq /var/spool/smtpd/incoming
+chown _smtpq /var/spool/smtpd/purge
+chown _smtpq /var/spool/smtpd/queue
+chown _smtpq /var/spool/smtpd/temporary
+
+###
+### This is what /var/spool/smtpd/ should like like:
+
+root@calomel#  ls -al /var/spool/smtpd/
+drwx--x--x   8 root    wheel   8 Feb 10 16:51 .
+drwxr-xr-x   9 root    wheel   9 Feb 10 16:33 ..
+drwx------   2 _smtpq  wheel   2 Feb 10 16:42 corrupt
+drwx------   2 _smtpq  wheel   2 Feb 10 16:53 incoming
+drwxrwxrwt   2 root    wheel   2 Feb 10 16:41 offline
+drwx------  12 _smtpq  wheel  13 Feb 10 16:51 purge
+drwx------  44 _smtpq  wheel  44 Feb 10 16:52 queue
+drwx------   2 _smtpq  wheel   2 Feb 10 16:53 temporary
+
+
+
+
+
+The Examples
+
+The following examples should provide a good idea of what you can do with OpenSMTPD. You can combine different options from each example in your config file. For example you may need to use the aliases, secret and virtual db files in your config. Let's take a look at some example configurations and how to set them up.
+
+
+Example #1: local mail delivery only
+
+This config file will allow local mail delivery only. Mail will go into the recipient's mbox in ~/Mail according to your procmail rules unless overridden by an entry in the aliases file. No mail will be sent from or accepted to this box from the outside world.
+
+#######################################################
+## Calomel.org  OpenSMTPD -- /usr/local/etc/mail/smtpd.conf
+##              https://calomel.org/opensmtpd.html
+
+## listen on localhost (ipv4 only) and port 25 (smtp)
+listen on 127.0.0.1 port 25 hostname example.com
+
+## the mail aliases database, created with "newaliases"
+#table aliases file:/usr/local/etc/mail/aliases
+table aliases db:/usr/local/etc/mail/aliases.db
+
+## accept mail from the local machine (lo0) to localhost accounts and pass to
+## the recipient's procmail rules. Address mapping is derived from the aliases file.
+## This rule is for internal machine mail only.
+accept from local for local alias <aliases > deliver to mda "/usr/local/bin/procmail -f -"
+accept for all relay
+
+#######################################################
+
+
+
+Example #2: Local mail delivery and relay to a central mail server
+
+This configuration is made for a local system which does not accept remote email, but will relay to a central mail server. The user or daemons can send mail to the local machine. Mail that is not destined for the local hostnames will be relayed to the "mailrelay.domain.lan" mail server using standard unencrypted SMTP port 25. For fun, we also want mail that is destined for @somehost.com, i.e. not our domain name, to also be delivered locally. All mail delivered to the local system will be passed to procmail for delivery.
+
+Lets setup an alias file for local mail delivery. An email alias is simply a forwarding e-mail address. Each e-mail alias simply forwards e-mail messages on to each specified e-mail address. Your file may be significantly larger, but as an example we will be aliasing root to calomel. All mail to the user root will be sent to our user calomel.
+
+## FreeBSD
+root@machine# cd /usr/local/etc/mail/
+root@machine# cat /usr/local/etc/mail/aliases
+root: calomel
+
+Second, make a db of the aliases file like so.
+
+root@machine# newaliases
+/usr/local/etc/mail/aliases: 1 aliases
+
+Then copy the following into /usr/local/etc/mail/smtpd.conf and start the daemon.
+
+#######################################################
+## Calomel.org  OpenSMTPD -- /usr/local/etc/mail/smtpd.conf
+##              https://calomel.org/opensmtpd.html
+
+## listen on localhost (ipv4 only) and port 25 (smtp)
+listen on 127.0.0.1 port 25 hostname example.com
+
+## the mail aliases database, created with "newaliases"
+#table aliases file:/usr/local/etc/mail/aliases
+table aliases db:/usr/local/etc/mail/aliases.db
+
+## accept mail from the local machine (lo0) to localhost accounts and pass to
+## the recipient's procmail rules. Address mapping is derived from the aliases file.
+## This rule is for internal machine mail only.
+accept from local for local alias <aliases > deliver to mda "/usr/local/bin/procmail -f -"
+
+## accept mail from any ip address to the hostname calomel.org and pass to
+## the recipient's procmail rules. Address mapping is derived from the aliases file.
+## This rule is for external mail being snt to a local account.
+accept from any for domain "somehost.com" alias  <aliases > deliver to mda "/usr/local/bin/procmail -f -"
+
+## outgoing mail is accepted from localhost only and relayed through
+accept from local for any relay via "mailrelay.domain.lan"
+
+#######################################################
+
+
+
+Example #3: Local mail delivery and relay to Google's gmail
+
+This configuration is made for a local system which also accepts remote email for the somehost.com domain. The user or daemons can send mail to the local machine. Mail that is not destined for the local hostnames and sent from a local account will be relayed to gmail over TLS port 587. All mail delivered to the local system will be passed to procmail for delivery.
+
+IMPORTANT: In order for OpenSMTPd to connect to the Gmail servers, your gmail configuration must allow "access by less secure apps". Google has published a simple tutorial to help you set the correct settings in their post, "Allowing less secure apps to access your account". If your Gmail account is not setup to allow less secure apps you will receive odd error messages like "Password incorrect", access denied or network connection issues.
+
+First, we to make a file which allows the smtpd daemon to send the username and password to the gmail server so we can relay mail. Make a new file called "secrets" in /etc/mail/. Add the gmail smtp server you are going to relay to and your gmail username and password. Make sure to set the permission of the file to 640 so only root can read and write to the file and the smtpd daemon running as _smtpd can read it.
+
+## FreeBSD
+root@machine# cd /usr/local/etc/mail
+
+root@machine# vi secrets
+label GMAIL_USERNAME@gmail.com:GMAIL_PASSWORD
+
+root@machine# chmod 640 secrets*
+root@machine# chown root:_smtpd secrets*
+
+Second, make a db of the secrets file. If you received the error, "no credentials for relay through "$myrelay": Undefined error: 0" then the smptd daemon did not find your secrets.db file. Make sure you made the db file in the /etc/mail directory and you have a map line in smtpd.conf like the example below. Run the following line to make the secrets.db file.
+
+## FreeBSD
+root@machine# cd /usr/local/etc/mail/
+root@machine# /usr/local/libexec/opensmtpd/makemap secrets
+
+Now place the following into /etc/mail/smtpd.conf and start the daemon. We have commented every line so you know what they do.
+
+#######################################################
+## Calomel.org  OpenSMTPD -- /usr/local/etc/mail/smtpd.conf
+##              https://calomel.org/opensmtpd.html
+
+## listen on localhost (ipv4 only) and port 25 (smtp)
+listen on 127.0.0.1 port 25 hostname somehost.com
+
+## expire messages in the mail queue after 4 hours. Expired messages will
+## be bounced back to the sender after this time.
+expire 4h
+
+## the mail aliases database, created with "newaliases"
+#table aliases file:/usr/local/etc/mail/aliases
+table aliases db:/usr/local/etc/mail/aliases.db
+
+## the file holding the gmail username and password
+## created with "/usr/local/libexec/opensmtpd/makemap /usr/local/etc/mail/secrets"
+table secrets db:/usr/local/etc/mail/secrets.db
+
+## accept mail from the local machine (lo0) to localhost accounts and pass to
+## the recipient's procmail rules. Address mapping is derived from the aliases file.
+## This rule is for internal machine mail only.
+accept from local for local alias <aliases> deliver to mda "/usr/local/bin/procmail -f -"
+
+## accept mail from any ip address to the hostname calomel.org and pass to
+## the recipient's procmail rules. Address mapping is derived from the aliases file.
+## This rule is for external mail being snt to a local account.
+accept from any for domain "somehost.com" alias <aliases> deliver to mda "/usr/local/bin/procmail -f -"
+
+## outgoing mail is accepted from localhost only and relayed through
+## Google's gmail using TLS authentication on port 587. The user and password
+## from the map "secrets"' file is used.
+## This rule is for local users _only_ to send mail through gmail. No open relays!
+accept from local for any relay via tls+auth://label@smtp.gmail.com:587 auth <secrets>
+
+#######################################################
+
+
+
+Check smtpd.conf for errors
+
+Check the validity of your configuration file, /usr/local/etc/mail/smtpd.conf .
+
+root@machine# smtpd -n
+configuration OK
+
+Start the smtpd. Pick one method...
+
+## Start in daemon mode as a background process
+smtpd
+
+..or..
+
+## Start in debug mode so you can see error output to the console.
+smtpd -dv
+
+
+
+Start smtpd on boot for FreeBSD
+
+As of FreeBSD 10, smtpd can be started using the smtpd_enable="" directive in the /etc/rc.conf file. You will also want to make sure sendmail does not start by setting sendmail flags to "NO".
+
+Edit /etc/rc.conf and add the following to start OpenSMTPD on boot and disable sendmail.
+
+root@machine# vi /etc/rc.conf
+smtpd_enable="YES"
+
+## sendmail daemons disabled
+dumpdev="NO"
+sendmail_enable="NO"
+sendmail_submit_enable="NO"
+sendmail_outbound_enable="NO"
+sendmail_msp_queue_enable="NO"
+
+
+
+HELPFUL HINT: For an added layer of protection again spam you can use a bayesian spam filter. Check out our Bogofilter "how to" Anti-Spam Guide. With a little time and understanding you could easily filter up to 99% of any remaining spam.
+
+
+
+
+
+What features would you like to see in later versions of OpenSMTPD ?
+
+A few readers have sent mail with some features they would like to see in future updates of OpenSMTPD. This list is just to keep track of them. Remember that OpenSMTPD is still in development and stability is most important right now. Features like the following may come later if the developers see them as useful. Also, look in the "Questions" section below for info on contacting the developers directly.
+
+Verbose Logging: Even if you start the daemon with the "-v" argument verbose logging of the daemon does not increase the output to /var/log/maillog. One could expect the logs to show the full conversation between client and server.
+
+Filter header output: For security and privacy you may not want the usernames and ip address of your internal network to be included in the header output of sent mail. Postfix has a filter directive using the "header_checks" file that will accomplish this function. For example, "/^Received:.*.domain.lan/ IGNORE" in postfix would omit any header lines with *.domain.lan in it. This option is required in top secret or secure environment.
+
+Blacklists or RTBL: The ability to query a real time black list (RTBL) like zen.spamhaus.org and deny mail on the results. The majority of spam is sent from compromised windows boxes. The zen list has a list of these types of ips, as well as other lists, and mail could be denied from them. Truthfully, if you are using smtpd you really should be using spamd in front which has support for black lists.
+
+DNS hostname verifications: When a remote mail server connects we could verify that the hostname of the originating ip matches the domain they say they are sending from. We might also want to make sure the HELO statement matches the senders ip. A directive similar to "accept if $CLIENT_HELO equals $SENDER_DOMAIN or error 450" says the HELO header must match the DNS domain name of the client or we send an error 450. The biggest problem with this request is the high cost of dns lookups.
+
+Work with Spamd: When mail is delivered on its first attempt, the connection goes to opensmtpd if the mail passes the checks. It not it is proxied to spamd. This is probably not going to be developed unless a smtpd proxy is put in front of both daemons.
+
+
+
+
+Questions?
+
+How do I flush a single message from the mail queue ?
+
+First, use smtpctl to show all of the messages in your queue:
+
+root@machine# smtpctl show queue
+MTA|1244574723.MTwCoXNepGJtbMcJ.441941725|PROCESSING,ENQUEUED|user@our_domain.org|someguy@somedomain.org|1244582934|0
+
+This will schedule the immediate delivery of that message. OpenSMTPD will try to deliver that mail right away.
+
+root@machine# smtpctl schedule 1244574723.MTwCoXNepGJtbMcJ.441941725
+command succeeded
+
+How do I print out statistics on the smtpd process?
+
+root@machine# smtpctl show stats
+mta.sessions=16
+mta.sessions.active=0
+parent.uptime=157948
+queue.inserts.local=5
+queue.inserts.remote=11
+runner.active=0
+smtp.errors.delays=0
+smtp.errors.linetoolong=0
+smtp.errors.read_eof=0
+smtp.errors.read_system=0
+smtp.errors.read_timeout=0
+smtp.errors.tempfail=0
+smtp.errors.toofast=0
+smtp.errors.write_eof=0
+smtp.errors.write_system=0
+smtp.errors.write_timeout=0
+smtp.sessions=16
+smtp.sessions.aborted=0
+smtp.sessions.active=0
+smtp.sessions.timeout=0
+smtp.sessions.smtps=0
+smtp.sessions.smtps.active=0
+smtp.sessions.starttls=0
+smtp.sessions.starttls.active=0
+
+Where can the logs for smtpd be found?Check in /var/log/maillog for entries similar to this...
+
+root@machine# cat /var/log/maillog | grep smtpd
+Jan 10 12:30:00 test smtpd[13226]: 1244651996.ZjcewNaiDZhvzdsD: from=<user@our_domain.org>, size=471, nrcpts=1, proto=ESMTP, relay=localhost [IPv6:::1]
+Jan 10 12:30:00 test smtpd[20966]: 1244651996.ZjcewNaiDZhvzdsD.2164998912: to=<someguy@somedomain.org>, delay=0, stat=Sent
+
+Does opensmtpd support smtp auth ?yes, the daemon supports smtp for both incoming and outgoing sessions over ssl (smtps or tls). -gilles@
+
+What is the error, "couldn't enqueue offline message; smtpctl exited abnormally" followed by "sendmail: unknown option -- L" ? This is a known bug (seen Jun 2009) that will be fixed soon. Make sure to clear out the old mail queue before starting smtpd on a new build.
+
+What is the error, "fatal: queue_load_envelope: fopen: No such file or directory" followed by "lost child: runner exited abnormally" ?This probably means that the /var/spool/smtpd/ queue directories are out of sync somehow. Opensmptd will not start if this is true. To fix this problem you can just delete all of the files and directories under that path. Like so, "rm -rf /var/spool/smtpd/*". Opesmtpd will remake all of the queue directories when it starts.
+
+What is the error, "error on start warning: could not load cert: lo0, no SSL/TLS/AUTH support" ?This is a known bug that should be fixed soon (seen Jun 2009). Even though we are not using a SSL cert for mail and it is not configured, this error still shows up. It is an informational message only.
+
+What is the error, "send-mail: write error: Broken pipe" ?The mail server will return this error if it unexpectedly dies or is killed.
+
+
+
+#END
+

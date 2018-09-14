@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=TsClient VNC
+Comment=Connect to a remote computer
+Exec=tsvnc
+Icon=/etc/xdg/uxm-icons/tigervncviewer.png
+Terminal=false
+Categories=GTK;Network;
+Encoding=UTF-8
+Type=Application

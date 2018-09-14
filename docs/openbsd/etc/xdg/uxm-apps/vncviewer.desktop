@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=VNC Viewer
+GenericName=VNC Viewer
+Comment=Connect to remote VNC Desktops
+Exec=vncviewer
+Icon=/etc/xdg/uxm-icons/realvncviewer.png
+Type=Application
+Categories=Network;VNC;

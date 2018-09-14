@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=GNU Robbo
+GenericName=Robbo
+Comment=GNU Robbo
+Exec=gnurobbo
+Icon=/etc/xdg/uxm-icons/game-robots.png
+Terminal=false
+Type=Application
+Categories=GTK;Game;

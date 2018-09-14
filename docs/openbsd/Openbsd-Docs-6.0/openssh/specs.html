@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>OpenSSH: Specifications</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="description" content="the OpenSSH specifications page">
+<meta name="copyright" content="This document copyright 2016 by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://www.openssh.com/security.html">
+<link rel="stylesheet" type="text/css" href="openbsd.css">
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#23238E">
+
+<h2>
+<a href="index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">SSH</font></a>
+<font color="#e00000">Specifications</font>
+</h2>
+<hr>
+
+<p>
+OpenSSH implements the following specifications.
+
+<h3>SSH protocol version 1</h3>
+<table>
+  <tr>
+    <td><a href="txt/ssh-rfc-v1.3.txt">ssh-rfc-v1.3</a>
+    <td>SSH protocol version 1.3
+  </tr>
+  <tr>
+    <td><a href="txt/ssh-rfc-v1.5.txt">ssh-rfc-v1.5</a>
+    <td>SSH protocol version 1.5
+  </tr>
+</table>
+
+<h3>SSH protocol version 2 Core RFCs</h3>
+Source: <a href="http://datatracker.ietf.org/wg/secsh/">secsh working group</a>
+<p>
+<table>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4250>RFC4250</a>
+    <td>
+    <td>SSH Protocol Assigned Numbers
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4251>RFC4251</a>
+    <td>
+    <td>SSH Protocol Architecture
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4252>RFC4252</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4252"
+      title="errata">(e)</a>
+    <td>SSH Authentication Protocol
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4253>RFC4253</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4253"
+      title="errata">(e)</a>
+    <td>SSH Transport Layer Protocol
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4254>RFC4254</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4254"
+      title="errata">(e)</a>
+    <td>SSH Connection Protocol
+  </tr>
+</table>
+
+<h3>SSH protocol version 2 Extension RFCs</h3>
+<table>
+  <tr>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4255>RFC4255</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4255"
+      title="errata">(e)</a>
+    <td>Using DNS to Securely Publish SSH Key Fingerprints (SSHFP)
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4256>RFC4256</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4256"
+      title="errata">(e)</a>
+    <td>Generic Message Exchange Authentication (aka "keyboard-interactive")
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4335>RFC4335</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4335"
+      title="errata">(e)</a>
+    <td>SSH Session Channel Break Extension
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4344>RFC4344</a>
+    <td>
+    <td>SSH Transport Layer Encryption Modes
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4345>RFC4345</a>
+    <td>
+    <td>Improved Arcfour Modes for the SSH Transport Layer Protocol
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4419>RFC4419</a>
+    <td>
+    <td>Diffie-Hellman Group Exchange
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4462>RFC4462</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=4462"
+      title="errata">(e)</a>
+    <td>GSS-API Authentication and Key Exchange (only authentication implemented)
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc4716>RFC4716</a>
+    <td>
+    <td>SSH Public Key File Format
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc5656>RFC5656</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=5656"
+      title="errata">(e)</a>
+    <td>Elliptic Curve Algorithm Integration in SSH
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc6594>RFC6594</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=6594"
+      title="errata">(e)</a>
+    <td>SHA-256 SSHFP Resource Records (new in OpenSSH 6.1).
+  </tr>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc6668>RFC6668</a>
+    <td>
+    <td>SHA-2 Data Integrity Algorithms (new in OpenSSH 5.9)
+  </tr>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc7479>RFC7479</a>
+    <td><a href="http://www.rfc-editor.org/errata_search.php?rfc=7479"
+      title="errata">(e)</a>
+    <td>ED25519 SSHFP Resource Records (new in OpenSSH 6.5).
+  </tr>
+</table>
+
+<h3>SSH protocol version 2 draft specifications</h3>
+<table>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-ietf-secsh-filexfer-02"
+      >draft-ietf-secsh-filexfer-02</a>
+    <td>SSH File Transfer Protocol version 3
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-rsa-dsa-sha2-256-03"
+      >draft-rsa-dsa-sha2-256-03</a>
+    <td>RSA and DSA Keys with SHA-2 256 and 512 (new in OpenSSH 7.2).
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-ssh-ext-info-04"
+      >draft-ssh-ext-info-04</a>
+    <td>Extension Negotiation (ext-info-s and ext-info-c, new in OpenSSH 7.2).
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-ietf-curdle-ssh-kex-sha2-03"
+      >draft-ietf-curdle-ssh-kex-sha2-03</a>
+    <td>Key Exchange (KEX) Method Updates and Recommendations (new in OpenSSH
+      7.3).
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-sgtatham-secsh-iutf8-01"
+      >draft-sgtatham-secsh-iutf8-01</a>
+    <td>IUTF8 Terminal Mode (new in OpenSSH 7.3).
+  </tr>
+</table>
+
+<h3>SSH protocol version 2 vendor extensions</h3>
+<table>
+  <tr>
+    <td><a
+      href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL?annotate=HEAD"
+       >PROTOCOL</a>
+    <td>An overview of all vendor extensions detailed below, and the
+      specifications of the SSH2 extensions <code>eow@openssh.com</code>,
+      <code>no-more-sessions@openssh.com</code>, <code>tun@openssh.com</code>
+       and the sftp extensions <code>posix-rename@openssh.com</code>
+      <code>statvfs@openssh.com</code>, <code>fstatvfs@openssh.com</code>
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.agent?annotate=HEAD"
+       >PROTOCOL.agent</a>
+    <td>ssh-agent protocol (<code>auth-agent@openssh.com</code>)
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.certkeys?annotate=HEAD"
+       >PROTOCOL.certkeys</a>
+    <td><code>ssh-rsa-cert-v00@openssh.com</code>,
+        <code>ssh-dsa-cert-v00@openssh.com</code>,
+        <code>ecdsa-sha2-nistp256-cert-v01@openssh.com</code>,
+        <code>ecdsa-sha2-nistp384-cert-v01@openssh.com</code>,
+        <code>ecdsa-sha2-nistp521-cert-v01@openssh.com</code> : new public
+         key algorithms supporting certificates.
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.chacha20poly1305?annotate=HEAD"
+       >PROTOCOL.chacha20poly1305</a>
+    <td><code>chacha20-poly1305@openssh.com</code> authenticated encryption mode.
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.key?annotate=HEAD"
+       >PROTOCOL.key</a>
+    <td>OpenSSH private key format (<code>openssh-key-v1</code>).
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.krl?annotate=HEAD"
+       >PROTOCOL.krl</a>
+    <td>Key Revocation Lists for OpenSSH keys and certificates.
+  </tr>
+  <tr>
+    <td><a
+       href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL.mux?annotate=HEAD"
+       >PROTOCOL.mux</a>
+    <td>Multiplexing protocol used by ssh(1) ControlMaster connection-sharing.
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-miller-secsh-umac-01"
+        >draft-miller-secsh-umac-01</a>
+    <td><code>umac-64@openssh.com</code>: a new transport-layer MAC.
+  </tr>
+  <tr>
+    <td><a href="https://tools.ietf.org/html/draft-miller-secsh-compression-delayed-00"
+      >draft-miller-secsh-compression-delayed-00</a>
+    <td><code>zlib@openssh.com</code>: Delayed compression until
+      after authentication.
+  </tr>
+  <tr>
+    <td><a
+       href="http://git.libssh.org/projects/libssh.git/tree/doc/curve25519-sha256@libssh.org.txt"
+       >curve25519-sha256@libssh.org</a>
+    <td><code>curve25519-sha256@libssh.org</code> key exchange method.
+  </tr>
+</table>
+
+<h3>Other specifications</h3>
+<table>
+  <tr>
+    <td><a href="txt/socks4.protocol">socks4.protocol</a>
+    <td>SOCKS protocol version 4.  Used for <code>ssh -D</code>.
+  </tr>
+  <tr>
+    <td><a href="txt/socks4a.protocol">socks4a.protocol</a>
+    <td>SOCKS protocol version 4a.  Used for <code>ssh -D</code>.
+  </tr>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc1928>RFC1928</a>
+    <td>SOCKS protocol version 5.  Used for <code>ssh -D</code>.
+  </tr>
+  <tr>
+    <td><a href=https://tools.ietf.org/html/rfc1349>RFC1349</a><br>
+        <a href=https://tools.ietf.org/html/rfc2597>RFC2597</a><br>
+        <a href=https://tools.ietf.org/html/rfc2598>RFC2598</a>
+    <td>IP Type of Service (ToS) and Differentiated Services.
+        ssh and sshd will automatically set the ToS as per rfc1349
+        unless specified otherwise via the <code>IPQoS</code> keyword in
+        <a href= "http://man.openbsd.org/?query=ssh_config"
+        >ssh_config</a> and <a href=
+        "http://man.openbsd.org/?query=sshd_config"
+        >sshd_config</a>.
+  </tr>
+</table>
+
+<p>
+</body>
+</html>

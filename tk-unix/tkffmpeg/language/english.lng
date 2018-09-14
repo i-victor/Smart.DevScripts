@@ -1,0 +1,64 @@
+.ffmpeg = Video Converter
+.fiLes = Files
+.fiLes.info.1.1.vcodec = Video codec
+.fiLes.info.1.2.vbit = Video bitrate
+.fiLes.info.1.3.size = Size
+.fiLes.info.1.4.aspect = Aspectratio
+.fiLes.info.2.1.acodec = Audio codec
+.fiLes.info.2.2.abit = Bitrate
+.fiLes.info.2.3.frequency = Frequency
+.fiLes.fiLes1.name = Input file
+.fiLes.fiLes2.name = Output file
+.fiLes.vframe.dvdvideo = Create the DVD-video
+.fiLes.vframe.ltemp = Select temp folder
+.fiLes.packed.dvdvideo = Multiple files
+.fiLes.packed.ltemp = Folder
+.option.optionV = Video options
+.option.optionA = Audio options
+.option.optionV.v1.1.bitrate = Video bitrate
+.option.optionV.v1.2.fps = FPS
+.option.optionV.v1.3.chdein = Deinterlace
+.option.optionV.v1.4.label = Video codec
+.option.optionV.size = Size
+.option.optionA.1.ac = Audio codec
+.option.optionA.2.fr = Frequency
+.option.optionA.3.bit = Bitrate
+.option.optionA.4.chst = Stereo
+.addit.moreL = Additional command line options
+.but.chop = Open file after converting
+.but.go = Run
+.but.cancel = EXIT
+.but.option = Options
+.but.burn = Burn
+.option.optionV.size.2.x = Aspectratio
+lang_adv_opt = Advanced options
+lang_change = Change language
+lang_programm = Change name Media Player
+lang_userO = Loaded with users settings
+lang_save_but = Save
+lang_ok = End of operation
+lang_exec = Start exec:
+lang_open_file = Open file...
+lang_abort = Abort
+lang_time = Running time
+lang_all_time = Total runtime
+.option.optionV.v1.5.copy = Copy video settings
+.option.optionA.5.copy = Copy audio settings
+tray_burn = Burn disk!
+tray_convert = Converting:
+error_user = ERROR! Lost run of the user!!! 
+error_log = ERROR! View log!!!
+error_programm = ERROR! Set real player name!!!
+error_file = ERROR! Select Input and Output File!!!
+error_input_file = ERROR! Select Input File!!!
+error_input_file_ex = ERROR! This Input File does not exists!!!
+error_output_file = ERROR! Select Output File!!!
+error_vbitrate = ERROR! Video bitrate. This value can not be = '0'
+error_x = ERROR! Size X. This value can not be = '0'
+error_y = ERROR! Size Y. This value can not be = '0'
+error_fps = ERROR! FPS. This value can not be = '0'
+error_vcodec = ERROR! Video codec. This value can not be = '0'
+error_acodec = ERROR! Audio codec. This value can not be = '0'
+error_freq = ERROR! Frequency. This value can not be = '0'
+error_abitrate = ERROR! Audio bitrate. This value can not be = '0'
+error_size = ERROR! File size does not match the size of the dvd-disk!!!

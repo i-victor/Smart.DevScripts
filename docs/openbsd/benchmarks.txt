@@ -1,0 +1,15 @@
+
+##### Sysbench
+
+sysbench --num-threads=1024 --test=cpu run
+sysbench --test=memory --memory-block-size=1M --memory-total-size=10G run
+
+cd /tmp
+sysbench --test=fileio --file-total-size=10G prepare
+sysbench --test=fileio --file-total-size=10G --file-test-mode=rndrw --init-rng=on --max-time=300 --max-requests=0 run
+
+##### PgBench
+
+pgbench --host=192.168.1.113 --port=5432 --username=postgres -s 100 --initialize
+pgbench --host=127.0.0.1 --port=5432 --username=postgres -T 60 -c 100 -r -P 2
+

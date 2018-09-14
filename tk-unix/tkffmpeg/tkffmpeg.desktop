@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=TkFFmpeg
+Comment= FFmpeg video converter GUI
+Exec=tkffmpeg
+Icon=tkffmpeg
+Terminal=false
+Categories=AudioVideo;

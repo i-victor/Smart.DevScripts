@@ -1,0 +1,26 @@
+# (c) 2014 unix-world.org
+
+# /etc/rc.conf @ NFS server
+rpcbind=yes
+mountd=yes
+nfs_server=yes
+lockd=yes
+statd=yes
+# /etc/exports (on NFS server)
+/path/to/export -network 169.254.252.1 -mask 255.255.0.0 -maproot=root:wheel
+# restart NFS
+hup mountd
+# Exports list on 169.254.252.1:
+showmount -e 169.254.252.1
+
+
+# /etc/rc.conf @ NFS client
+rpcbind=yes
+nfs_client=yes
+lockd=yes
+statd=yes
+# restart NFS
+hup mountd
+# mount a NFs share
+mount_nfs 169.254.252.1:/home /home
+

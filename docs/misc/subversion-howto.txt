@@ -1,0 +1,119 @@
+##### SVN (Subversion) HowTo // Author: Radu Ovidiu Ilies
+
+## init svn
+groupadd svn
+useradd -m -g svn -s /sbin/nologin svn
+mkdir /home/svn/repository
+##
+
+## create a repository
+svnadmin create /home/svn/repository/my-repo
+svn import -m "Initial Import" /www/webdav/my-repo/ file:///home/svn/repository/my-repo/
+chown -R svn:svn /home/svn/repository
+chmod 0770 dirs...
+chmod 0660 files...
+##
+
+## Cfg: /usr/pkg/svnservenf
+# [general]
+anon-access = write
+auth-access = write
+##Inetd
+svn stream tcp nowait svn /usr/pkg/bin/svnserve svnserve -i --listen-port 3690 --listen-host 127.0.0.1 --config-file /usr/pkg/etc/svnserve.conf -r /home/svn/repository/my-repo/
+##
+
+## svn_GET.sh
+#svn checkout file:///home/svn/repository/my-repo/ /www/my-repo/
+svn checkout svn://127.0.0.1:3690/my-repo/ /www/my-repo/
+/_SVN/my-repo/_conform_www.sh
+#svn up
+##
+
+## svn_PUT.sh
+svn commit -m "Changes ${1}" /www/my-repo/
+#svn ci
+##
+
+## status
+#svn st
+##
+
+## propset / propdel
+svn propset 'svn:executable' *.js
+svn propdel 'svn:executable' *.js
+##
+
+### SVN Dump
+svnadmin dump /path/to/reponame > /tmp/reponame.dump
+###
+
+### SVN Restore
+svnadmin create /path/to/reponame
+svnadmin load /path/to/reponame < /tmp/repo1.dump
+# Chown/Chmod
+###
+
+
+###################### Apache SVN
+
+### httpd.conf
+
+LoadModule dav_svn_module     modules/mod_dav_svn.so
+LoadModule authz_svn_module   modules/mod_authz_svn.so
+
+<Location /svn>
+	DAV svn
+	SVNParentPath /home/svn/repository
+	# Uncomment below will allow read-only anonymous access
+	#<LimitExcept GET PROPFIND OPTIONS REPORT>
+		#SSLRequireSSL
+		AuthType Basic
+		AuthName "SVN Area"
+		AuthUserFile /etc/subversion/dav_svn.passwd
+		AuthzSVNAccessFile /etc/subversion/dav_svn.authz
+		Require valid-user
+	#</LimitExcept>
+    # disable PHP engine for safety
+    php_flag engine off
+    # force text/plain for active scripts
+    #<Files ~ "\.(shtml|php|inc|pl)$">
+        ForceType text/plain
+    #</Files>
+    # end disable PHP
+</Location>
+
+### dav_svn.authz
+
+[groups]
+svnadmin = user1
+ro = user3
+some-project = user1, user2
+
+[/:/]
+@svnadmin = rw
+* = r
+
+[some-project:/]
+@svnadmin = rw
+@ro = r
+* =
+
+### dav_svn.passwd
+
+# gen password: # htpasswd -cb ./dav_svn.passwd user1 password1
+
+user1:encryptedpassword
+user2:encryptedpassword
+user3:encryptedpassword
+
+### websvn/.htaccess
+
+AuthUserFile /etc/subversion/dav_svn.passwd
+AuthType Basic
+AuthName "WebSVN Area"
+require valid-user
+
+######################
+
+##### END
+

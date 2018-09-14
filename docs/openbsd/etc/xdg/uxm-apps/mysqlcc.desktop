@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=MySQL Admin
+Comment=MySQL Database Admin
+Exec=mysqlcc
+Icon=/etc/xdg/uxm-icons/mysqlcc.png
+Terminal=false
+Type=Application
+Categories=Application;Database;Development;

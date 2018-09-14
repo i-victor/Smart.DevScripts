@@ -1,0 +1,16 @@
+
+### NFS Server (for linux clients the lockd MUST be running to provide flock !!!)
+rcctl enable mountd nfsd portmap lockd
+mc -e /etc/exports #
+rcctl restart mountd nfsd portmap
+###
+
+### NFS Client (mount need to be done by root)
+#rcctl enable mountd portmap  # aparently no need
+#rcctl restart mountd portmap # aparently no need
+mount_nfs 169.254.101.1:/NFS-SHARE /mnt
+###
+
+### High Performance NFS Server
+nfsd_flags=-u -t -n 20
+####

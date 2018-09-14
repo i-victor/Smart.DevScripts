@@ -1,0 +1,7 @@
+
+driver = sqlite
+connect = /etc/mail/db/smtpd.sqlite3
+
+default_pass_scheme = BLF-CRYPT
+password_query = SELECT user, password FROM userinfo WHERE user = '%u' LIMIT 1 OFFSET 0
+

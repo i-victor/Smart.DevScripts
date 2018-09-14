@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=QT3 Designer
+GenericName=Interface Designer
+Comment=Create or open user interface designs for QT3 applications
+Exec=designer3
+Icon=/etc/xdg/uxm-icons/qt3.png
+Type=Application
+Categories=Development;GUIDesigner;

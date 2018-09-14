@@ -1,0 +1,18 @@
+ab -n 1200 -c 150 http://127.0.0.1/smart-framework/?/page/samples.benchmark
+
+Disabling ACPI in OpenBSD 4.8
+Published on Sun 21 November 2010 under OpenBSD, howto
+
+As I've mentioned, OpenBSD 4.8 can't boot on a HP Mini 5101 netbook due to an apparent ACPI issue. The way to work around the issue is as follows:
+
+    When booting, enter boot -c at the boot> prompt. A UKC> prompt will appear shortly.
+    Enter disable acpi, then quit; the kernel should proceed to boot successfully to the login prompt.
+    After logging in, enter su (sudo won't work since you haven't edited /etc/sudoers yet).
+    Enter config -e -o bsd.noacpi /bsd; you will see the UKC> prompt again.
+    Enter disable acpi, then quit; you should be back in the shell, with a new file called bsd.noacpi in the current directory.
+    Enter mv /bsd /bsd.acpi && mv bsd.noacpi /bsd to replace the current kernel with the new one.
+    Enter chmod 0644 /bsd to set proper permissions for the new kernel.
+    Enter reboot to test things out; the computer should now boot into the login prompt without any assistance.
+
+What's going on here? UKC is the User Kernel Config, OpenBSD's tool for tweaking a kernel without re-compiling it. As we've seen, it can be used to great effect even during the boot process. What's perhaps even more impressive, UKC can also tweak the currently running kernel without having to reboot. All relevant info can be found by entering man UKC and man config in the OpenBSD shell.
+

@@ -1,0 +1,683 @@
+<!DOCTYPE html><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<base href="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/"><style type="text/css">body { margin-left:0;margin-right:0;margin-top:0; }#google-cache-hdr {background:#f5f5f5 !important;font:13px arial,sans-serif !important;text-align:left !important;color:#202020 !important;border:0 !important;margin:0 !important;border-bottom:1px solid #cecece !important;line-height:16px !important ;padding:16px 28px 24px 28px !important;}#google-cache-hdr * {display:inline !important;font:inherit !important;text-align:inherit !important;color:inherit !important;line-height:inherit !important;background:none !important;border:0 !important;margin:0 !important;padding:0 !important;letter-spacing:0 !important;}#google-cache-hdr a {text-decoration:none !important;color:#1a0dab !important;}#google-cache-hdr a:hover { text-decoration:underline !important; }#google-cache-hdr a:visited { color:#609 !important; }#google-cache-hdr div { display:block !important;margin-top:4px !important; }#google-cache-hdr b {font-weight:bold !important;display:inline-block !important;direction:ltr !important;}</style><div id="google-cache-hdr"  dir=ltr><div>This is Google&#39;s cache of <a href="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/" dir="ltr">https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/</a>. It is a snapshot of the page as it appeared on Oct 24, 2017 04:04:50 GMT. </div><div>The <a href="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/" dir="ltr">current page</a> could have changed in the meantime. <a href="http://support.google.com/websearch/bin/answer.py?hl=en&amp;p=cached&amp;answer=1687222">Learn more</a></div><div></div><div><span style="display:inline-block !important;margin-top:8px !important;margin-right:104px !important;white-space:nowrap !important;"><span style="margin-right:28px !important;"><span style="font-weight:bold !important;">Full version</span></span><span style="margin-right:28px !important;"><a href="http://webcache.googleusercontent.com/search?q=cache:J7zLCJd2cO4J:https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/&amp;num=1&amp;client=firefox-b&amp;hl=en&amp;gl=us&strip=1&vwsrc=0">Text-only version</a></span><span style="margin-right:28px !important;"><a href="http://webcache.googleusercontent.com/search?q=cache:J7zLCJd2cO4J:https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/&amp;num=1&amp;client=firefox-b&amp;hl=en&amp;gl=us&strip=0&vwsrc=1">View source</a></span></span><span style="display:inline-block !important;margin-top:8px !important;color:#717171 !important;">Tip: To quickly find your search term on this page, press <b>Ctrl+F</b> or <b>⌘-F</b> (Mac) and use the find bar.</span></div></div><div style="position:relative;">
+<!DOCTYPE html>
+<html>
+<head>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD</title>
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/assets/built/screen.css?v=e97c1f75df" />
+
+    <meta name="description" content="Setup OpenSMTPD with MySQL / MariaDB database and Dovecot. Configuration of SPAMD, strong antispam solution." />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="canonical" href="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    <link rel="amphtml" href="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/amp/" />
+    
+    <meta property="og:site_name" content="CagedMonster&#x27;S Blog" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD" />
+    <meta property="og:description" content="Setup OpenSMTPD with MySQL / MariaDB database and Dovecot. Configuration of SPAMD, strong antispam solution." />
+    <meta property="og:url" content="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1458157075751-561ccefedcd0?ixlib&#x3D;rb-0.3.5&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;s&#x3D;f8a90cd282a8f3e30e5c64f6a614261e" />
+    <meta property="article:published_time" content="2017-07-13T12:39:25.000Z" />
+    <meta property="article:modified_time" content="2017-09-08T04:51:08.000Z" />
+    <meta property="article:tag" content="OpenBSD" />
+    <meta property="article:tag" content="IT" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD" />
+    <meta name="twitter:description" content="Setup OpenSMTPD with MySQL / MariaDB database and Dovecot. Configuration of SPAMD, strong antispam solution." />
+    <meta name="twitter:url" content="https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/" />
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1458157075751-561ccefedcd0?ixlib&#x3D;rb-0.3.5&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;s&#x3D;f8a90cd282a8f3e30e5c64f6a614261e" />
+    <meta name="twitter:label1" content="Written by" />
+    <meta name="twitter:data1" content="CagedMonster" />
+    <meta name="twitter:label2" content="Filed under" />
+    <meta name="twitter:data2" content="OpenBSD, IT" />
+    <meta name="twitter:site" content="@MonsterCaged" />
+    <meta name="twitter:creator" content="@MonsterCaged" />
+    <meta property="og:image:width" content="1080" />
+    <meta property="og:image:height" content="720" />
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "CagedMonster&#x27;S Blog",
+        "logo": "https://blog.cagedmonster.net/favicon.ico"
+    },
+    "author": {
+        "@type": "Person",
+        "name": "CagedMonster",
+        "image": {
+            "@type": "ImageObject",
+            "url": "https://blog.cagedmonster.net/content/images/2017/08/geek.jpg",
+            "width": 300,
+            "height": 249
+        },
+        "url": "https://blog.cagedmonster.net/author/cagedmonster/",
+        "sameAs": [
+            "https://blog.cagedmonster.net",
+            "https://twitter.com/MonsterCaged"
+        ]
+    },
+    "headline": "OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD",
+    "url": "https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/",
+    "datePublished": "2017-07-13T12:39:25.000Z",
+    "dateModified": "2017-09-08T04:51:08.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://images.unsplash.com/photo-1458157075751-561ccefedcd0?ixlib=rb-0.3.5&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max&s=f8a90cd282a8f3e30e5c64f6a614261e",
+        "width": 1080,
+        "height": 720
+    },
+    "keywords": "OpenBSD, IT",
+    "description": "Setup OpenSMTPD with MySQL / MariaDB database and Dovecot. Configuration of SPAMD, strong antispam solution.",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://blog.cagedmonster.net/"
+    }
+}
+    </script>
+
+    <meta name="generator" content="Ghost 1.15" />
+    <link rel="alternate" type="application/rss+xml" title="CagedMonster&#x27;S Blog" href="https://blog.cagedmonster.net/rss/" />
+    <a href="mailto:lina@cagedmonster.net"></a>
+<a href="mailto:badhackersarebad@cagedmonster.net"></a>
+<!-- Advert -->
+<script src="https://moulinette.cagedmonster.net/cagedmonster.js"></script><script>document.addEventListener('DOMContentLoaded', function(event){cookieChoices.showCookieConsentBar('CagedMonster is going fully private, this blog will be only available soon to private members', 'Ok', 'What?', 'https://blog.cagedmonster.net/cagedmonster-hits-300-private-active-members/');});</script>
+<!-- End Advert Code -->
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//moulinette.cagedmonster.net/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="//moulinette.cagedmonster.net/piwik.php?idsite=1&rec=1" style="border:0;" alt="" /></p></noscript>
+<!-- End Piwik Code -->
+
+</head>
+<body class="post-template tag-openbsd tag-it">
+
+    <div class="site-wrapper">
+
+        
+
+<header class="site-header outer">
+    <div class="inner">
+        <nav class="site-nav">
+    <div class="site-nav-left">
+                <a class="site-nav-logo" href="https://blog.cagedmonster.net">CagedMonster&#x27;S Blog</a>
+            <ul class="nav" role="menu">
+    <li class="nav-home" role="menuitem"><a href="https://blog.cagedmonster.net/">Home</a></li>
+    <li class="nav-mails" role="menuitem"><a href="https://mail.cagedmonster.net/">Mails</a></li>
+    <li class="nav-ghost-blog" role="menuitem"><a href="https://ghost.org/">Ghost blog</a></li>
+    <li class="nav-freebsd" role="menuitem"><a href="https://www.freebsd.org/">FreeBSD</a></li>
+    <li class="nav-netbsd" role="menuitem"><a href="https://www.netbsd.org/">NetBSD</a></li>
+    <li class="nav-openbsd" role="menuitem"><a href="https://www.openbsd.org/">OpenBSD</a></li>
+    <li class="nav-opensmtpd" role="menuitem"><a href="https://www.opensmtpd.org/">OpenSMTPd</a></li>
+    <li class="nav-nginx" role="menuitem"><a href="https://nginx.org/">Nginx</a></li>
+    <li class="nav-netdata" role="menuitem"><a href="https://stats.cagedmonster.net/">Netdata</a></li>
+    <li class="nav-piwik" role="menuitem"><a href="https://moulinette.cagedmonster.net">Piwik</a></li>
+    <li class="nav-admin" role="menuitem"><a href="https://blog.cagedmonster.net/ghost/">Admin</a></li>
+</ul>
+
+    </div>
+    <div class="site-nav-right">
+        <div class="social-links">
+                <a class="social-link social-link-tw" href="https://twitter.com/MonsterCaged" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"/></svg>
+</a>
+        </div>
+            <a class="subscribe-button" href="#subscribe">Subscribe</a>
+    </div>
+</nav>
+    </div>
+</header>
+
+
+<main id="site-main" class="site-main outer" role="main">
+    <div class="inner">
+
+        <article class="post-full post tag-openbsd tag-it featured ">
+
+            <header class="post-full-header">
+                <section class="post-full-meta">
+                    <time class="post-full-meta-date" datetime="2017-07-13">13 July 2017</time>
+                        <span class="date-divider">/</span> <a href="/tag/openbsd/">OpenBSD</a>
+                </section>
+                <h1 class="post-full-title">OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD</h1>
+            </header>
+
+            <figure class="post-full-image" style="background-image: url(https://images.unsplash.com/photo-1458157075751-561ccefedcd0?ixlib&#x3D;rb-0.3.5&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;s&#x3D;f8a90cd282a8f3e30e5c64f6a614261e)">
+            </figure>
+
+            <section class="post-full-content">
+                <div class="kg-card-markdown"><p>This article is the continuation of my previous tutorial <a href="https://blog.cagedmonster.net/opensmtpd-under-openbsd-with-ssl-virtualusers-dovecot/">OpenSMTPD under OpenBSD with SSL/VirtualUsers/Dovecot</a>. We'll use the same configuration and add some features so we can :</p>
+<ul>
+<li>Use our domains, aliases, virtual users with a MySQL database (MariaDB under OpenBSD).</li>
+<li>Deploy <strong>SPAMD</strong> with <strong>OpenSMTPD</strong> for a strong antispam solution.</li>
+</ul>
+<p><a href="http://www.gifmania.fr/Gif-Animes-Sport/Animations-Saut-A-L-Elastique/Saut-A-L-Elastique-83092.gif">Jump in!</a></p>
+<p><img src="http://openbsd.appli.se/images/openbsd-logo.gif" alt="OpenBSD"></p>
+<h2 id="spanstyletextdecorationunderlineintegrationofthemysqldatabasesupportspan"><span style="text-decoration: underline;"><strong>Integration of the MySQL database support :</strong></span></h2>
+<p>We'll use the OpenBSD package system, check your <a href="http://man.openbsd.org/pkg.conf"><strong>/etc/pkg.conf</strong></a> file.</p>
+<p><span style="text-decoration: underline;">Setup of the MySQL support for OpenSMTPD &amp; Dovecot :</span></p>
+<pre><code># pkg_add opensmtpd-extras-mysql 
+# pkg_add dovecot-mysql
+</code></pre>
+<p><span style="text-decoration: underline;">We create our SQL database named <strong>« smtpd »</strong> :</span></p>
+<pre><code># mysql -uroot -p -e 'create database smtpd'
+</code></pre>
+<p><span style="text-decoration: underline;">We create our SQL user « <strong>opensmtpd</strong> » we give him the privileges on our SQL database and we set its password :</span></p>
+<pre><code># mysql -uroot -p -e &quot;GRANT ALL ON smtpd.* to 'opensmtpd'@'127.0.0.1' IDENTIFIED BY 'opensmtpdpass'&quot;
+</code></pre>
+<p><span style="text-decoration: underline;">We create the structure of our SQL database:</span></p>
+<pre><code># vi smtpd.sql
+
+DROP TABLE IF EXISTS valias;
+DROP TABLE IF EXISTS vdomains;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS userinfo;
+
+CREATE TABLE IF NOT EXISTS valias (
+alias_id INT(8) NOT NULL AUTO_INCREMENT,
+addr varchar(42) NOT NULL,
+alias varchar(42) NOT NULL,
+PRIMARY KEY (alias_id)
+) ENGINE=InnoDB ;
+
+CREATE TABLE IF NOT EXISTS vdomains (
+domain_id INT(11) NOT NULL AUTO_INCREMENT,
+domain VARCHAR(42) NOT NULL,
+PRIMARY KEY (domain_id)
+) ENGINE=InnoDB ;
+
+CREATE TABLE IF NOT EXISTS userinfo (
+user_id INT(11) NOT NULL AUTO_INCREMENT,
+user VARCHAR(42) UNIQUE NOT NULL,
+password VARCHAR(255) NOT NULL,
+uid INT(42) DEFAULT 106,
+gid INT(42) DEFAULT 107,
+maildir VARCHAR(255) DEFAULT '/var/empty',
+PRIMARY KEY (user_id)
+) ENGINE=InnoDB ;
+
+CREATE TABLE IF NOT EXISTS users (
+user_id INT(8) NOT NULL AUTO_INCREMENT,
+username TEXT NOT NULL,
+domain TEXT NOT NULL,
+mailbox TEXT NOT NULL,
+password TEXT NULL,
+home TEXT NOT NULL,
+uid INTEGER NOT NULL,
+gid INTEGER NOT NULL,
+PRIMARY KEY (user_id)
+) ENGINE=InnoDB ;
+</code></pre>
+<p><a href="http://wiki.dovecot.org/AuthDatabase/SQL">You can check this page for more informations.</a></p>
+<p>First, we generate our password with Blowfish (remember it's OpenBSD !) for our users :</p>
+<pre><code># smtpctl encrypt my-personnal-password 
+$2b$10$nNLSbqFDLlLx9JRyxvhjI.FVzTgEEqVyEjYHf108S7cA49cqED6da
+</code></pre>
+<p><span style="text-decoration: underline;">We create our tables and we include our datas :</span></p>
+<pre><code># vi users.sql
+
+DELETE FROM valias;
+DELETE FROM vdomains;
+DELETE FROM userinfo;
+
+INSERT INTO valias VALUES('','lina@cagedmonster.net', 'lina');
+
+INSERT INTO vdomains VALUES('','cagedmonster.net');
+
+INSERT INTO userinfo 
+VALUES('','lina','$2b$10$JiGuncDXUcT2/hS/7Ty4KubsbuCjO0zsRhOQ7isFPCEcSLnIb.JMi',default,default,default);
+</code></pre>
+<p><span style="text-decoration: underline;">We push everything to our database :</span></p>
+<pre><code># mysql -uroot -p smtpd &lt; smtpd.sql 
+# mysql -uroot -p smtpd &lt; users.sql 
+# mysql -uroot -p -e 'FLUSH PRIVILEGES'
+</code></pre>
+<p><span style="text-decoration: underline;">Time to configure OpenSMTPD :</span></p>
+<pre><code># vi /etc/mail/smtpd.conf 
+
+pki mail.cagedmonster.net certificate &quot;/etc/ssl/server.crt&quot; 
+pki mail.cagedmonster.net key &quot;/etc/ssl/private/server.key&quot; 
+
+table vdomains mysql:/etc/mail/mysql.conf
+table vusers mysql:/etc/mail/mysql.conf
+table userinfo mysql:/etc/mail/mysql.conf
+table credentials mysql:/etc/mail/mysql.conf
+
+listen on lo0 listen on egress port 25 tls pki mail.cagedmonster.net 
+listen on egress port 587 tls-require pki mail.cagedmonster.net auth &lt;credentials&gt;
+
+accept from any for domain &lt;vdomains&gt; virtual &lt;vusers&gt; userbase &lt;userinfo&gt; deliver to lmtp &quot;/var/dovecot/lmtp&quot; 
+accept from local for any relay
+</code></pre>
+<p>The configuration is similar to the file of our previous tutorial but with a difference : we included the link of the mysql tables.</p>
+<p><span style="text-decoration: underline;">We create our mysql.conf file and configure it :</span></p>
+<pre><code># vi /etc/mail/mysql.conf 
+
+host 127.0.0.1
+username opensmtpd
+password opensmtpdpass
+database smtpd
+
+query_credentials SELECT user,password FROM userinfo WHERE user=?; 
+
+query_domain SELECT domain FROM vdomains WHERE domain=? LIMIT 1; 
+
+query_userinfo SELECT uid,gid,maildir FROM userinfo where user=?; 
+
+query_alias SELECT alias FROM valias WHERE addr=?;
+</code></pre>
+<p><span style="text-decoration: underline;">Configuration of Dovecot.conf :</span></p>
+<pre><code># vi /etc/dovecot.conf 
+
+ssl = yes 
+!include conf.d/auth-sql.conf.ext 
+ssl_cert = &lt;/etc/ssl/server.crt 
+ssl_key = &lt;/etc/ssl/private/server.key 
+userdb { 
+        driver = static 
+        args = uid=virtmail gid=virtmail home=/var/virtmail/%u 
+       } 
+
+mail_location = maildir:/var/virtmail/%u 
+mail_uid = virtmail 
+mail_gid = virtmail 
+
+passdb { 
+        driver = sql 
+        args = /etc/dovecot/dovecot-sql.conf.ext 
+       } 
+
+protocols = lmtp imap 
+base_dir = /var/dovecot/ 
+postmaster_address = postmaster@cagedmonster.net
+</code></pre>
+<p><span style="text-decoration: underline;">Configuration of auth-sql.conf.ext</span></p>
+<pre><code># vi /etc/dovecot/conf.d/auth-sql.conf.ext  
+
+passdb { 
+        driver = sql 
+        args = /etc/dovecot/dovecot-sql.conf.ext 
+        } 
+userdb { 
+        driver = sql 
+        args = /etc/dovecot/dovecot-sql.conf.ext 
+        }
+</code></pre>
+<p><span style="text-decoration: underline;">Configuration of dovecot-sql.conf.ext</span></p>
+<pre><code># vi /etc/dovecot/dovecot-sql.conf.ext 
+
+driver = mysql 
+
+connect = host=127.0.0.1 dbname=smtpd user=opensmtpd password=opensmtpdpass
+
+default_pass_scheme = BLF-CRYPT 
+
+password_query = \ 
+  SELECT user, password \ 
+  FROM userinfo WHERE user = '%u'
+</code></pre>
+<p>The password is set with BLOWFISH, we need to specify it.</p>
+<p><span style="text-decoration: underline;">Restart our services :</span></p>
+<pre><code># rcctl restart smtpd dovecot
+</code></pre>
+<p><span style="text-decoration: underline;">Time to test if everything is working as we want :</span></p>
+<p>We send a mail...</p>
+<pre><code>$ telnet localhost 25
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 mail.cagedmonster.net ESMTP OpenSMTPD
+HELO FRIEND
+250 mail.cagedmonster.net Hello FRIEND [127.0.0.1], pleased to meet you
+MAIL FROM:&lt;test@tutorialoflinasovereign.com&gt;
+250 2.0.0: Ok
+RCPT TO:&lt;lina@cagedmonster.net&gt;
+250 2.1.5 Destination address valid: Recipient ok
+DATA
+354 Enter mail, end with &quot;.&quot; on a line by itself
+It's a test and I hope it will work !
+.
+250 2.0.0: 408391e3 Message accepted for delivery
+QUIT
+221 2.0.0: Bye
+Connection closed by foreign host.
+</code></pre>
+<p>We check the logs :</p>
+<pre><code>$ cat /var/log/maillog
+Aug 20 18:25:41 mail smtpd[65810]: e31eedb08a3c2f01 smtp event=message msgid=408391e3 from=&lt;test@tutorialoflinasovereign.com&gt; to=&lt;lina@cagedmonster.net&gt; size=241 ndest=1 proto=SMTP
+Aug 20 18:25:41 mail smtpd[65810]: 0000000000000000 mda event=delivery evpid=408391e380f6c1e2 from=&lt;test@tutorialoflinasovereign.com&gt; to=&lt;lina@cagedmonster.net&gt; user=lina method=lmtp delay=13s result=Ok stat=Delivered
+</code></pre>
+<p>See if our mail is &quot;physicaly&quot; here :</p>
+<pre><code># cat /var/virtmail/lina/new/1471710341.M714123P83824.mail.cagedmonster.net,S\=536,W\=548\:2,
+
+Return-Path: &lt;test@tutorialoflinasovereign.com&gt;
+Delivered-To: lina
+Received: from mail.cagedmonster.net
+by mail.cagedmonster.net (Dovecot) with LMTP id 9Dn0KYWEuFdwRwEA8Z+lxA
+for &lt;lina&gt;; Sat, 20 Aug 2016 18:25:41 +0200
+Return-Path: test@tutorialoflinasovereign.com
+Delivered-To: lina@cagedmonster.net
+Received: from FRIEND (localhost [127.0.0.1])
+by mail.cagedmonster.net (OpenSMTPD) with SMTP id 408391e3
+for &lt;lina@cagedmonster.net&gt;;
+Sat, 20 Aug 2016 18:25:30 +0200 (CEST)
+It's a test and I hope it will work ! 
+</code></pre>
+<p>Next : <strong>SPAMD</strong> !</p>
+<h2 id="spanstyletextdecorationunderlineopensmtpdspamdspan"><span style="text-decoration: underline;">OpenSMTPD &amp; SPAMD :</span></h2>
+<p>SPAMD is a service simulating a fake SMTP server and relying on strict compliance with RFC to determine whether the server delivering a mail is a spammer or not.<br>
+Messages pass through PackFilter to SPAMD and are redirected if the SMTP server in front is valid. To do this, SPAMD is based on three (3) types of lists:</p>
+<ol>
+<li><strong>Blacklist</strong>: Servers recognized as SPAMMERS, the received messages will be delayed as long as possible in order to handicap the pest in terms of time and resources. At the end of the allotted time, <a href="http://www.deezer.com/track/111539946?utm_source=deezer&amp;utm_content=track-111539946&amp;utm_term=35676211_1471854074&amp;utm_medium=web">a message will be sent</a> and the message will never be transmitted to our real mail server.</li>
+<li><strong>Greylist</strong>: In this case, SPAMD has not yet determined whether the SMTP server was a spammer or not. It will therefore rely on the workings of the RFC to send a temporary error to the remote server. If it is a genuine SMTP server, the RFC wants a new attempt to be made within a fairly short time (between about twenty minutes and four hours) until the message is delivered until a given time (about 5 days in general). If the RFC is respected, SPAMD will put the server on whitelist.</li>
+<li><strong>Whitelist</strong>: The server is recognized as authentic and reliable, it does not pass through SPAMD and is relayed directly to our OPENSMTPD server.</li>
+</ol>
+<p><span style="text-decoration: underline;"><strong>Configuration of SPAMD :</strong></span></p>
+<p><span style="text-decoration: underline;">Enable SPAMD &amp; SPAMLOGD at system startup :</span></p>
+<pre><code> # rcctl enable spamd spamlogd
+</code></pre>
+<p><span style="text-decoration: underline;">Configuration of SPAMD flags :</span></p>
+<p>SPAMD offers a large number of features, we will use a few to be as penalizing as possible for SPAMMERS :</p>
+<pre><code> # rcctl set spamd flags -4 -G25:4:864 -h cagedmonster.net -l127.0.0.1 -S60 -s1 -v -w1
+</code></pre>
+<ul>
+<li><strong>-4</strong> Basic disqualification: &quot;451 Temporary failure, please try again later. &quot;</li>
+<li><strong>-G25: 4: 744:</strong> This is the parameter to test a server in Greylist. In this case, the server has between 25 minutes and 4 hours to make a new attempt to send to Whitelist. Once in Whitelist the host will be kept for a period of 744 hours, ie a month of 31 days.</li>
+<li><strong>-h:</strong> Domains valid, they will not be tested</li>
+<li><strong>-l127.0.0.1:</strong> SPAMD only listens to local</li>
+<li><strong>-S60:</strong> will wait for SMTP servers in Blacklist &amp; Greylist for 60 seconds. This parameter is configurable between 1 and 90 seconds</li>
+<li><strong>-s1:</strong> Sets the number of characters accepted by SPAMD per seconds.</li>
+<li><strong>-v:</strong> Allows us to log what the remote server will send us, always informative</li>
+<li><strong>-w1:</strong> the ultimate option for slowing down the remote host. Slower the window of sending data when connecting, causing spammers to lose a considerable amount of time.</li>
+</ul>
+<p>PS: It is also possible to add the <strong>-n OpenSMTPD</strong> option to change the default header: 220 <a href="http://cagedmonster.net">cagedmonster.net</a> ESMTP spamd IP-based SPAM blocker; Mon Aug 22 11:29:00 2016</p>
+<p><span style="text-decoration: underline;">Configuration of PacketFilter :</span></p>
+<pre><code># vi /etc/pf.conf
+
+table &lt;spamd-white&gt; persist
+
+pass in log on egress inet proto tcp from &lt;spamd-white&gt; to egress port smtp keep state rdr-to lo0
+pass in log on egress inet proto tcp from !&lt;spamd-white&gt; to egress port smtp keep state rdr-to lo0 port spamd
+
+# pfctl -f /etc/pf.conf
+</code></pre>
+<p>If the remote host is in <spamd-white> we immediately redirect to our SMTP server, otherwise we pass it through the SPAMD filter. I like to use the expression &quot;egress&quot; because it refers directly to the interfaces managing the default routes.</p>
+<p><span style="text-decoration: underline;">Configuration of SPAMD :</span></p>
+<pre><code># vi /etc/spamd.conf
+
+nixspam:\
+    :black:\
+    :msg=&quot;Your address %A is in the nixspam list\n\
+    See http://www.heise.de/ix/nixspam/dnsbl_en/ for details&quot;:\
+    :method=http:\
+    :file=www.openbsd.org/spamd/nixspam.gz
+
+# crontab -e
+
+0       *       *       *       *       sleep $((RANDOM \% 1800)) &amp;&amp; /usr/libexec/spamd-setup
+</code></pre>
+<p><span style="text-decoration: underline;">Start SPAMD &amp; SPAMLOGD :</span></p>
+<pre><code># rcctl start spamd spamlogd
+</code></pre>
+<p></p>
+<p><span style="text-decoration: underline;"><strong>Need help ?</strong></span></p>
+<iframe height="150" src="https://kiwiirc.com/client/irc.freenode.net/?nick=bloguser|?#openbsd" style="border: 0; width: 100%; height: 450px;" width="300"></iframe>
+</div>
+            </section>
+
+            <section class="subscribe-form">
+                <h3 class="subscribe-form-title">Subscribe to CagedMonster&#x27;S Blog</h3>
+                <p>Get the latest posts delivered right to your inbox</p>
+                <form method="post" action="/subscribe/" class="">
+    <input class="confirm" type="hidden" name="confirm"  /><input class="location" type="hidden" name="location"  /><input class="referrer" type="hidden" name="referrer"  />
+
+    <div class="form-group">
+        <input class="subscribe-email" type="email" name="email"  placeholder="youremail@example.com" />
+    </div>
+    <button class="" type="submit"><span>Subscribe</span></button>
+    <script type="text/javascript">(function(g,h,o,s,t){h[o]('.location')[s]=h[o]('.location')[s] || g.location.href;h[o]('.referrer')[s]=h[o]('.referrer')[s] || h.referrer;})(window,document,'querySelector','value');</script>
+</form>
+
+
+            </section>
+
+            <footer class="post-full-footer">
+
+                <section class="author-card">
+                        <img class="author-profile-image" src="/content/images/2017/08/geek.jpg" alt="CagedMonster" />
+                    <section class="author-card-content">
+                        <h4 class="author-card-name"><a href="/author/cagedmonster/">CagedMonster</a></h4>
+                            <p>« I know everyone
+I&#x27;ve been everywhere
+I know everything
+Because I&#x27;m everybody »
+Ether - Nothingface
+</p>
+                    </section>
+                </section>
+                <div class="post-full-footer-right">
+                    <a class="author-card-button" href="/author/cagedmonster/">Read More</a>
+                </div>
+
+            </footer>
+
+
+        </article>
+
+    </div>
+</main>
+
+<aside class="read-next outer">
+    <div class="inner">
+        <div class="read-next-feed">
+<script>console.error("The {{get}} helper is not available. The Public API flag must be enabled in labs if you wish to use the {{get}} helper. See https://help.ghost.org/hc/en-us/articles/115000301672-Public-API-Beta");</script>
+                <article class="post-card post tag-raspberry-pi tag-freebsd tag-it featured">
+        <a class="post-card-image-link" href="/setup-full-server-with-freebsd-on-raspberrypi/">
+            <div class="post-card-image" style="background-image: url(https://images.unsplash.com/photo-1485962232502-f25e5874a8d1?ixlib&#x3D;rb-0.3.5&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;s&#x3D;0f9236ef6a9049b6929f48fa8e582904)"></div>
+        </a>
+    <div class="post-card-content">
+        <a class="post-card-content-link" href="/setup-full-server-with-freebsd-on-raspberrypi/">
+            <header class="post-card-header">
+                    <span class="post-card-tags">Raspberry PI</span>
+                <h2 class="post-card-title">Setup a complete FreeBSD server environment on your Raspberry PI</h2>
+            </header>
+            <section class="post-card-excerpt">
+                <p>A guide to transform your Raspberry PI into a complete FreeBSD server.</p>
+            </section>
+        </a>
+        <footer class="post-card-meta">
+                <img class="author-profile-image" src="/content/images/2017/08/geek.jpg" alt="CagedMonster" />
+            <span class="post-card-author"><a href="/author/cagedmonster/">CagedMonster</a></span>
+        </footer>
+    </div>
+</article>
+
+                <article class="post-card post tag-openbsd tag-it featured">
+        <a class="post-card-image-link" href="/opensmtpd-under-openbsd-with-ssl-virtualusers-dovecot/">
+            <div class="post-card-image" style="background-image: url(https://images.unsplash.com/photo-1463527882365-18201e85a091?ixlib&#x3D;rb-0.3.5&amp;q&#x3D;80&amp;fm&#x3D;jpg&amp;crop&#x3D;entropy&amp;cs&#x3D;tinysrgb&amp;w&#x3D;1080&amp;fit&#x3D;max&amp;s&#x3D;1e154bf2d57c8029fd0aa67ec1229fb8)"></div>
+        </a>
+    <div class="post-card-content">
+        <a class="post-card-content-link" href="/opensmtpd-under-openbsd-with-ssl-virtualusers-dovecot/">
+            <header class="post-card-header">
+                    <span class="post-card-tags">OpenBSD</span>
+                <h2 class="post-card-title">OpenSMTPD under OpenBSD with SSL/VirtualUsers/Dovecot</h2>
+            </header>
+            <section class="post-card-excerpt">
+                <p>This article is the translation of my previous paper in French. During the 2013 AsiaBSDCon, the team of OpenBSD  presented its mail solution named OpenSMTPD. Developped by the OpenBSD team, we find the</p>
+            </section>
+        </a>
+        <footer class="post-card-meta">
+                <img class="author-profile-image" src="/content/images/2017/08/geek.jpg" alt="CagedMonster" />
+            <span class="post-card-author"><a href="/author/cagedmonster/">CagedMonster</a></span>
+        </footer>
+    </div>
+</article>
+
+        </div>
+    </div>
+</aside>
+
+<div class="floating-header">
+    <div class="floating-header-logo">
+        <a href="https://blog.cagedmonster.net">
+            <span>CagedMonster&#x27;S Blog</span>
+        </a>
+    </div>
+    <span class="floating-header-divider">&mdash;</span>
+    <div class="floating-header-title">OpenSMTPD and Dovecot under OpenBSD with MySQL support and SPAMD</div>
+    <div class="floating-header-share">
+        <div class="floating-header-share-label">Share this <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M7.5 15.5V4a1.5 1.5 0 1 1 3 0v4.5h2a1 1 0 0 1 1 1h2a1 1 0 0 1 1 1H18a1.5 1.5 0 0 1 1.5 1.5v3.099c0 .929-.13 1.854-.385 2.748L17.5 23.5h-9c-1.5-2-5.417-8.673-5.417-8.673a1.2 1.2 0 0 1 1.76-1.605L7.5 15.5zm6-6v2m-3-3.5v3.5m6-1v2"/>
+</svg>
+</div>
+        <a class="floating-header-share-tw" href="https://twitter.com/share?text=OpenSMTPD%20and%20Dovecot%20under%20OpenBSD%20with%20MySQL%20support%20and%20SPAMD&amp;url=https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/"
+            onclick="window.open(this.href, 'share-twitter', 'width=550,height=235');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M30.063 7.313c-.813 1.125-1.75 2.125-2.875 2.938v.75c0 1.563-.188 3.125-.688 4.625a15.088 15.088 0 0 1-2.063 4.438c-.875 1.438-2 2.688-3.25 3.813a15.015 15.015 0 0 1-4.625 2.563c-1.813.688-3.75 1-5.75 1-3.25 0-6.188-.875-8.875-2.625.438.063.875.125 1.375.125 2.688 0 5.063-.875 7.188-2.5-1.25 0-2.375-.375-3.375-1.125s-1.688-1.688-2.063-2.875c.438.063.813.125 1.125.125.5 0 1-.063 1.5-.25-1.313-.25-2.438-.938-3.313-1.938a5.673 5.673 0 0 1-1.313-3.688v-.063c.813.438 1.688.688 2.625.688a5.228 5.228 0 0 1-1.875-2c-.5-.875-.688-1.813-.688-2.75 0-1.063.25-2.063.75-2.938 1.438 1.75 3.188 3.188 5.25 4.25s4.313 1.688 6.688 1.813a5.579 5.579 0 0 1 1.5-5.438c1.125-1.125 2.5-1.688 4.125-1.688s3.063.625 4.188 1.813a11.48 11.48 0 0 0 3.688-1.375c-.438 1.375-1.313 2.438-2.563 3.188 1.125-.125 2.188-.438 3.313-.875z"/></svg>
+        </a>
+        <a class="floating-header-share-fb" href="https://www.facebook.com/sharer/sharer.php?u=https://blog.cagedmonster.net/opensmtpd-and-dovecot-under-openbsd-with-mysql-support-and-spamd/"
+            onclick="window.open(this.href, 'share-facebook','width=580,height=296');return false;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="M19 6h5V0h-5c-3.86 0-7 3.14-7 7v3H8v6h4v16h6V16h5l1-6h-6V7c0-.542.458-1 1-1z"/></svg>
+        </a>
+    </div>
+    <progress class="progress" value="0">
+        <div class="progress-container">
+            <span class="progress-bar"></span>
+        </div>
+    </progress>
+</div>
+
+
+
+
+        <footer class="site-footer outer">
+            <div class="site-footer-content inner">
+                <section class="copyright"><a href="https://blog.cagedmonster.net">CagedMonster&#x27;S Blog</a> &copy; 2017</section>
+                <nav class="site-footer-nav">
+                    <a href="https://blog.cagedmonster.net">Latest Posts</a>
+                    
+                    <a href="https://twitter.com/MonsterCaged" target="_blank" rel="noopener">Twitter</a>
+                    <a href="https://ghost.org" target="_blank" rel="noopener">Ghost</a>
+                </nav>
+            </div>
+        </footer>
+
+    </div>
+
+    <div id="subscribe" class="subscribe-overlay">
+        <a class="subscribe-overlay-close" href="#"></a>
+        <div class="subscribe-overlay-content">
+            <h1 class="subscribe-overlay-title">Subscribe to CagedMonster&#x27;S Blog</h1>
+            <p class="subscribe-overlay-description">Stay up to date! Get all the latest &amp; greatest posts delivered straight to your inbox</p>
+            <form method="post" action="/subscribe/" class="">
+    <input class="confirm" type="hidden" name="confirm"  /><input class="location" type="hidden" name="location"  /><input class="referrer" type="hidden" name="referrer"  />
+
+    <div class="form-group">
+        <input class="subscribe-email" type="email" name="email"  placeholder="youremail@example.com" />
+    </div>
+    <button class="" type="submit"><span>Subscribe</span></button>
+    <script type="text/javascript">(function(g,h,o,s,t){h[o]('.location')[s]=h[o]('.location')[s] || g.location.href;h[o]('.referrer')[s]=h[o]('.referrer')[s] || h.referrer;})(window,document,'querySelector','value');</script>
+</form>
+
+
+        </div>
+    </div>
+
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous">
+    </script>
+    <script type="text/javascript" src="/assets/js/jquery.fitvids.js?v=e97c1f75df"></script>
+
+
+    <script>
+
+// NOTE: Scroll performance is poor in Safari
+// - this appears to be due to the events firing much more slowly in Safari.
+//   Dropping the scroll event and using only a raf loop results in smoother
+//   scrolling but continuous processing even when not scrolling
+$(document).ready(function () {
+    // Start fitVids
+    var $postContent = $(".post-full-content");
+    $postContent.fitVids();
+    // End fitVids
+
+    var progressBar = document.querySelector('progress');
+    var header = document.querySelector('.floating-header');
+    var title = document.querySelector('.post-full-title');
+
+    var lastScrollY = window.scrollY;
+    var lastWindowHeight = window.innerHeight;
+    var lastDocumentHeight = $(document).height();
+    var ticking = false;
+
+    function onScroll() {
+        lastScrollY = window.scrollY;
+        requestTick();
+    }
+
+    function onResize() {
+        lastWindowHeight = window.innerHeight;
+        lastDocumentHeight = $(document).height();
+        requestTick();
+    }
+
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(update);
+        }
+        ticking = true;
+    }
+
+    function update() {
+        var trigger = title.getBoundingClientRect().top + window.scrollY;
+        var triggerOffset = title.offsetHeight + 35;
+        var progressMax = lastDocumentHeight - lastWindowHeight;
+
+        // show/hide floating header
+        if (lastScrollY >= trigger + triggerOffset) {
+            header.classList.add('floating-active');
+        } else {
+            header.classList.remove('floating-active');
+        }
+
+        progressBar.setAttribute('max', progressMax);
+        progressBar.setAttribute('value', lastScrollY);
+
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('resize', onResize, false);
+
+    update();
+});
+</script>
+
+
+    <a href="mailto:lina@cagedmonster.net"></a>
+<a href="mailto:badhackersarebad@cagedmonster.net"></a>
+
+</body>
+</html>

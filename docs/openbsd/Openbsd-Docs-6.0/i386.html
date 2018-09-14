@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC  "-//W3C//DTD HTML 4.01 Transitional//EN"
+	"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>OpenBSD/i386</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="description" content="the OpenBSD/i386 page">
+<meta name="copyright" content="This document copyright 1996-2016 by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/i386.html">
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#23238e">
+
+<h2>
+<a href="index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">i386</font>
+</h2>
+<hr>
+<p>
+
+OpenBSD/i386 runs on the standard PCs and clones, with a wide variety
+of processors, I/O bus architectures and peripherals supported.
+
+<br clear=all>
+<hr>
+
+<h3 id="history"><font color="#0000e0"><strong>History:</strong></font></h3>
+
+<p>
+The OpenBSD/i386 port has been present since the inception of the project.
+Over the years, more and more hardware support has been written
+specifically for OpenBSD (such as the cryptographic accelerator drivers),
+or adapted from FreeBSD and NetBSD.
+
+<hr>
+
+<h3 id="status"><font color="#0000e0"><strong>Current status:</strong></font></h3>
+
+<p>
+It can be expected to install and run with minimal difficulty on most current
+hardware.
+Machines using custom BIOS (such as older proprietary PCs, laptops, and some
+specialized server machines) may cause problems.
+
+<p>
+X Window System support is available for most graphics cards, using
+the X.Org server.  As with other free operating systems it is highly recommended
+that Nvidia cards are avoided since this vendor continues to show tremendous
+resistance towards releasing information that would allow X.Org to support their
+hardware properly.
+
+<hr>
+
+<h3 id="hardware"><font color="#0000e0"><strong>Supported hardware:</strong></font></h3>
+
+<h4>Processors</h4>
+
+<p>
+All CPUs compatible with the Intel 80486 or better, with Intel-compatible
+hardware floating point support should work.  
+
+<h4>SMP support</h4>
+
+<p>
+OpenBSD/i386 supports most SMP (Symmetrical MultiProcessor) systems,
+including multi-chip, multi-core and/or hyperthreading designs.
+To support SMP operation, a separate SMP kernel (<tt>bsd.mp</tt>) is
+included with the installation file sets.
+
+<h3><font color="#0000e0">Unsupported Hardware:</font></h3>
+
+<p>
+New hardware is constantly being released, some of which may lack support.
+Your <a href="donations.html">donation of time, hardware, or documentation</a>
+can accelerate this support!
+
+
+<hr>
+
+<h3 id="multiboot"><font color="#0000e0"><strong>Installation with other operating systems:
+</strong></font></h3>
+
+<p>
+OpenBSD/i386 can be installed to share the system disks with other operating
+systems, such as MS-DOS, Windows or Linux, using the MBR/partition table
+scheme, and an optional boot selector program.
+Everyday operation is trouble free, but setup requires care, and several
+operating systems, such as Windows 95, are known to be careless about
+pre-existing MBR information.
+
+<p>
+Also, some laptop computers use a specific partition as suspend-to-disk
+storage, which should not be clobbered.
+
+<p>
+More details on this process can be found in the
+<a href="faq/faq4.html">Installation Guide</a> and
+<a href="faq/faq14.html">Disk Setup Manual</a>.
+
+<hr>
+
+<h3 id="install"><font color="#0000e0">
+<strong>Getting and installing OpenBSD/i386:</strong>
+</font></h3>
+
+<p>
+The latest supported OpenBSD/i386 release is
+<a href="60.html">OpenBSD 6.0</a>.
+Here are the
+<a href="https://ftp.OpenBSD.org/pub/OpenBSD/6.0/i386/INSTALL.i386">
+OpenBSD/i386 6.0 installation instructions
+</a>.
+
+<p>
+Snapshots are made available from time to time, in
+<a href="https://ftp.OpenBSD.org/pub/OpenBSD/snapshots/i386">this location</a>
+as well as in a few
+<a href="ftp.html">mirrors</a>.
+Here are the
+<a href="https://ftp.OpenBSD.org/pub/OpenBSD/snapshots/i386/INSTALL.i386">
+OpenBSD/i386 snapshot installation instructions
+</a> as well.
+
+<p>
+There are several installation media provided:
+
+<ul>
+  <li><strong>CD boot</strong>
+  <br>
+  The CD provides an <i>El Torito</i> no-emulation boot image
+  that includes almost all OpenBSD drivers.
+  This also includes minimal USB support (storage devices and keyboard).<br>
+  For the latest list of drivers available on this image, take a look at the
+  <a href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/sys/arch/i386/conf/RAMDISK_CD?rev=HEAD">RAMDISK_CD</a>
+  kernel configuration file.
+  <li><strong>Disk Image</strong> (miniroot60.fs)
+  <br>
+  The same installer as the CD, but in a form suitable for creating bootable
+  hard drives or USB flash drives.
+  <li><strong>Floppy</strong> (floppy60.fs)
+  <br>
+  This 1.44MB floppy image contains the most common drivers.
+  It is designed to cover the most typical PC. As a general rule, you will
+  find that the missing drivers are ones which need large microcodes to run,
+  such as for rare SCSI cards, gigabit ethernet cards, or RAID devices.<br>
+  For the latest list of drivers available on this image, take a look at the
+  <a href="http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/sys/arch/i386/conf/RAMDISK?rev=HEAD">RAMDISK</a>
+  kernel configuration file.
+</ul>
+
+</body>
+</html>

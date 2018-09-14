@@ -1,0 +1,1 @@
+ipmitool -L user -H 169.254.100.132 -U ipmi -P imonitor sdr

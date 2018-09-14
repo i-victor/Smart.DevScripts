@@ -1,0 +1,1253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">
+<Document>
+<description><![CDATA[powered by <a href="http://www.wordpress.org">WordPress</a> &amp; <a href="https://www.mapsmarker.com">MapsMarker.com</a>]]></description>
+<open>1</open>
+<Style id="urbanpark"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/urbanpark.png</href></Icon></IconStyle></Style>
+<Style id="cabin-21"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/cabin-21.png</href></Icon></IconStyle></Style>
+<Style id="resort"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/resort.png</href></Icon></IconStyle></Style>
+<Style id="camping"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/camping.png</href></Icon></IconStyle></Style>
+<Style id="Salvamont1"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/Salvamont1.png</href></Icon></IconStyle></Style>
+<Style id="flowers"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/flowers.png</href></Icon></IconStyle></Style>
+<Style id="panoramicview"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/panoramicview.png</href></Icon></IconStyle></Style>
+<Style id="cathedral baroc"><IconStyle><Icon><href>http://www.bihorinimagini.ro/wp-content/uploads/leaflet-maps-marker-icons/cathedral baroc.png</href></Icon></IconStyle></Style>
+<Folder>
+<name>Parcul Natural Apuseni</name>
+<Placemark id="marker-100">
+<styleUrl>#urbanpark</styleUrl>
+<name>Groapa Ruginoasa</name>
+<TimeStamp><when>2014-07-19T11:07:03+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p style="text-align: left;"><span style="font-size: 12pt;"><em>Groapa Ruginoasa<br /></em><span style="font-size: 8pt;">GPS: 46.527266, 22.652674<br /></span></span><strong><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/groapa-ruginoasa-o-gura-de-iad-intr-un-colt-de-rai/" target="_blank">Povestea locului...<br /><img class="alignnone size-medium wp-image-5369" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Groapa-Ruginoasă-cover-300x223.jpg" alt="Groapa Ruginoasa cover" width="300" height="223" /><br /></a></strong></p>]]></description>
+<address><![CDATA[Vârtop, Romania]]></address>
+<Point>
+<coordinates>22.652757,46.525608</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-100">
+<styleUrl>#urbanpark</styleUrl>
+<name>Groapa Ruginoasa</name>
+<TimeStamp><when>2014-07-19T11:07:03+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p style="text-align: left;"><span style="font-size: 12pt;"><em>Groapa Ruginoasa<br /></em><span style="font-size: 8pt;">GPS: 46.527266, 22.652674<br /></span></span><strong><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/groapa-ruginoasa-o-gura-de-iad-intr-un-colt-de-rai/" target="_blank">Povestea locului...<br /><img class="alignnone size-medium wp-image-5369" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Groapa-Ruginoasă-cover-300x223.jpg" alt="Groapa Ruginoasa cover" width="300" height="223" /><br /></a></strong></p>]]></description>
+<address><![CDATA[Vârtop, Romania]]></address>
+<Point>
+<coordinates>22.652757,46.525608</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-135">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada Bohodei</name>
+<TimeStamp><when>2014-07-26T08:07:12+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cascada Bohodei</em></span><br /><span style="font-size: 8pt;">GPS: 46.65398, 22.64035<br /><img class="alignnone size-medium wp-image-10426" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/12/Cascada-Bohodei-275x300.jpg" alt="Cascada Bohodei" width="275" height="300" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.640350,46.653980</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-137">
+<styleUrl>#urbanpark</styleUrl>
+<name>Rezervație naturală Vârful Cârligaţi</name>
+<TimeStamp><when>2014-07-26T09:07:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Rezervație naturală Vârful Cârligaţi<br /><span style="font-size: 8pt;">GPS: 46.641187, 22.684708<br /><img class="alignnone size-medium wp-image-5581" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/03/Culmea-Cârligate-300x225.jpg" alt="Culmea Cârligate" width="300" height="225" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/rezervatia-naturala-varful-carligati/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.677412,46.640951</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-137">
+<styleUrl>#urbanpark</styleUrl>
+<name>Rezervație naturală Vârful Cârligaţi</name>
+<TimeStamp><when>2014-07-26T09:07:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Rezervație naturală Vârful Cârligaţi<br /><span style="font-size: 8pt;">GPS: 46.641187, 22.684708<br /><img class="alignnone size-medium wp-image-5581" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/03/Culmea-Cârligate-300x225.jpg" alt="Culmea Cârligate" width="300" height="225" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/rezervatia-naturala-varful-carligati/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.677412,46.640951</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-138">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera din Valea Rea</name>
+<TimeStamp><when>2014-07-26T09:07:40+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<em><span style="font-size: 12pt;">Peştera din Valea Rea</span></em><br /><span style="font-size: 8pt;">GPS: 46.632968, 22.682619</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.682619,46.632968</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-139">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada şi valea Moloh</name>
+<TimeStamp><when>2014-07-26T09:07:30+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cascada şi valea Moloh</em></span><br /><span style="font-size: 8pt;">GPS: 46.63325, 22.71451</span></p><p><img class="alignnone size-medium wp-image-7640" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Cheile-Somesului-Cald05-247x300.jpg" alt="Cheile Somesului Cald05" width="247" height="300" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.714510,46.633250</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-140">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cheile Someşului Cald</name>
+<TimeStamp><when>2014-07-26T09:07:44+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cheile Someşului Cald</em></span><br /><span style="font-size: 8pt;">GPS: 46.636473, 22.716246<br /><img class="alignnone size-medium wp-image-10004" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Somesul-Cald-300x175.jpg" alt="Somesul Cald" width="300" height="175" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.716246,46.636473</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-141">
+<styleUrl>#urbanpark</styleUrl>
+<name>Pietrele Boghii</name>
+<TimeStamp><when>2014-07-26T10:07:01+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Pietrele Boghii</em></span><br /><span style="font-size: 8pt;">GPS: 46.606349, 22.693130<br /><img class="alignnone size-medium wp-image-7984" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/11/Priveliste-de-pe-Pietrele-Boghii-300x227.jpg" alt="Priveliste de pe Pietrele Boghii" width="300" height="227" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/amfiteatrul-pietrele-boghii/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.693173,46.606467</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-141">
+<styleUrl>#urbanpark</styleUrl>
+<name>Pietrele Boghii</name>
+<TimeStamp><when>2014-07-26T10:07:01+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Pietrele Boghii</em></span><br /><span style="font-size: 8pt;">GPS: 46.606349, 22.693130<br /><img class="alignnone size-medium wp-image-7984" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/11/Priveliste-de-pe-Pietrele-Boghii-300x227.jpg" alt="Priveliste de pe Pietrele Boghii" width="300" height="227" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/amfiteatrul-pietrele-boghii/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.693173,46.606467</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-143">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada Oşelu</name>
+<TimeStamp><when>2014-07-26T10:07:20+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Cascada Oşelu</span></em><br /><span style="font-size: 8pt;">GPS: <span style="color: #000000;">46.60725, 22.67197<br /><img class="alignnone size-medium wp-image-5013" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/01/canionul-Oșelu2-225x300.jpg" alt="canionul Oșelu2" width="225" height="300" /><br /></span></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.671970,46.607250</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-144">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada Bulbuci</name>
+<TimeStamp><when>2014-07-26T10:07:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cascada Bulbuci</em></span><br /><span style="font-size: 8pt;">GPS: 46.601705, 22.665782</span></p><p><img class="alignnone size-medium wp-image-9697" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/04/Cascada-Bulbuci03-300x200.jpg" alt="Cascada Bulbuci03" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.665782,46.601705</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-145">
+<styleUrl>#urbanpark</styleUrl>
+<name>Valea Rea</name>
+<TimeStamp><when>2014-07-26T10:07:38+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Valea Rea</em></span><br /><span style="font-size: 8pt;">GPS: 46.61509, 22.6692</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.669200,46.615090</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-148">
+<styleUrl>#urbanpark</styleUrl>
+<name>Gheţarul de la Barsa</name>
+<TimeStamp><when>2014-08-01T10:08:52+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Gheţarul de la Barsa</em></span><br /><span style="font-size: 8pt;">GPS: 46.582113, 22.681449</span></p><p><img class="alignnone size-medium wp-image-8043" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Groapa-de-la-Barsa-intrare-300x200.jpg" alt="Groapa de la Barsa intrare" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.681449,46.582113</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-148">
+<styleUrl>#urbanpark</styleUrl>
+<name>Gheţarul de la Barsa</name>
+<TimeStamp><when>2014-08-01T10:08:52+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Gheţarul de la Barsa</em></span><br /><span style="font-size: 8pt;">GPS: 46.582113, 22.681449</span></p><p><img class="alignnone size-medium wp-image-8043" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Groapa-de-la-Barsa-intrare-300x200.jpg" alt="Groapa de la Barsa intrare" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.681449,46.582113</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-149">
+<styleUrl>#urbanpark</styleUrl>
+<name>Tăul Negru</name>
+<TimeStamp><when>2014-08-01T10:08:19+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Tăul Negru</span></em><br /><span style="font-size: 8pt;">GPS: 46.580392, 22.683444<br /><img class="alignnone size-medium wp-image-7854" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/10/Tăul-Negru-fara-fund-300x200.jpg" alt="Tăul Negru fara fund" width="300" height="200" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/taul-negru-lacul-din-mijlocul-padurii-de-conifere/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.683409,46.580398</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-150">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Neagră</name>
+<TimeStamp><when>2014-08-01T10:08:09+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Neagră</em></span><br /><span style="font-size: 8pt;">GPS: 46.577487, 22.685666</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.685666,46.577487</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-151">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Ghețarul Focul Viu</name>
+<TimeStamp><when>2014-08-01T10:08:18+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Peştera Ghețarul Focul Viu</em></span><br /><span style="font-size: 8pt;">GPS: 46.57516, 22.67998<br /><img class="alignnone size-medium wp-image-4784" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Focul-Viu-Ovi-Pop-300x200.jpg" alt="Focul Viu Ovi Pop" width="300" height="200" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.679980,46.575160</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-151">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Ghețarul Focul Viu</name>
+<TimeStamp><when>2014-08-01T10:08:18+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Peştera Ghețarul Focul Viu</em></span><br /><span style="font-size: 8pt;">GPS: 46.57516, 22.67998<br /><img class="alignnone size-medium wp-image-4784" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Focul-Viu-Ovi-Pop-300x200.jpg" alt="Focul Viu Ovi Pop" width="300" height="200" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.679980,46.575160</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-152">
+<styleUrl>#urbanpark</styleUrl>
+<name>Pietrele Galbenei</name>
+<TimeStamp><when>2014-08-01T11:08:26+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Pietrele Galbenei</em></span><br /><span style="font-size: 8pt;">GPS: 46.570699, 22.682511<br /><img class="alignnone size-medium wp-image-4796" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Pietrele-Galbenei-300x175.jpg" alt="Pietrele Galbenei" width="300" height="175" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.682583,46.570652</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-152">
+<styleUrl>#urbanpark</styleUrl>
+<name>Pietrele Galbenei</name>
+<TimeStamp><when>2014-08-01T11:08:26+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Pietrele Galbenei</em></span><br /><span style="font-size: 8pt;">GPS: 46.570699, 22.682511<br /><img class="alignnone size-medium wp-image-4796" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Pietrele-Galbenei-300x175.jpg" alt="Pietrele Galbenei" width="300" height="175" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.682583,46.570652</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-153">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana florilor</name>
+<TimeStamp><when>2014-08-01T11:08:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Poiana florilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.558795, 22.672044</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.672044,46.558795</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-153">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana florilor</name>
+<TimeStamp><when>2014-08-01T11:08:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Poiana florilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.558795, 22.672044</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.672044,46.558795</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-154">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cheile Galbenei</name>
+<TimeStamp><when>2014-08-01T11:08:37+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cheile Galbenei</em></span><br /><span style="font-size: 8pt;">GPS: 46.555873, 22.678288<br /><img class="alignnone size-medium wp-image-4793" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Cheile-Galbenei-300x200.jpg" alt="Cheile Galbenei" width="300" height="200" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cheile-galbenei-frumoasele-chei-din-apuseni/">Mai multe informatii...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.678764,46.555644</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-154">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cheile Galbenei</name>
+<TimeStamp><when>2014-08-01T11:08:37+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cheile Galbenei</em></span><br /><span style="font-size: 8pt;">GPS: 46.555873, 22.678288<br /><img class="alignnone size-medium wp-image-4793" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Cheile-Galbenei-300x200.jpg" alt="Cheile Galbenei" width="300" height="200" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cheile-galbenei-frumoasele-chei-din-apuseni/">Mai multe informatii...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.678764,46.555644</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-155">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada Evantai</name>
+<TimeStamp><when>2014-08-01T11:08:12+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Cascada Evanta</em></span>i<br /><span style="font-size: 8pt;">GPS: 46.553989, 22.677745<br /><img class="alignnone size-medium wp-image-4788" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Cascada-de-pe-Cheile-Galbenei-300x275.jpg" alt="Cascada de pe Cheile Galbenei" width="300" height="275" /><br /></span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.677745,46.553989</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-156">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Borţig</name>
+<TimeStamp><when>2014-08-01T11:08:41+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Avenul Borţig</em></span><br /><span style="font-size: 8pt;">GPS: 46.560464, 22.694198<br /><img class="alignnone size-medium wp-image-4789" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Avenul-Borţig-192x300.jpg" alt="Avenul Borţig" width="192" height="300" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.694198,46.560464</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-156">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Borţig</name>
+<TimeStamp><when>2014-08-01T11:08:41+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Avenul Borţig</em></span><br /><span style="font-size: 8pt;">GPS: 46.560464, 22.694198<br /><img class="alignnone size-medium wp-image-4789" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/11/Avenul-Borţig-192x300.jpg" alt="Avenul Borţig" width="192" height="300" /><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.694198,46.560464</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-157">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cetățile Ponorului</name>
+<TimeStamp><when>2014-08-01T11:08:27+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cetățile Ponorului</em></span><br /><span style="font-size: 8pt;">GPS: 46.563118, 22.701355<br /><img class="alignnone size-medium wp-image-4176" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/09/Cetatile-Ponorului-Waterfall-300x200.jpg" alt="Cetatile Ponorului - Sabin Uivaroșan" width="300" height="200" /><span style="font-size: 10pt;"><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cetatile-ponorului-cel-mai-mare-complex-carstic-din-romania/" target="_blank">Povestea locului...</a></span><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.701144,46.562814</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-157">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cetățile Ponorului</name>
+<TimeStamp><when>2014-08-01T11:08:27+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cetățile Ponorului</em></span><br /><span style="font-size: 8pt;">GPS: 46.563118, 22.701355<br /><img class="alignnone size-medium wp-image-4176" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/09/Cetatile-Ponorului-Waterfall-300x200.jpg" alt="Cetatile Ponorului - Sabin Uivaroșan" width="300" height="200" /><span style="font-size: 10pt;"><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cetatile-ponorului-cel-mai-mare-complex-carstic-din-romania/" target="_blank">Povestea locului...</a></span><br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.701144,46.562814</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-158">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana Ponor</name>
+<TimeStamp><when>2014-08-01T02:08:30+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Poiana Ponor</em></span><br /><span style="font-size: 8pt;">GPS: 46.571256,  22.715051<br /><img class="alignnone size-medium wp-image-4192" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/09/Ponor-Clearing-300x198.jpg" alt="Poiana Ponor" width="300" height="198" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/ponor-poiana-misterioasa-a-parcului-natural-apuseni/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.715092,46.571135</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-159">
+<styleUrl>#urbanpark</styleUrl>
+<name>Platoul Carstic Lumea Pierdută</name>
+<TimeStamp><when>2014-08-01T02:08:13+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Platoul Carstic Lumea Pierdută<br /><span style="font-size: 8pt;">GPS: 46.562509, 22.729633</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.728953,46.562519</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-159">
+<styleUrl>#urbanpark</styleUrl>
+<name>Platoul Carstic Lumea Pierdută</name>
+<TimeStamp><when>2014-08-01T02:08:13+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Platoul Carstic Lumea Pierdută<br /><span style="font-size: 8pt;">GPS: 46.562509, 22.729633</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.728953,46.562519</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-160">
+<styleUrl>#urbanpark</styleUrl>
+<name>Rezervaţia Molhaşurile de la Izbuce</name>
+<TimeStamp><when>2014-08-01T12:08:54+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Rezervaţia Molhaşurile de la Izbuce</em></span><br /> <span style="font-size: 8pt;">GPS: 46.591126, 22.761288<br /> <img class="alignnone size-medium wp-image-10365" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/06/Turbaria-Apusenilor-300x200.jpg" alt="Turbaria Apusenilor" width="300" height="200" /></span><br /> <a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/molhasurile-de-la-izbuce-turbaria-apusenilor/#/"><span style="font-size: 10pt;">Mai multe informatii...</span></a></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.761288,46.591126</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-160">
+<styleUrl>#urbanpark</styleUrl>
+<name>Rezervaţia Molhaşurile de la Izbuce</name>
+<TimeStamp><when>2014-08-01T12:08:54+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Rezervaţia Molhaşurile de la Izbuce</em></span><br /> <span style="font-size: 8pt;">GPS: 46.591126, 22.761288<br /> <img class="alignnone size-medium wp-image-10365" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/06/Turbaria-Apusenilor-300x200.jpg" alt="Turbaria Apusenilor" width="300" height="200" /></span><br /> <a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/molhasurile-de-la-izbuce-turbaria-apusenilor/#/"><span style="font-size: 10pt;">Mai multe informatii...</span></a></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.761288,46.591126</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-161">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Hoanca Urzicarilor</name>
+<TimeStamp><when>2014-08-01T12:08:52+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Avenul Hoanca Urzicarilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.524281, 22.688223</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.688223,46.524281</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-163">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Micula</name>
+<TimeStamp><when>2014-08-01T12:08:56+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Peştera Micula</span><br /><span style="font-size: 8pt;">GPS: 46.55371, 22.58724</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.587240,46.553710</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-163">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Micula</name>
+<TimeStamp><when>2014-08-01T12:08:56+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Peştera Micula</span><br /><span style="font-size: 8pt;">GPS: 46.55371, 22.58724</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.587240,46.553710</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-164">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Urşilor</name>
+<TimeStamp><when>2014-08-01T12:08:59+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Peştera Urşilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.553803, 22.569279</span></p><p><img class="alignnone size-medium wp-image-7720" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/09/Pestera-Ursilor08-300x200.jpg" alt="Pestera Ursilor08" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.569279,46.553803</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-164">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Urşilor</name>
+<TimeStamp><when>2014-08-01T12:08:59+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Peştera Urşilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.553803, 22.569279</span></p><p><img class="alignnone size-medium wp-image-7720" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/09/Pestera-Ursilor08-300x200.jpg" alt="Pestera Ursilor08" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.569279,46.553803</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-165">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul din Dosul Muncelului</name>
+<TimeStamp><when>2014-08-01T12:08:55+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Avenul din Dosul Muncelului</em></span><br /><span style="font-size: 8pt;">GPS: 46.5212, 22.62584</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.625840,46.521200</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-166">
+<styleUrl>#urbanpark</styleUrl>
+<name>Canionul Cheia Rea</name>
+<TimeStamp><when>2014-08-01T12:08:02+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Canionul Cheia Rea</em></span><br /><span style="font-size: 8pt;">GPS: 46.525535, 22.613301</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.613301,46.525535</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-167">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera de la Izvorul Crişului</name>
+<TimeStamp><when>2014-08-01T12:08:44+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<em><span style="font-size: 12pt;">Peştera de la Izvorul Crişului</span></em><br /><span style="font-size: 8pt;">GPS: 46.506059, 22.641117</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.641117,46.506059</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-168">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Porţile Bihorului</name>
+<TimeStamp><when>2014-08-01T01:08:03+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Peştera Porţile Bihorului</span></em><br /> <span style="font-size: 8pt;">GPS: 46.500704, 22.624476</span></p><p><img class="alignnone size-large wp-image-10039" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Peștera-Porțile-Bihorului07-683x1024.jpg" alt="Peștera Porțile Bihorului07" width="683" height="1024" /></p><p><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/pestera-portile-bihorului-o-formatiune-carstica-grandioasa/" target="_blank">Mai multe detalii...</a></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.625093,46.500700</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-170">
+<styleUrl>#urbanpark</styleUrl>
+<name>Vârful Bihorul</name>
+<TimeStamp><when>2014-08-01T01:08:47+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Vârful Bihorul</span><br /><em><span style="font-size: 8pt;">GPS: 46.441234, 22.686698<br /><img class="alignnone size-medium wp-image-4318" src="http://www.bihorinimagini.ro/wp-content/uploads/2014/09/Varful-Bihor-la-apus-300x200.jpg" alt="Varful Bihor la apus" width="300" height="200" /><br /></span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.686698,46.441234</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-171">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Fânaţe</name>
+<TimeStamp><when>2014-08-01T01:08:06+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Fânaţe</em></span><br /><span style="font-size: 8pt;">GPS: 46.496963, 22.572109</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.572109,46.496963</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-172">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Secăturii</name>
+<TimeStamp><when>2014-08-01T01:08:17+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Secăturii</em></span><br /><span style="font-size: 8pt;">GPS: 46.498835, 22.582705</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.582705,46.498835</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-173">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Fruncele</name>
+<TimeStamp><when>2014-08-01T01:08:22+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Avenul Fruncele</em></span><br /><span style="font-size: 8pt;">GPS: 46.503403, 22.579689</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.579689,46.503403</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-174">
+<styleUrl>#urbanpark</styleUrl>
+<name>Valea Sighiștel</name>
+<TimeStamp><when>2014-08-01T02:08:32+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Valea Sighiștel</span></em><br /><span style="font-size: 8pt;">GPS: 46.530875, 22.562945<br /><img class="alignnone size-medium wp-image-6885" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/05/Valea-Sighistelului01-247x300.jpg" alt="Valea Sighistelului01" width="247" height="300" /><br /></span></p><p> </p><p> </p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.573128,46.532768</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-174">
+<styleUrl>#urbanpark</styleUrl>
+<name>Valea Sighiștel</name>
+<TimeStamp><when>2014-08-01T02:08:32+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Valea Sighiștel</span></em><br /><span style="font-size: 8pt;">GPS: 46.530875, 22.562945<br /><img class="alignnone size-medium wp-image-6885" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/05/Valea-Sighistelului01-247x300.jpg" alt="Valea Sighistelului01" width="247" height="300" /><br /></span></p><p> </p><p> </p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.573128,46.532768</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-175">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Dealul Cornii</name>
+<TimeStamp><when>2014-08-01T02:08:33+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Peştera Dealul Cornii</span><br /><span style="font-size: 8pt;">GPS: 46.52101, 22.5526</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.550254,46.523305</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-176">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Varniţa</name>
+<TimeStamp><when>2014-08-01T02:08:04+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Varniţa</em></span><br /><span style="font-size: 8pt;">GPS: 46.528038, 22.560194</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.560194,46.528038</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-177">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera cu Punte</name>
+<TimeStamp><when>2014-08-01T02:08:11+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera cu Punte</em></span><br /><span style="font-size: 8pt;">GPS: 46.52965, 22.56127</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.561270,46.529650</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-178">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera de la Zvârluşul Corbeştilor</name>
+<TimeStamp><when>2014-08-01T02:08:34+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera de la Zvârluşul Corbeştilor</em></span><br /><span style="font-size: 8pt;">GPS: 46.532575, 22.573391</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.573391,46.532575</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-179">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Corbasca</name>
+<TimeStamp><when>2014-08-01T02:08:15+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<em><span style="font-size: 12pt;">Peştera Corbasca</span></em><br /><span style="font-size: 8pt;">GPS: 46.533772, 22.573169</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.573169,46.533772</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-180">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Colibii II</name>
+<TimeStamp><when>2014-08-01T02:08:30+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Colibii II</em></span><br /><span style="font-size: 8pt;">GPS: 46.533474, 22.580386</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.580386,46.533474</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-181">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Drăcoaia</name>
+<TimeStamp><when>2014-08-01T02:08:39+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Drăcoaia</em></span><br /><span style="font-size: 8pt;">GPS: 46.533723, 22.583456</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.583456,46.533723</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-182">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Gaura Fetii</name>
+<TimeStamp><when>2014-08-01T02:08:09+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Gaura Fetii</em></span><br /><span style="font-size: 8pt;">GPS: 46.5335, 22.58729</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.587290,46.533500</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-183">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Pişolca</name>
+<TimeStamp><when>2014-08-01T02:08:11+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Pişolca</em></span><br /><span style="font-size: 8pt;">GPS: 46.532434, 22.590508</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.590508,46.532434</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-184">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Măgura</name>
+<TimeStamp><when>2014-08-01T02:08:35+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Măgura</em></span><br /><span style="font-size: 8pt;">GPS: 46.531643, 22.594332</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.594332,46.531643</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-185">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peştera Coliboaia</name>
+<TimeStamp><when>2014-08-01T02:08:45+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Peştera Coliboaia</em></span><br /><span style="font-size: 8pt;">GPS: 46.531537, 22.59548</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.595480,46.531537</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-186">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cheile Sighiştel</name>
+<TimeStamp><when>2014-08-01T02:08:05+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Cheile Sighiştel</em></span><br /><span style="font-size: 8pt;">GPS: 46.529703, 22.599087</span></p><p><img class="alignnone size-medium wp-image-10613" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/09/Valea-Sighistel-logo-300x200.jpg" alt="valea-sighistel-logo" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.599087,46.529703</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-242">
+<styleUrl>#cabin-21</styleUrl>
+<name>Boga</name>
+<TimeStamp><when>2014-08-02T05:08:06+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<span style="font-size: 12pt;"><em>Boga</em></span><br /><span style="font-size: 8pt;">GPS: 46.608708, 22.659688</span>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.659688,46.608708</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-243">
+<styleUrl>#resort</styleUrl>
+<name>Statiuea Vartop</name>
+<TimeStamp><when>2014-08-02T05:08:30+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Stațiunea Vârtop</em></span><br /><span style="font-size: 8pt;">GPS: 46.514283, 22.676972</span></p>]]></description>
+<address><![CDATA[Vârtop, Arieseni, Romania]]></address>
+<Point>
+<coordinates>22.676972,46.514283</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-244">
+<styleUrl>#cabin-21</styleUrl>
+<name>Padis</name>
+<TimeStamp><when>2014-08-02T06:08:50+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Padiș</em></span><br /><span style="font-size: 8pt;">GPS: 46.596100, 22.732495<br /><img class="alignnone size-medium wp-image-6066" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/04/Platoul-Padis-300x200.jpg" alt="Platoul Padis" width="300" height="200" /><br /></span></p>]]></description>
+<address><![CDATA[Padiş, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.732495,46.596100</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-245">
+<styleUrl>#camping</styleUrl>
+<name>Glăvoi</name>
+<TimeStamp><when>2014-08-02T06:08:04+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><em><span style="font-size: 12pt;">Glăvoi</span></em><br /><span style="font-size: 8pt;">GPS: 46.579689, 22.702535</span></p><p><img class="alignnone size-medium wp-image-7262" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/06/Dimineata-in-Glavoi-logo-300x200.jpg" alt="Dimineata in Glavoi logo" width="300" height="200" /></p>]]></description>
+<address><![CDATA[Pietroasa, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.702535,46.579689</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-302">
+<styleUrl>#urbanpark</styleUrl>
+<name>Canionul Valea Seacă</name>
+<TimeStamp><when>2015-01-11T11:01:05+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Canionul Valea Seacă</span><br /><span style="font-size: 8pt;"><em>GPS: 46.53830, 22.66082</em></span></p><p><span style="font-size: 8pt;"><em><img class="alignnone size-medium wp-image-6591" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/05/Canionul-Valea-Seaca05-300x225.jpg" alt="Canionul Valea Seaca05" width="300" height="225" /></em><span style="font-size: 10pt;"><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/canionul-valea-seaca-lumea-alpinistilor/" target="_blank">Povestea locului...</a></span><em><br /></em></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.661877,46.534185</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-303">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cheile Jgheabului</name>
+<TimeStamp><when>2015-01-11T11:01:38+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Cheile Jgheabului</span><br /><span style="font-size: 8pt;"><em>GPS: 46.579136, 22.647028<br /><img class="alignnone size-medium wp-image-4894" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/01/Cheile-Jgheabului1-300x222.jpg" alt="Cheile Jgheabului" width="300" height="222" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cheile-jgheabului-cheile-salbatice-din-apuseni/" target="_blank">Povestea locului...</a></em></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.655720,46.572077</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-305">
+<styleUrl>#urbanpark</styleUrl>
+<name>Izbucul Ponor</name>
+<TimeStamp><when>2015-02-12T01:02:59+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Izbucul Ponor</span><br /><span style="font-size: 8pt;">GPS: 46.57664, 22.71696</span></p><p><img class="alignnone size-medium wp-image-8031" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Izbucul-Ponor-225x300.jpg" alt="Izbucul Ponor" width="225" height="300" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.716960,46.576640</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-306">
+<styleUrl>#urbanpark</styleUrl>
+<name>La Balcoane</name>
+<TimeStamp><when>2015-02-12T01:02:55+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Balcoane</span><br /><em><span style="font-size: 8pt;">GPS: 46.565020, 22.700919<br /><img class="alignnone size-medium wp-image-5404" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/02/Vedere-panoramica-de-la-Balcoane-300x154.jpg" alt="Vedere panoramica de la Balcoane" width="300" height="154" /><br /></span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.700919,46.565020</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-307">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana Vărășoaia</name>
+<TimeStamp><when>2015-02-13T12:02:39+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p style="color: #000000; margin: 0in; font-family: Calibri; font-size: 11.0pt;"><span style="font-size: 12pt;">Poiana Vărășoaia<br /><span style="font-size: 10pt;"><em>GPS: 46.611774, 22.707710<br /><img class="alignnone wp-image-7791 size-full" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/10/Vedere-de-pe-Vf-Vărășoaia-spre-Poaina-Varasoaia.jpg" alt="" width="1100" height="1111" /><br /></em></span><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/poiana-varasoaia-lumea-dolinelor/" target="_blank">Povestea locului...</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.707710,46.611774</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-314">
+<styleUrl>#urbanpark</styleUrl>
+<name>Canionul Oșelu</name>
+<TimeStamp><when>2015-03-25T11:03:45+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p style="color: #000000; margin: 0in; font-family: Calibri; font-size: 11.0pt;"><span style="font-size: 12pt;">Canionul Oșelu</span><br /><em><span style="font-size: 8pt;">GPS: 46.609916 - 22.679644<br /><img class="alignnone size-medium wp-image-5014" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/01/canionul-Oșelu3-300x225.jpg" alt="canionul Oșelu3" width="300" height="225" /></span></em><br /><br /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.679644,46.609916</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-316">
+<styleUrl>#Salvamont1</styleUrl>
+<name>Punct de Lucru Stei Salvamont Bihor</name>
+<TimeStamp><when>2015-03-26T07:03:02+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Punct de Lucru Stei Salvamont Bihor</span><br /><em><span style="font-size: 10pt;">GPS: 46.534497, 22.455775</span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.455775,46.534497</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-317">
+<styleUrl>#Salvamont1</styleUrl>
+<name>Baza Salvamont Bihor Vârtop</name>
+<TimeStamp><when>2015-03-26T07:03:22+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Baza Salvamont Bihor Vârtop</span><br /><em><span style="font-size: 10pt;">GPS: 46.512675, 22.673350</span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.672713,46.511389</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-318">
+<styleUrl>#Salvamont1</styleUrl>
+<name>Baza Salvamont Bihor Glăvoi</name>
+<TimeStamp><when>2015-03-26T07:03:32+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Baza Salvamont Bihor Glăvoi</span><br /><span style="font-size: 10pt;"><em>GPS: 46.577799, 22.704492</em></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.704492,46.577799</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-321">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cetatea Rădesei</name>
+<TimeStamp><when>2015-03-28T12:03:08+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Cetatea Rădesei</span><br /><em><span style="font-size: 8pt;">GPS: 46.63214,  22.70966<br /><img class="alignnone wp-image-7434 size-medium" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/08/Pestera-Cetatea-Radesei-300x207.jpg" alt="" width="300" height="207" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cetatea-radesei-pestera-cu-hornuri-din-tavan-unica-in-romania/" target="_blank">Povestea locului...</a></span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.708268,46.629960</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-321">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cetatea Rădesei</name>
+<TimeStamp><when>2015-03-28T12:03:08+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Cetatea Rădesei</span><br /><em><span style="font-size: 8pt;">GPS: 46.63214,  22.70966<br /><img class="alignnone wp-image-7434 size-medium" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/08/Pestera-Cetatea-Radesei-300x207.jpg" alt="" width="300" height="207" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/cetatea-radesei-pestera-cu-hornuri-din-tavan-unica-in-romania/" target="_blank">Povestea locului...</a></span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.708268,46.629960</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-325">
+<styleUrl>#flowers</styleUrl>
+<name>Roua Cerului (Drosera rotundifolia)</name>
+<TimeStamp><when>2015-05-10T03:05:01+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;">Roua Cerului (Drosera rotundifolia)<br /><span style="font-size: 8pt;">GPS: 46.588804, 22.759895</span><br /><img class="alignnone size-medium wp-image-6634" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/05/Roua-Cerului-Drosera-rotundifolia-300x200.jpg" alt="Roua Cerului Drosera rotundifolia" width="300" height="200" /><br /></span></p>]]></description>
+<address><![CDATA[Padiş, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.759895,46.588804</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-334">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peștera Honu</name>
+<TimeStamp><when>2015-07-09T07:07:19+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;">Peșter Honu</span><br /><span style="font-size: 8pt;">GPS: <a class="cards-reveal-lat-lng cards-light">46.640374, 22.715900</a></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.717195,46.639625</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-337">
+<styleUrl>#urbanpark</styleUrl>
+<name>Tăul Vărășoaia</name>
+<TimeStamp><when>2015-08-08T04:08:28+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Tăul Vărășoaia<br /><em><span style="font-size: 10pt;">GPS: 46.612982, 22.705436<br /><img class="alignnone size-medium wp-image-7390" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/07/Taul-Varasoaia-300x218.jpg" alt="Taul Varasoaia" width="300" height="218" /><br /></span></em></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.705436,46.612982</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-338">
+<styleUrl>#panoramicview</styleUrl>
+<name>Vârful Biserica Moțului</name>
+<TimeStamp><when>2015-09-30T01:09:20+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;">Vărful Biserica Moțului<br /><span style="font-size: 8pt;">GPS: 46.589902, 22.736539</span></span></p><p> </p><p><img class="alignnone size-full wp-image-7754" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/09/Biserica-Moțului-Nagy-Ivan.jpg" alt="Biserica Moțului - Nagy Ivan" width="2048" height="1365" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.736539,46.589902</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-338">
+<styleUrl>#panoramicview</styleUrl>
+<name>Vârful Biserica Moțului</name>
+<TimeStamp><when>2015-09-30T01:09:20+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;">Vărful Biserica Moțului<br /><span style="font-size: 8pt;">GPS: 46.589902, 22.736539</span></span></p><p> </p><p><img class="alignnone size-full wp-image-7754" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/09/Biserica-Moțului-Nagy-Ivan.jpg" alt="Biserica Moțului - Nagy Ivan" width="2048" height="1365" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.736539,46.589902</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-341">
+<styleUrl>#panoramicview</styleUrl>
+<name>Vârful Cârligați</name>
+<TimeStamp><when>2015-11-14T01:11:46+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;">Vedere de pe Vârful Cârligați</span><br /><span style="font-size: 10pt;"><em>GPS: 46.6418508, 22.6759539<br /><img class="alignnone size-medium wp-image-7842" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/10/Vedere-de-pe-Vf-Carligati-300x200.jpg" alt="Vedere de pe Vf Carligati" width="300" height="200" /><br /><a href="http://www.bihorinimagini.ro/de-vizitat/obiective-naturale/rezervatia-naturala-varful-carligati/" target="_blank">Povestea locului...</a></em></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.676296,46.641570</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-342">
+<styleUrl>#panoramicview</styleUrl>
+<name>Vârful Cornu Munţilor</name>
+<TimeStamp><when>2015-11-14T01:11:30+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Vârful Cornu Munţilor<br /><span style="font-size: 10pt;">GPS: 46.638388, 22.667906</span></p><br /><p> <img class="alignnone size-medium wp-image-8050" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/11/Vârful-Cornu-Munţilor-300x200.jpg" alt="Vârful Cornu Munţilor" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.667906,46.638388</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-344">
+<styleUrl>#urbanpark</styleUrl>
+<name>Izvorul Fântăna Rece</name>
+<TimeStamp><when>2015-12-08T07:12:37+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;">Izvorul Fântăna Rece</span><br /><span style="font-size: 8pt;">GPS: 46.641115, 22.663577<br /><img class="alignnone size-medium wp-image-8302" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/12/Izvorul-Fântăna-Rece-300x245.jpg" alt="Izvorul Fântăna Rece" width="300" height="245" /><br /></span></p>]]></description>
+<address><![CDATA[Padiş, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.663577,46.641115</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-347">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peștera Șura Boghii</name>
+<TimeStamp><when>2016-05-04T11:05:14+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Peștera Șura Boghii<br /><span style="font-size: 8pt;">GPS: 46.606467, 22.692540<br /></span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.692620,46.606622</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-348">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana Balileasa</name>
+<TimeStamp><when>2016-05-08T11:05:55+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Poiana Balileasa<br /> <em>GPS: 46.589335, 22.690287<br /><img class="alignnone size-medium wp-image-10086" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Poiana-Balileasa-la-apus-300x200.jpg" alt="Poiana Balileasa la apus" width="300" height="200" /><br /><br /></em></p>]]></description>
+<address><![CDATA[Poiana Balileasa]]></address>
+<Point>
+<coordinates>22.690287,46.589335</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-348">
+<styleUrl>#urbanpark</styleUrl>
+<name>Poiana Balileasa</name>
+<TimeStamp><when>2016-05-08T11:05:55+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Poiana Balileasa<br /> <em>GPS: 46.589335, 22.690287<br /><img class="alignnone size-medium wp-image-10086" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Poiana-Balileasa-la-apus-300x200.jpg" alt="Poiana Balileasa la apus" width="300" height="200" /><br /><br /></em></p>]]></description>
+<address><![CDATA[Poiana Balileasa]]></address>
+<Point>
+<coordinates>22.690287,46.589335</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-349">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peștera Căput</name>
+<TimeStamp><when>2016-05-16T05:05:56+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Peștera Căput<br /><span style="font-size: 8pt;">GPS: 46.564222, 22.712730<br /><img class="alignnone size-medium wp-image-10118" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Pestera-Caput-intrarea-300x213.jpg" alt="Pestera Caput intrarea" width="300" height="213" /><br /></span></p>]]></description>
+<address><![CDATA[Pestera Caput, Budureasa, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.712730,46.564222</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-350">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Gemănata</name>
+<TimeStamp><when>2016-05-16T05:05:43+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;"><em>Avenul Gemănata</em></span><br /> <span style="font-size: 8pt;">GPS: 46.5616611, 22.7326222</span></p><p><img class="alignnone size-medium wp-image-10113" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Avenul-Geamanata-300x265.jpg" alt="Avenul Geamanata" width="300" height="265" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.732622,46.561661</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-351">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Negru</name>
+<TimeStamp><when>2016-05-16T05:05:07+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;"><em> Avenul Negru</em></span><br /> <span style="font-size: 8pt;">GPS: 46.55944, 22.73542</span></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.735420,46.559440</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-352">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Acoperit</name>
+<TimeStamp><when>2016-05-16T05:05:57+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;"><em>Avenul Acoperit</em></span><br /> <span style="font-size: 8pt;">GPS: 46.562888, 22.734210</span></p><p><img class="alignnone size-medium wp-image-10112" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Avenul-Acoperit-300x222.jpg" alt="Avenul Acoperit" width="300" height="222" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.734210,46.562888</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-353">
+<styleUrl>#urbanpark</styleUrl>
+<name>Avenul Pionierilor</name>
+<TimeStamp><when>2016-05-16T05:05:36+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 10pt;"><em>Avenul Pionierilor</em></span><br /> <span style="font-size: 8pt;">GPS: 46.563382, 22.734715</span></p><p><img class="alignnone size-medium wp-image-10115" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/05/Avenul-Pionierilor-300x200.jpg" alt="Avenul Pionierilor" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.734715,46.563382</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-356">
+<styleUrl>#urbanpark</styleUrl>
+<name>Izbucul Galbenei</name>
+<TimeStamp><when>2016-07-26T09:07:11+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p><span style="font-size: 12pt;"><em>Izbucul Galbenei</em></span><br /><span style="font-size: 8pt;">GPS: 46.557551, 22.679772</span></p><p><img class="alignnone size-medium wp-image-5790" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/03/Izbucul-Galbenei-300x200.jpg" alt="Izbucul Galbenei" width="300" height="200" /></p>]]></description>
+<address><![CDATA[Padiş, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.679772,46.557551</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-357">
+<styleUrl>#urbanpark</styleUrl>
+<name>Peștera Ferice</name>
+<TimeStamp><when>2016-08-22T04:08:22+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Peștera Ferice<br />GPS: 46.641389, 22.523780</p><p><img class="alignnone size-medium wp-image-10894" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/10/Pestera-Ferice-300x220.jpg" alt="pestera-ferice" width="300" height="220" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.523780,46.641389</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-358">
+<styleUrl>#urbanpark</styleUrl>
+<name>Piatra Ciungilor</name>
+<TimeStamp><when>2016-08-22T06:08:48+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Piatra Ciungilor<br /> GPS: 46.6040944, 22.6591694</p><p><img class="alignnone size-medium wp-image-10467" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/04/Vedere-de-pe-Piatra-Ciungilor-01-300x169.jpg" alt="Vedere de pe Piatra Ciungilor-01" width="300" height="169" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.659169,46.604094</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-360">
+<styleUrl>#urbanpark</styleUrl>
+<name>Piatra Bulzului</name>
+<TimeStamp><when>2016-12-06T08:12:48+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Piatra Bulzului<br /><span style="font-size: 8pt;">GPS: 46.601632, 22.641728</span></p><p><img class="alignnone size-medium wp-image-5551" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/03/Belvedere-de-pe-Piatra-Bulzului-300x145.jpg" alt="Belvedere de pe Piatra Bulzului" width="300" height="145" /></p>]]></description>
+<address><![CDATA[Piatra Bulzului, Pietroasa, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.641728,46.601632</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-360">
+<styleUrl>#urbanpark</styleUrl>
+<name>Piatra Bulzului</name>
+<TimeStamp><when>2016-12-06T08:12:48+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Piatra Bulzului<br /><span style="font-size: 8pt;">GPS: 46.601632, 22.641728</span></p><p><img class="alignnone size-medium wp-image-5551" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/03/Belvedere-de-pe-Piatra-Bulzului-300x145.jpg" alt="Belvedere de pe Piatra Bulzului" width="300" height="145" /></p>]]></description>
+<address><![CDATA[Piatra Bulzului, Pietroasa, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.641728,46.601632</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-364">
+<styleUrl>#urbanpark</styleUrl>
+<name>Cascada Sf.Treime</name>
+<TimeStamp><when>2016-12-28T05:12:14+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Cascada Sf.Treime<br /><span style="font-size: 8pt;">GPS: 46.472138, 22.664186</span></p><p><img class="alignnone size-medium wp-image-9600" src="http://www.bihorinimagini.ro/wp-content/uploads/2016/02/Cascada-Sf-Treime06-300x200.jpg" alt="Cascada Sf Treime06" width="300" height="200" /></p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.664186,46.472138</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-365">
+<styleUrl>#panoramicview</styleUrl>
+<name>Vârful Tătăroaia</name>
+<TimeStamp><when>2016-12-28T07:12:01+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Vârful Tătăroaia<br /> <em>GPS: 46.566281, 22.620120</em></p><p><strong></strong><img class="alignnone size-medium wp-image-7704" src="http://www.bihorinimagini.ro/wp-content/uploads/2015/09/varful-tataroaia01-300x200.jpg" alt="varful tataroaia01" width="300" height="200" /></p>]]></description>
+<address><![CDATA[Vârful Tătăroaia, Pietroasa, Bihor County, Romania]]></address>
+<Point>
+<coordinates>22.620120,46.566281</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-366">
+<styleUrl>#urbanpark</styleUrl>
+<name>Pietrele Negre</name>
+<TimeStamp><when>2017-01-17T06:01:09+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Pietrele Negre<br />GPS: 46.515406, 22.629004</p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.629004,46.515406</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-367">
+<styleUrl>#camping</styleUrl>
+<name>Camping Valea Sighiştelului</name>
+<TimeStamp><when>2017-01-17T06:01:24+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Camping Valea Sighiştelului<br />GPS: 46.523084, 22.554674</p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.554674,46.523084</coordinates>
+</Point>
+</Placemark>
+<Placemark id="marker-368">
+<styleUrl>#cathedral baroc</styleUrl>
+<name>Biserica de lemn din Sebiș</name>
+<TimeStamp><when>2017-01-17T10:01:00+03:00</when></TimeStamp>
+<atom:author><atom:name>dandragos</atom:name></atom:author>
+<atom:link rel="related" href="http://www.bihorinimagini.ro" />
+<description><![CDATA[<p>Biserica de lemn din Sebiș<br />GPS: 46.619601, 22.423073</p>]]></description>
+<address><![CDATA[]]></address>
+<Point>
+<coordinates>22.423073,46.619601</coordinates>
+</Point>
+</Placemark>
+</Folder></Document>
+</kml>

@@ -1,0 +1,14 @@
+##### GIT HowTo
+
+git pull
+git status
+git add --all
+git commit -m "Changes"
+git pull
+git push
+git status
+
+git log
+
+##### END
+

@@ -1,0 +1,29 @@
+
+acme.sh --issue --dns -d example.com -d www.example.com
+acme.sh --renew -d example.com
+
+# wildcard (default key size is 2048)
+acme.sh  --issue -d example.com  -d *.example.com --dns dns_cf --keylength 4096
+acme.sh --renew -d example.com  -d *.example.com
+
+# add in DNS (records)
+
+_acme-challenge 	IN 		TXT 	"key-www-goes-here..."
+_acme-challenge 	IN 		TXT 	"key-wildcard-goes-here..."
+
+### Example:
+
+./acme.sh --issue -d unix-world.org -d *.unix-world.org --keylength 4096 --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+# set in DNS the acme challenges as listed from the above command as above DNS records in /etc/bind_isc/bind-domains/unix-world.org && restart DNS server
+./acme.sh --renew -d unix-world.org -d *.unix-world.org --keylength 4096 --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+
+./acme.sh --issue -d w3soft.org -d *.w3soft.org --keylength 4096 --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+# set in DNS the acme challenges as listed from the above command as above DNS records in /etc/bind_isc/bind-domains/w3soft.org && restart DNS server
+./acme.sh --renew -d w3soft.org -d *.w3soft.org --keylength 4096 --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+
+##
+
+./acme.sh --issue -d enquoted.com -d *.enquoted.com --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+./acme.sh --renew -d enquoted.com -d *.enquoted.com --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+
+#END

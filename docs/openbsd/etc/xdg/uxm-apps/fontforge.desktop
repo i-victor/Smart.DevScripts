@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Font Forge
+Comment=Font Editor
+Type=Application
+Exec=fontforge
+Icon=/etc/xdg/uxm-icons/fontforge.png
+Terminal=false
+Categories=System;
+

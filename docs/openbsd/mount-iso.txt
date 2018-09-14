@@ -1,0 +1,16 @@
+
+### Mount ISO
+vnconfig vnd0 /home/nixcraft/downloads/foo.iso
+mount -t cd9660 /dev/vnd0c /mnt
+df
+cd /mnt
+ls -l
+#cp xyz /home/nixcraft/
+
+### Unmount ISO
+umount /mnt
+### Detaching vnode device from the image ###
+vnconfig -u vnd0
+
+### HINTS: Unprivileged mount requires access to /dev/fuse0 for that user/group + set in sysctl.conf:
+kern.usermount=1

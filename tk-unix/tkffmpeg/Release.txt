@@ -1,0 +1,5 @@
+Release Notes for tkffmpeg
+
+This application is a gui for ffmpeg - helps to simplify the process of converting media content. 
+Based on Tcl/Tk, uses the ffmpeg. This is needed for the running. Install this.
+Licensed under the GPLv2

@@ -1,0 +1,7 @@
+
+##### Firmware
+### Firmware can be downloaded from openbsd.org or can be compiled and installed from ports
+
+man fw_update
+fw_update -i
+

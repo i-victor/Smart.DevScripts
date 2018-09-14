@@ -1,0 +1,23 @@
+
+# start a new session (press CTRL-B+D to exit (detach)
+tmux
+
+# re-attach
+tmux a -t 1
+
+# rename (must pe previous attached, CTRL-B+$)
+# renamed as sample-term
+# CTRL-B+D, deattach
+
+# re-attach (after rename)
+tmux a -t sample-term
+
+# list active terminals
+tmux ls
+
+# create a new term
+tmux
+
+# delete a term
+# CTRL-B+&
+

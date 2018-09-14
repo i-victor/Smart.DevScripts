@@ -1,0 +1,281 @@
+Create your own high-performance NAS using GlusterFS
+
+GlusterFS is used in environments where high performance, redundancy and reliability are of a premium.
+The best part is that it’s exceedingly easy to use
+
+GlusterFS is a file system that is designed to provide network storage that can be made redundant, fault-tolerant and scalable.
+It’s particularly well suited to applications that require high-performance access to large files.
+With GlusterFS, you can have enterprise- or scientific-research-grade storage up and running in minutes,
+but it wouldn’t be our first choice for the type of simple file sharing that Samba or NFS are usually used for.
+
+Although GlusterFS can do striping (chopping the files into parts), it isn’t the preferred approach.
+Typically, additional storage nodes, or ‘bricks’ as they are called, are used for either replicated (redundant) data or
+for distributed storage that adds capacity and improves performance.
+
+GlusterFS expects the clients to be running the FUSE (user-space) file system driver, but since version 3.x,
+GlusterFS automatically enables NFS access to the volumes.
+The built- in NFS server offers better performance when accessing lots of small files for applications such as web serving
+or a remote /home directory.
+Bear in mind, getting GlusterFS’s NFS working alongside existing NFS shares is outside the scope of this tutorial.
+The most amazing thing about GlusterFS is that it’s very simple to use and maintain, as we intend to show you here.
+NASThis tutorial will work with any of the major distributions
+Resources
+
+Multiple Linux boxes
+A network
+GlusterFS
+Step by Step
+
+### Step 01
+
+Set up the network
+
+GlusterFS is at its best when connected to Gigabit Ethernet and a large array of servers and storage devices.
+However, a combination of two computers or even two VMs are sufficient when learning how to use GlusterFS.
+
+### Step 02
+
+Become root
+
+Become root by typing:
+
+sudo -i
+
+...on Ubuntu and derivatives. This saves having to type ‘sudo’ before every command. Use the ‘su’ command on other distros.
+Consider opening a terminal on another tab, for example, to carry out actions as a standard user.
+
+### Step 03
+
+Install server
+
+Compare version numbers between your distro and the website. If you manually install a newer server, you might have to update
+the clients as well. If your distro is offering a recent enough version, you can install by typing:
+
+apt-get install glusterfs-server
+
+### Step 04
+
+Switch to static IP
+
+Open /etc/network/interfaces in a text editor. If present, remove the line:
+
+iface eth0 inet dynamic
+
+Add the lines
+
+auto eth0
+iface eth0 inet static
+address 192.168.0.100
+netmask 255.255.255.0
+gateway 192.168.0.1
+broadcast 192.168.0.255
+network 192.168.0.0
+
+adjusting the details for your network. Restart the machine and test the network.
+
+### Step 05
+
+Adding and removing volumes
+
+Use the following command:
+
+gluster volume create testvol 192.168.0.100:/data
+
+This creates a volume called ‘testvol’ that is stored on the server at 192.168.0.100. The files are located in a directory
+called /data in the root file system of the server, and this is what GlusterFS refers to as a brick. Then, type:
+
+gluster volume start testvol
+
+Type
+
+gluster volume info
+
+to verify that it works. You can remove this volume, later on, by typing:
+
+gluster volume stop testvol
+
+and then
+
+gluster volume delete testvol
+
+### Step 06
+
+Mount the volume locally
+
+We’ll now mount the volume, locally, from the server itself. Create a mount point using:
+
+mkdir /mnt/gluster
+
+Use the command:
+
+mount.glusterfs 192.168.0.100:/ testvol /mnt/glusterfs
+
+to mount it. Type:
+
+echo “It works” > /mnt/gluster/test. txt
+
+...then browse to the mount point to check it works.
+
+### Step 07
+
+Mount the volume remotely
+
+On a client machine, install the GlusterFS client packages (sudo apt-get install glusterfs-client on Ubuntu).
+Create a mount point and mount the GlusterFS volume with:
+
+mkdir /mnt/gluster
+
+and then
+
+sudo mount.glusterfs 192.168.0.100:/testvol /mnt/gluster
+
+### Step 08
+
+Mount on startup
+
+Make the mount permanent on any client machine by adding it to /etc/fstab.
+
+As root, open /etc/fstab in a text editor, and add the line:
+
+192.168.0.100:/testvol /mnt/gluster glusterfs defaults,_netdev 0 0
+
+### Step 09
+
+Share over NFS
+
+Recent versions of GlusterFS automatically enable NFS access to volumes.
+To make it work, you need to add the portmap package to the server.
+Then, you can mount the volume using NFS by adding a mount point:
+
+sudo mkdir /mnt/nfsgluster
+
+and then typing
+
+sudo mount -t nfs 192.168.0.100:/ testvol /mnt/nfstest/ -o tcp,vers=3
+
+To make a client mount the share on boot, add the details of the GlusterFS NFS share to /etc/fstab in the normal way.
+For our example, add the line:
+
+192.168.0.100:7997:/testvol / mnt/nfstest nfs defaults,_netdev 0 0
+
+### Step 10
+
+Add second server
+
+Begin by setting up a new server, as shown in the earlier steps. Give the new server an IP address such as 192.168.0.101.
+Note that you can run these commands on any GlusterFS server. Type:
+
+gluster peer probe 192.168.0.101
+
+and then type
+
+gluster peer status
+
+to check the status of the new server.
+
+### Step 11
+
+Edit hosts file
+
+Admin can be carried out from any Gluster server, so add the servers to the hosts file of your admin machine
+if you prefer to work with names rather than IP addresses.
+For example, edit /etc/hosts with a text editor, and add a line such as 192.168.0.100 server1 for each server.
+
+### Step 12
+
+Add storage volume (distributed)
+
+Add a distributed volume to the system by typing:
+
+gluster volume create test-volume 192.168.0.100:/storage1 192.168.0.101:/storage2
+
+Note that on a setup like this, a single server becoming damaged or unavailable is going to lead to a major loss of files.
+
+### Step 13
+
+Add storage volume (duplicated)
+
+To create a duplicated volume, for redundancy, type:
+
+gluster volume create test-volume replica 2 192.168.0.100:/storage1 192.168.0.101:/storage2
+
+To create a volume that is both duplicated and distributed, type:
+
+gluster volume create test-volume replica 2 192.168.0.100:/ storage1 192.168.0.101:/ storage2 192.168.0.100:/storage3 192.168.0.101:/storage4
+
+The order in which the servers are specified ensures that each contains a brick and a copy of the other brick,
+an arrangement that maintains redundancy if either server fails or becomes unavailable.
+
+### Step 14
+
+Authorise clients
+
+By default, any client can connect to a GlusterFS server. However, you can limit access using the command:
+
+gluster volume set testvol auth. allow [list of addresses]
+
+Note that this command supports the use of wildcards to authorise a range. You might find it more convenient to
+locate the configuration file for the volume in /etc/glusterd/vols/[name of volume]/.
+Open the file up in a text editor and scroll down to ‘option auth.addr./data.allow’.
+Replace the asterisk with a list or range of authorised client IP addresses.
+
+### Step 15
+
+Adding and removing bricks
+
+You can add extra bricks on the fly, but they must be in multiples of the existing storage.
+For example, if you have a duplicated storage volume, you must add two bricks to expand it. Use:
+
+gluster volume add-brick testvol 192.168.0.100:/media/storage/extra
+
+...to add an extra brick. New bricks are empty when they are first added, so they need to be rebalanced with this command:
+
+gluster volume rebalance testvol start
+
+You can remove bricks with a command like this:
+
+gluster volume remove-brick testvol 192.168.0.100:/storage4
+
+Note that the information stored on the brick will become inaccessible, but the data is not deleted.
+
+### Step 16
+
+Examine the log directory
+
+By default, GlusterFS stores its logs under /var/log/ and they are comprehensive.
+You can change the log directory for a volume with the command:
+
+gluster volume log [directory]
+
+...and you can locate the logs associated with a volume using:
+
+gluster volume log locate [name of log]
+
+### Step 17
+
+Add striped volumes
+
+Striping, chopping files up and distributing them is possible but not the preferred option.
+If you have a use case that will benefit from this approach, use the following command:
+
+gluster volume create striped-volume stripe 2 192.168.0.100:/storage1 192.168.0.101:/storage2
+
+### Step 18
+
+Preparing a storage drive
+
+You may like to prepare a blank storage drive for GlusterFS bricks. Ext4 and ext3 are supported along with XFS.
+Which one you choose depends on your requirements and your experience with each, but the consensus is that
+the advantages of XFS only start to come to the fore under huge loads and enormous storage spaces.
+
+### Step 19
+
+Examine the storage
+
+The easiest way to check on your mounted storage is with the df -h command. gluster volume info lists all
+mounted and active volumes and the bricks that they are composed of.
+You can examine the bricks and their contents by browsing the directories normally.
+
+Tags: GlusterFS, NAS, network attached storage, Programming
+
+### END

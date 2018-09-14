@@ -1,0 +1,3 @@
+
+# 7zip archive with no compression
+7za a -m0=Copy images.7z images/*

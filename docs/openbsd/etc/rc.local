@@ -1,0 +1,2 @@
+#/opt/solr-scripts/solr-start >/dev/null 2>&1 </dev/null # Start Solr
+/etc/webmin/start >/dev/null 2>&1 </dev/null # Start Webmin

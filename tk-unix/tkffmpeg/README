@@ -1,0 +1,18 @@
+This application is a gui for ffmpeg - helps to simplify the process of converting media content. 
+Licensed under the GPLv2
+
+Based on Tcl/Tk, uses the tk 8.5, tcl 8.5, ffmpeg, dvdauthor, dvd+rw-tools, tcl-img. This is needed for the running.
+You must install these programs before you use tkffmpeg.
+
+After unpacking 
+
+$ chmod +x tkffmpeg
+$ ./tkffmpeg
+
+To stop the conversion, click "Ctrl+q".
+
+If you want to see the icon in the tray, then install the tktray. 
+You can do this with your package manager or download it from http://code.google.com/p/tktray/downloads/list.
+Same you can download and unpack the pre-compiled library, and depending on your 
+system (x86, amd64), copy libtktray.so in to the folder tkffmpeg.
+Download from here: http://sourceforge.net/projects/tkarc/files/tkarc/libtktray1.2.tar.gz/download

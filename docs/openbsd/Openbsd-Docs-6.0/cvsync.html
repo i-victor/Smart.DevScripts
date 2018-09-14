@@ -1,0 +1,287 @@
+<!-- DO NOT EDIT MANUALLY! See comments in www/build/mirrors.dat for details -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>OpenBSD: CVSync</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="copyright" content="This document copyright 2003-2016 by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/cvsync.html">
+<style type="text/css">
+  h3 { color: #0000e0; }
+</style>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000" link="#23238E">
+
+<h2>
+<a href="index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">CVSync</font>
+</h2>
+<hr>
+<p>
+
+<h3 id="CVSync">What Is CVSync?</h3>
+
+<b>CVSync</b> is a software package for distributing and updating source
+trees from a master <a href="http://man.openbsd.org/cvs">cvs(1)</a>
+repository on a remote server host.
+The OpenBSD sources are maintained in a CVS repository on a central
+development machine in Canada.
+ With CVSync, OpenBSD users can easily keep their own source trees up to date.
+
+<p>
+<b>CVSync</b> uses the so-called pull model of updating. Under the pull
+model, each client asks the server for updates, if and when they are
+wanted.  The server waits passively for update requests from its clients.
+Thus all updates are instigated by the client.  The server never sends
+unsolicited updates.  Users must either run the <b>CVSync</b> client
+manually to get an update, or they must set up a
+<a href="http://man.openbsd.org/cron">cron(8)</a> job to run it
+automatically on a regular basis.
+
+<p>
+The term <b>CVSync</b>, capitalized just so, refers to the entire software
+package. Its main components are the client <tt>cvsync</tt> which runs on
+each user's machine, and the server <tt>cvsyncd</tt> which runs at each of
+the OpenBSD CVSync mirror sites.
+
+<p>
+<b>CVSync</b> is intended to be both faster and more flexible than
+sup and CVSup.
+
+<p>
+The OpenBSD Project currently has six main source repositories:
+
+<ul>
+  <li><b>src</b> - Houses all source code for the OpenBSD Operating System.</li>
+  <li><b>ports</b> - Houses the <a href="faq/ports/index.html">OpenBSD Ports</a>.</li>
+  <li><b>www</b> - Houses all OpenBSD web pages (including this one).</li>
+  <li><b>xenocara</b> - Houses OpenBSD's active X.org v7 source tree.
+</ul>
+
+<h3 id="CVS">What Is CVS?</h3>
+
+CVS is the source code control system used to manage the OpenBSD source
+tree.  It is described in more detail <a href="anoncvs.html#CVS">here</a>.
+Note that CVS and CVSync are entirely different programs.  Although
+CVS can be used for remote file access, it is not optimized for
+wholesale source tree distribution over the net, and CVSync can be
+easily an order of magnitude more efficient for this task.
+
+<h3 id="starting">Getting Started Using CVSync</h3>
+
+If you only care about running CVSync, it is recommended that you
+download the cvsync package from the <a href="ftp.html">ftp mirror
+sites</a> instead of building your own from the <tt>net/cvsync</tt>
+port.
+
+<p>
+For further information about CVSync, see the
+<a href="http://www.cvsync.org/">project homepage</a>.
+However, don't build your own copy from unmodified upstream source -
+the port/package has been modified to support commitid which is now
+used in the OpenBSD repository.
+
+<p>
+In order to mirror the OpenBSD repository with CVSync,
+the following configuration file might be used:
+
+<pre>
+	config {
+	    hostname anoncvs.eu.openbsd.org
+	    # If your network link is a T1 or faster, comment out the following line.
+	    compress
+	    collection {
+		name openbsd release rcs
+		prefix /cvs
+		umask 002
+	    }
+	}
+</pre>
+
+<p>
+This directs cvsync to refresh all OpenBSD distributions from
+<b>anoncvs.eu.openbsd.org</b> with a
+<a href="http://man.openbsd.org/umask">umask(2)</a> that permits group write
+permission to the local repository.
+
+<p>
+Assuming this file is saved as <tt>cvs-syncfile</tt>, the
+following command would be used to invoke cvsync
+
+<pre>
+        <b>cvsync -c cvs-syncfile</b>
+</pre>
+
+<h3 id="using">Using CVS to Work With Your Repository</h3>
+
+Now that you have a local copy of the CVS repository, it is now simple
+to check out, update, or do any of the other CVS operations you would
+normally do against a remote repository, locally.
+For example:
+<pre>
+        <b>cvs -d/cvs checkout -P src</b>
+        <b>cvs -d/cvs up -Pd</b>
+        <b>cvs -d/cvs diff -u file.c</b>
+</pre>
+More details on CVS operation can be found in
+<a href="faq/faq5.html#BldGetSrc">FAQ5, Fetching appropriate source
+code</a> and in the
+<a href="http://man.openbsd.org/cvs">cvs(1)</a>
+man page.
+
+<h3 id="CVSROOT">Available CVSync Servers</h3>
+
+The following CVSync servers are available:
+
+<ul>
+<li><strong>ftp5.eu.openbsd.org</strong><br>
+Host also known as <strong>anga.funkfeuer.at</strong>.<br>
+Location: Vienna, Austria.<br>
+Maintained by <a href="mailto:martin@catai.org">Martin Reindl</a>.<br>
+Updated hourly.<br>
+<p>
+<li><strong>anoncvs.comstyle.com</strong><br>
+Location: Toronto, Canada.<br>
+Maintained by <a href="mailto:brad@comstyle.com">Brad Smith</a>.<br>
+Updated hourly.<br>
+<p>
+<li><strong>openbsd.cs.toronto.edu</strong><br>
+Location: University of Toronto, Toronto, ON, Canada.<br>
+Maintained by <a href="mailto:nick@holland-consulting.net">Nick Holland</a>.<br>
+Updated every 2 hours.<br>
+<p>
+<li><strong>anoncvs.fr.openbsd.org</strong><br>
+Location: Paris, France.<br>
+Maintained by <a href="mailto:openbsd-mirror@bsdfrog.org">Landry Breuil, Antoine Jacoutot</a>.<br>
+Updated every 2 hours from anoncvs1.ca.openbsd.org.<br>
+<p>
+<li><a href="http://mirror.osn.de/"><strong>mirror.osn.de</strong></a><br>
+Location: N&uuml;rnberg, Germany.<br>
+Maintained by <a href="mailto:aw@osn.de">Armin Wolfermann</a>.<br>
+Updated every 3 hours.<br>
+<p>
+<li><strong>ftp.hostserver.de</strong><br>
+Location: Frankfurt, Germany.<br>
+Maintained by <a href="mailto:mirror@hostserver.de">Sebastian Benoit, Peter Hessler</a>.<br>
+Updated hourly from anoncvs1.ca.openbsd.org.<br>
+<p>
+<li><a href="http://www.allbsd.org/"><strong>cvsync.allbsd.org</strong></a><br>
+Location: Tokyo, Japan.<br>
+Maintained by <a href="mailto:hrs@allbsd.org">Hiroki Sato</a>.<br>
+<p>
+<li><strong>anoncvs.eu.openbsd.org</strong><br>
+Location: Stockholm University, Stockholm, Sweden.<br>
+Maintained by <a href="mailto:jj@openbsd.org, ftp@it.su.se">Janne Johansson</a>.<br>
+Updated every 2 hours.<br>
+<p>
+<li><strong>anoncvs.spacehopper.org</strong><br>
+Location: London, United Kingdom.<br>
+Maintained by <a href="mailto:sthen@openbsd.org">Stuart Henderson</a>.<br>
+Updated hourly from anoncvs.ca.openbsd.org.<br>
+<p>
+<li><strong>anoncvs3.usa.openbsd.org</strong><br>
+Location: National Center for Atmospheric Research, Boulder, CO, USA.<br>
+Maintained by <a href="mailto:millert@openbsd.org">Todd C. Miller</a>.<br>
+Updated hourly.<br>
+<p>
+<li><strong>anoncvs4.usa.openbsd.org</strong><br>
+Host also known as <strong>anoncvs4.usa.openbsd.org</strong>.<br>
+Location: New York Internet, New York, NY, USA.<br>
+Maintained by <a href="mailto:millert@openbsd.org">Todd C. Miller</a>.<br>
+Updated hourly.<br>
+<p>
+<li><strong>anoncvs2.usa.openbsd.org</strong><br>
+Host also known as <strong>anoncvs2.usa.openbsd.org, openbsd.se.rit.edu</strong>.<br>
+Location: Rochester Institute of Technology, Rochester, NY, USA.<br>
+Maintained by <a href="mailto:millert@openbsd.org">Todd C. Miller</a>.<br>
+Updated hourly.<br>
+<p>
+<li><strong>anoncvs1.usa.openbsd.org</strong><br>
+Host also known as <strong>anoncvs.usa.openbsd.org, anoncvs1.usa.openbsd.org</strong>.<br>
+Location: Network Media, LLC, Bend, OR, USA.<br>
+Maintained by <a href="mailto:millert@openbsd.org">Todd C. Miller</a>.<br>
+Updated hourly.<br>
+<p>
+
+</ul>
+
+<em>Note:</em> If your server is listed on here with inaccurate or
+unknown information, please contact <a
+href="mailto:beck@openbsd.org"><tt>beck@openbsd.org</tt></a>
+
+<p>
+You may want to use <a href="http://man.openbsd.org/traceroute">traceroute(8)</a>
+to find out which server is nearest you.
+Problems with a server should be reported to the <b>maintainer</b> of the
+server in question.
+
+<p>
+As of March 2016, the CVS repository sizes are
+
+<p>
+<table>
+<tr><td width="20"></td>
+    <td><strong>openbsd-ports</strong></td>
+    <td>- <b>857</b>MB</td></tr>
+<tr><td></td>
+    <td><strong>openbsd-src</strong></td>
+    <td>- <b>2201</b>MB</td></tr>
+<tr><td></td>
+    <td><strong>openbsd-www</strong></td>
+    <td>- <b>598</b>MB</td></tr>
+<tr><td></td>
+    <td><strong>openbsd-xenocara</strong></td>
+    <td>- <b>1426</b>MB</td></tr>
+<tr><td></td>
+    <td><strong>openbsd-cvsroot</strong></td>
+    <td>- <b>1248</b>MB</td></tr>
+</table>
+
+<p>
+The overall repository size currently increases at a rate
+of about <b>400</b>MB per annum. The src repository increases by about
+<b>150</b>MB.
+
+<p>
+<strong>IMPORTANT NOTE:</strong>
+There are a few issues relating to cryptographic software that everyone
+should be aware of:
+
+<ul>
+  <li>
+    <p>
+    The OpenBSD sources are from Canada. As
+    <a href="http://www.efc.ca/pages/doc/crypto-export.html">
+    researched by a Canadian individual</a> and as
+    <a href="http://axion.physics.ubc.ca/ECL.html">
+    described in the Export Control list of Canada</a>,
+    it is legal to export crypto software from Canada to the world.
+  </li>
+  <li>
+    <p>
+    However, if you are outside the USA or Canada, you should not
+    fetch the cryptographic sections of the OpenBSD sources from a
+    CVSync server located in the USA. The files in question are...
+    <ul>
+      <li><tt>src/kerberosIV/*</tt></li>
+      <li><tt>src/kerberosV/*</tt></li>
+      <li><tt>src/lib/libdes/*</tt></li>
+      <li><tt>src/lib/libc/crypt/crypt.c</tt></li>
+      <li><tt>src/lib/libc/crypt/morecrypt.c</tt></li>
+      <li><tt>src/sys/crypto</tt></li>
+      <li><tt>src/sys/netinet</tt></li>
+      <li><tt>src/usr.sbin/afs/src/rxkad/*</tt></li>
+    </ul>
+    <p>
+    Because of the USA ITAR munitions list,
+    crypto software may only be exported to Canada from the USA.
+  </li>
+</ul>
+
+</body>
+</html>

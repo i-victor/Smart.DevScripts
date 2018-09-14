@@ -1,0 +1,454 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!-- If you make edits to any FAQ documents, please start each sentence
+     on a new line, and try to keep the general formatting consistent
+     with the rest of the pages -->
+
+<title>OpenBSD FAQ: Keyboard and Display Controls</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name= "copyright"     content= "This document copyright 1998-2016
+                                      by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="../openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/faq/faq7.html">
+</head>
+
+<body bgcolor= "#ffffff" text= "#000000">
+
+<h2>
+<a href="../index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">FAQ - Keyboard and Display Controls</font>
+<small>
+<a href="index.html" style="font-weight:normal; float:right">[FAQ Index]</a>
+</small>
+</h2>
+<hr>
+
+<ul>
+<li><a href="#Keyboard"     >Remapping the keyboard</a>
+<li><a href="#ConsoleMouse" >Console mouse support</a>
+<li><a href="#Scrollback"   >Accessing the console scrollback buffer</a>
+<li><a href="#SwitchConsole">Switching consoles</a>
+<li><a href="#Blanker"      >Blanking the console after a period of
+                             inactivity</a>
+<li><a href="#Size80x50"    >Changing console font and resolution</a>
+<li><a href="#SerCon"       >Configuring a serial console</a>
+</ul>
+<hr>
+
+<h2 id="Keyboard">Remapping the keyboard</h2>
+
+The <a href="http://man.openbsd.org/kbd">kbd(8)</a> utility can be used to
+change the keyboard encoding.
+Most keyboard options can be controlled using the
+<a href="http://man.openbsd.org/wsconsctl">wsconsctl(8)</a> utility.
+For example, to change keymappings with
+<a href="http://man.openbsd.org/wsconsctl">wsconsctl(8)</a>,
+one would execute the following:
+
+<blockquote><pre>
+# <b>wsconsctl keyboard.encoding=uk</b>
+</pre></blockquote>
+
+Remap <tt>[Caps Lock]</tt> to be <tt>[Control L]</tt>, the left control key:
+
+<blockquote><pre>
+# <b>wsconsctl keyboard.map+="keysym Caps_Lock = Control_L"</b>
+</pre></blockquote>
+
+To make changes permanent, use the
+<a href="http://man.openbsd.org/wsconsctl.conf">wsconsctl.conf(5)</a> file.
+
+<h2 id="ConsoleMouse">Console mouse support</h2>
+
+For the <a href="../alpha.html">alpha</a>, <a href="../amd64.html">amd64</a>
+and <a href="../i386.html">i386</a> platforms, OpenBSD provides
+<a href="http://man.openbsd.org/wsmoused">wsmoused(8)</a>.
+It can be enabled with the <a href="http://man.openbsd.org/rcctl">rcctl(8)</a>
+utility.
+See also the FAQ on the <a href="faq10.html#rc">rc script</a>.
+
+<h2 id="Scrollback">Accessing the console scrollback buffer</h2>
+
+On a few platforms and hardware combinations, OpenBSD provides a console
+scrollback buffer.
+This allows you to see information that has already scrolled past your screen.
+To move up and down in the buffer, use <tt>[SHIFT]+[PGUP]</tt> and
+<tt>[SHIFT]+[PGDN]</tt>.
+The number of pages that you can move up and view is 8.
+Switching consoles will clear the scrollback buffer.
+Due to space limitations, the install kernels do not have this feature.
+
+<p>
+This is a feature of the <a href="http://man.openbsd.org/vga">vga(4)</a> driver,
+so it will not work without a VGA card, or on hardware that uses
+<a href="http://man.openbsd.org/drm">drm(4)</a>.
+
+<h2 id="SwitchConsole">Switching consoles</h2>
+
+On alpha, amd64 and i386 systems with
+<a href="http://man.openbsd.org/vga">vga(4)</a> cards, OpenBSD provides six
+virtual terminals by default, <tt>/dev/ttyC0</tt> through <tt>/dev/ttyC5</tt>.
+You can switch between them using <tt>[CTRL]+[ALT]</tt> together with
+<tt>[F1]</tt> through <tt>[F6]</tt>.
+The virtual terminal <tt>ttyC4</tt> is reserved for use by the X Window system,
+leaving five text consoles available.
+
+<p>
+If you wish to have more than the default number of virtual consoles, use the
+<a href="http://man.openbsd.org/wsconscfg">wsconscfg(8)</a> command to create
+screens for <tt>ttyC6</tt>, <tt>ttyC7</tt> and above.
+For example:
+
+<blockquote><pre>
+# <b>wsconscfg -t 80x25 6</b>       # this will not work on systems using drm(4)
+</pre></blockquote>
+
+This will create a virtual terminal for <tt>ttyC6</tt>, accessed by
+<tt>[CTRL]+[ALT]+[F7]</tt>.
+To get a <tt>login:</tt> prompt on the newly created virtual console, you need
+to set it to <tt>on</tt> in <a href="http://man.openbsd.org/ttys">ttys(5)</a>,
+and either reboot or send <a href="http://man.openbsd.org/init">init(8)</a>
+a HUP signal using <a href="http://man.openbsd.org/kill">kill(1)</a>.
+Add this command to <a href="http://man.openbsd.org/rc.local">rc.local(8)</a>
+if you want the extra screen the next time you boot the computer.
+
+<h2 id="Blanker">Blanking the console after a period of inactivity</h2>
+
+If you wish to blank your console after a period of inactivity without using X,
+modify the following <a href="http://man.openbsd.org/wscons">wscons(4)</a>
+variables:
+
+<ul>
+  <li><b><tt>display.screen_off</tt></b>
+    determines the blanking time in milliseconds.
+  <li><b><tt>display.kbdact</tt></b>
+    if set to <tt>on</tt>, keyboard activity will unblank the screen.
+  <li><b><tt>display.msact</tt></b>
+    if set to <tt>on</tt>, <a href="#ConsoleMouse" >console mouse</a>
+    activity will unblank the screen.
+  <li><b><tt>display.outact</tt></b>
+    if set to <tt>on</tt>, screen output will unblank the screen.
+  <li><b><tt>display.vblank</tt></b>
+    if set to <tt>on</tt> will disable the vertical sync pulse.
+    This will cause many monitors to go into an energy saver mode.
+</ul>
+
+For example:
+
+<blockquote><pre>
+# <b>wsconsctl display.screen_off=60000</b>
+display.screen_off -> 60000
+</pre></blockquote>
+
+Set them permanently by editing
+<a href="http://man.openbsd.org/wsconsctl.conf">wsconsctl.conf(5)</a>.
+The blanker is activated when either <tt>display.kbdact</tt> or
+<tt>display.outact</tt> is set to <tt>on</tt>.
+Note that one of those two must be <tt>off</tt>.
+
+<h2 id="Size80x50">Changing console font and resolution</h2>
+
+alpha, amd64 and i386 users with VGA but
+non-<a href="http://man.openbsd.org/drm">drm(4)</a> display adapters normally
+get a console screen of 25 lines of 80 characters.
+However, many VGA video cards are capable of displaying a higher text
+resolution of 50 lines of 80 characters.
+
+<p>
+First, a font that supports the desired resolution must be loaded using the
+<a href="http://man.openbsd.org/wsfontload">wsfontload(8)</a> command.
+The standard 80x25 text screen uses 8x16 pixel fonts; to double the number of
+lines, we will have to use 8x8 pixel fonts.
+
+<p>
+After that, we will have to delete and recreate a
+<a href="#SwitchConsole">virtual console</a> at the desired screen resolution,
+using the <a href="http://man.openbsd.org/wsconscfg">wsconscfg(8)</a> command.
+
+<p>
+This can be done automatically at boot by adding the following lines to
+the end of your <a href="http://man.openbsd.org/rc.local">rc.local(8)</a> file:
+
+<blockquote><pre>
+wsfontload -h 8 -e ibm /usr/share/misc/pcvtfonts/vt220l.808
+wsconscfg -dF 5
+wsconscfg -t 80x50 5
+</pre></blockquote>
+
+As with any modification to your system configuration, it is recommended
+you spend some time with the man pages to understand what these commands do.
+
+<p>
+The first line above loads the 8x8 font.
+The second line deletes screen 5 (which would be accessed by
+<tt>[CTRL]+[ALT]+[F6]</tt>).
+The third line creates a new screen 5 with 50 lines of 80 characters each.
+If you do this, you will see your primary screen, and the other three default
+virtual consoles, come up in the standard 80x25 mode, but a new screen 5 at
+80x50 accessible through <tt>[CTRL]+[ALT]+[F6]</tt>.
+
+<p>
+Remember that <tt>[CTRL]+[ALT]+[F1]</tt> is screen 0 (<tt>ttyC0</tt>).
+If you wish to alter other screens, simply repeat the delete and add screen
+steps for whichever screens you want running at the 80x50 resolution.
+
+<p>
+You should avoid changing screen 4 (<tt>ttyC4</tt>, <tt>[CTRL]+[ALT]+[F5]</tt>),
+which is used by X as a graphical screen.
+It is also not possible to change the resolution of the primary console
+device (i.e., <tt>ttyC0</tt>).
+
+<p>
+As one might expect, all these commands can be run as root at the console.
+
+<p>
+<b>Note: this will not work on all video cards.</b>
+Unfortunately, not all video cards support the uploaded fonts that
+<a href="http://man.openbsd.org/wscons">wscons(4)</a>
+requires to achieve the 80x50 text mode.
+In these cases, you might wish to consider running X.
+Cards supported by the
+<a href="http://man.openbsd.org/drm">drm(4)</a>
+driver will have a higher resolution anyway, but can not use these uploaded
+fonts.
+
+<h2 id="SerCon">Configuring a serial console</h2>
+
+There are many reasons you may wish to use a serial console for your OpenBSD
+system:
+
+<ul>
+  <li>Recording console output (for documentation)
+  <li>Remote management
+  <li>Easier maintenance of a large quantity of machines
+  <li>Providing a useful dmesg from machines which might otherwise be difficult
+    to get one from
+  <li>Providing an accurate <tt>trace</tt> and <tt>ps</tt> output if your system
+    crashes so developers can have a chance to fix the problem
+</ul>
+
+OpenBSD supports serial console on most platforms, however details vary greatly
+between platforms.
+
+<p>
+Note that serial interfacing is not a trivial task -- you will often need
+unusual cables, and ports are not standardized between machines, in some cases,
+not even consistent on one machine.
+It is assumed you know how to select the appropriate cable to go between your
+computer and the device acting as your serial terminal.
+
+<h3 id="SerContty"><tt>/etc/ttys</tt> change</h3>
+
+There are two parts to getting a functional serial console on an OpenBSD system.
+First, you must have OpenBSD use your serial port as a console for status and
+single user mode.
+This part is very platform-dependent.
+Second, you must enable the serial port to be used as an interactive terminal,
+so a user can log into it when running multi-user.
+This part is fairly similar between platforms, and is detailed here.
+
+<p>
+Terminal sessions are controlled by the
+<a href="http://man.openbsd.org/ttys">ttys(5)</a> file.
+Before OpenBSD will give you a <tt>login:</tt> prompt at a device, it has to be
+enabled in <tt>/etc/ttys</tt>.
+After all, there are uses for a serial port other than for a terminal.
+In platforms which typically have an attached keyboard and screen as a console,
+the serial terminal is typically disabled by default.
+We'll use the i386 platform as an example.
+In this case, you must edit the line that reads:
+
+<blockquote><pre>
+tty00   "/usr/libexec/getty std.9600"   unknown off
+</pre></blockquote>
+
+to read something like:
+
+<blockquote><pre>
+tty00   "/usr/libexec/getty std.9600"   vt220   on secure
+</pre></blockquote>
+
+Here, <tt>tty00</tt> is the serial port we are using as a console.
+<tt>vt220</tt> is the <a href="http://man.openbsd.org/termcap.5">termcap(5)</a>
+entry that matches your terminal.
+Other likely options might include <tt>vt100</tt>, <tt>xterm</tt>, etc.
+The <tt>on</tt> bit activates the
+<a href="http://man.openbsd.org/getty">getty(8)</a> for that serial port, so
+that a <tt>login:</tt> prompt will be presented.
+The <tt>secure</tt> bit permits a <tt>root</tt> (uid 0) login at this console.
+The <tt>9600</tt> bit is the terminal baud rate.
+Resist the urge to crank the baud rate up to the maximum your hardware can
+support, as you are more likely to create problems than benefit.
+Most systems have a <tt>default</tt> speed (supported by default by the boot ROM
+and/or the boot loader, often 9600), use this unless you have real reason to use
+something different.
+
+<p>
+Note that you can use a serial console for install without doing this step, as
+the system is running in single user mode, and not using <tt>getty</tt> for
+login.
+
+<p>
+On some platforms and some configurations, you must bring the system up in
+single user mode to make this change if a serial console is all you have
+available.
+
+<h3>amd64 and i386</h3>
+To direct the boot process to use the serial port as a console, create or edit
+your <a href="http://man.openbsd.org/boot.conf">boot.conf(5)</a> file to include
+the line
+
+<blockquote><pre>
+set tty com0
+</pre></blockquote>
+
+The default baud rate is 9600bps.
+This can be changed with a <tt>/etc/boot.conf</tt> line using the <tt>stty</tt>
+option.
+This file is put on your boot drive, which could also be your install media, or
+the command can be entered at the <tt>boot&gt;</tt> prompt of
+<a href="http://man.openbsd.org/boot">boot(8)</a> for a one-time serial console
+usage.
+
+<h4>amd64 and i386 notes:</h4>
+
+<ul>
+<li>OpenBSD numbers the serial ports starting at <i>tty00</i>,
+DOS/Windows labels them starting at <i>COM1</i>.
+So, keep in mind <i>tty02</i> is <i>COM3</i>, not <i>COM2</i>.
+
+<li>Some systems may be able to operate without a video card in the
+machine, but certainly not all -- many systems consider this an error
+condition.
+Some machines will even refuse to work easily without a keyboard attached.
+
+<li>Some systems are capable of redirecting all BIOS keyboard and screen
+activity to a serial port through a configuration option, so the machine
+can be completely maintained through the serial port.
+Your results may vary -- when using this feature, some BIOSs may prevent
+the boot loader from seeing the serial port, and thus, the kernel will
+not be told to use it.
+Some BIOSs have an option to "Continue Console Redirection after POST"
+(Power On Self Test), this should be set to "OFF", so the boot loader
+and the kernel can handle their own console.
+Unfortunately, this feature is not universal.
+
+<li>PC-compatible computers are not designed to be run from a serial
+console, unlike some other platforms.
+Even those systems that support a serial console usually have it as a
+BIOS configuration option -- and should the configuration information
+get corrupted, you will find the system looking for a standard monitor
+and keyboard again.
+You generally must have some way to get a monitor and keyboard to your
+amd64 and i386 systems in an emergency.
+
+<li>You will need to edit <tt>/etc/ttys</tt> as <a href="#SerContty">above</a>.
+
+</ul>
+
+<h3>sparc64</h3>
+These machines are designed to be completely maintainable with a serial
+console.
+Simply remove the keyboard from the machine, and the system will run serial.
+
+<ul>
+<li>On some systems, the serial ports are labeled <i>ttya</i>, <i>ttyb</i>,
+<i>ttyh0</i> and/or <i>ttyh1</i>.
+
+<li>Unlike some other platforms, it is not necessary to make any changes to
+<tt>/etc/ttys</tt> to use a serial console.
+
+<li>The sparc64 systems interpret a BREAK signal on the console
+port to be the same as a STOP-A command, and kicks the system back to
+the Forth prompt, stopping any application and operating system at that
+point.
+This is handy when desired, but unfortunately, some serial terminals at
+power-down and some RS-232 switching devices send something the computer
+interprets as a break signal, halting the machine.
+Test before you go into production.
+
+<li>If you have a keyboard and monitor attached, you can still force
+the serial console to be used instead by using the following commands
+at the <tt>ok</tt> prompt:
+
+<blockquote><pre>
+ok <b>setenv input-device ttya</b>
+ok <b>setenv output-device ttya</b>
+ok <b>reset</b>
+</pre></blockquote>
+
+If the keyboard and monitor (<tt>ttyC0</tt>) are active in <tt>/etc/ttys</tt>
+(<a href="#SerContty">above</a>), you can use the keyboard and monitor in X.
+</ul>
+
+<h3>MacPPC</h3>
+The MacPPC machines are configured for a serial console through OpenFirmware.
+Use the commands:
+
+<blockquote><pre>
+ok <b>setenv output-device scca</b>
+ok <b>setenv input-device scca</b>
+ok <b>reset-all</b>
+</pre></blockquote>
+
+Set your serial console to 57600bps, 8N1.
+
+<h4>MacPPC notes</h4>
+<ul>
+<li>Unfortunately, serial console is not directly possible on most MacPPCs.
+While most of these machines do have serial hardware, it isn't accessible
+outside the machine.
+Fortunately, a few companies offer add-on devices for several Macintosh
+models which will make this port available for use as a serial console
+(or other uses).
+Use your favorite search engine and look for "Macintosh internal serial port."
+
+<li>You will have to change <tt>tty00</tt> in <tt>/etc/ttys</tt> to
+<tt>on</tt> and set the speed to 57600 instead of the default of 9600 as
+detailed <a href="#SerContty">above</a> in single user mode before
+booting multi-user and having the serial console functional.
+</ul>
+
+<h3>I get input/output error when trying to use my tty devices</h3>
+
+You need to use <tt>/dev/cuaXX</tt> for connections initiated from the OpenBSD
+system, the <tt>/dev/ttyXX</tt> devices are intended only for terminal or
+dial-in usage.
+While it was possible to use the tty devices in the past, the OpenBSD kernel
+is no longer compatible with this usage.
+
+<p>
+From
+<a href="http://man.openbsd.org/cua">cua(4)</a>:
+
+<p>
+For hardware terminal ports, dial-out is supported through matching
+device nodes called calling units.
+For instance, the terminal called <tt>/dev/tty03</tt> would have a matching
+calling unit called <tt>/dev/cua03</tt>.
+These two devices are normally differentiated by creating the calling unit
+device node with a minor number 128 greater than the dial-in device node.
+<i>Whereas the dial-in device (the tty) normally requires a
+hardware signal to indicate to the system that it is active, the
+dial-out device (the cua) does not, and hence can communicate unimpeded
+with a device such as a modem</i>.
+This means that a process like
+<a href="http://man.openbsd.org/getty">getty(8)</a>
+will wait on a dial-in device until a connection is established.
+Meanwhile, a dial-out connection can be established on the dial-out
+device (for the very same hardware terminal port) without disturbing
+anything else on the system.
+The <a href="http://man.openbsd.org/getty">getty(8)</a>
+process does not even notice that anything is happening on the terminal port.
+If a connecting call comes in after the dial-out connection has finished, the
+<a href="http://man.openbsd.org/getty">getty(8)</a>
+process will deal with it properly, without having noticed the intervening
+dial-out action.
+
+<p>
+</body>
+</html>

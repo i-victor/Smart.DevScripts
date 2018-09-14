@@ -1,0 +1,4 @@
+
+# Local Daemons
+pkg_scripts=redis memcached  postgresql mysqld mongod apache2 dovecot cupsd messagebus slim
+xdm_flags=NO

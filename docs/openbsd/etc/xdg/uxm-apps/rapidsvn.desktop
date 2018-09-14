@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=RapidSVN
+Comment=Svn repository viewer
+Exec=rapidsvn
+Icon=/etc/xdg/uxm-icons/rapidsvn.png
+StartupNotify=true
+Categories=Development;RevisionControl;

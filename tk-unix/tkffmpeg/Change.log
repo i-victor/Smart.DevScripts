@@ -1,0 +1,63 @@
+0.0.82
+- Add Spanish language
+0.0.81
+- Fix libx264 bugs
+- Added additional command line options
+0.0.80
+- Added tray icon
+- Changed icons
+- Create tkffmpeg files
+- Optimize programm code
+- Added "Copy" check
+0.0.77
+- Online change of language was added
+- Language files were changed
+- Fixed GUI interface
+0.0.76
+- Fixed GUI interface
+- Add running time
+- Fixed some bugs
+0.0.75
+- Add multi files converted
+0.0.73
+- Fixed some bugs
+0.0.70
+- Add info about file
+0.0.68
+- Increased speed of execution of the program
+- Add video and audio options for dvd-video converting
+0.0.67
+- Add "Abort" button
+- Add progress bar
+- Optimize programm code
+0.0.66
+- Add change temp folder
+- Change free space needs
+- Add Burn and Go buttons disabled
+- Change language variables
+0.0.65
+- Add to dvd-video converting
+- Add burn dvd-video on dvd-disk
+0.0.62
+- Fix kill error
+- Change pid value
+- Change theme color
+0.0.61
+- Fix combobox error
+- Change Tk theme
+- Change Frame style
+- Add clear log window
+- Color text in log window
+0.0.6
+- Fix error if dirname with space
+- Add default.ini
+- Add advanced options window
+- Add multi-language
+- Add Russian language
+- Add verifying real media player programm
+- Optimize programm code
+0.0.5
+- Change save options
+- Fix -y key error
+- Fix error in filename with space
+- Change open option after work ffmpeg

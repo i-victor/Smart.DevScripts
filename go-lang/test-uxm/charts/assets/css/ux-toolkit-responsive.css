@@ -1,0 +1,130 @@
+/***** Smart UX CSS Toolkit @ Responsive :: v.3.5.7 r.2017.09.05 / smart.framework.v.3.5 *****/
+
+/*
+License: BSD
+	extended by unixman (stable.171005), (c) 2015-2017 unix-world.org
+	based on Pure.css v.0.6 by Yahoo :: http://purecss.io/
+*/
+
+@media all and (max-width:767px) {
+
+	/* All buttons Responsive */
+
+	.ux-button {
+		width: 98% !important;
+		min-width: 98% !important;
+		margin: 0.7em 0 0;
+	}
+
+	.ux-button-responsive {
+		width: 98% !important;
+		min-width: 98% !important;
+		margin: 0.7em 0 0;
+	}
+
+	/* Reflow Tables */
+
+	.ux-reflow-table {
+		min-width: 98% !important;
+		width: 98% !important;
+	}
+
+	.ux-reflow-table td,
+	.ux-reflow-table th,
+	.ux-reflow-table tbody th,
+	.ux-reflow-table tbody td,
+	.ux-reflow-table thead td,
+	.ux-reflow-table thead th {
+		display: block !important;
+		margin: 0 !important;
+		border: 0 !important;
+	}
+
+	.ux-reflow-table tr,
+	.ux-reflow-table tbody tr,
+	.ux-reflow-table thead tr {
+		display: block !important;
+		border-bottom: 1px dotted #AAAAAA !important;
+	}
+
+	/* All Form Elements Responsive */
+
+	.ux-form button[type="submit"] {
+		margin: 0.7em 0 0;
+	}
+
+	.ux-form input:not([type]),
+	.ux-form input[type="text"],
+	.ux-form input[type="password"],
+	.ux-form input[type="email"],
+	.ux-form input[type="url"],
+	.ux-form input[type="date"],
+	.ux-form input[type="month"],
+	.ux-form input[type="time"],
+	.ux-form input[type="datetime"],
+	.ux-form input[type="datetime-local"],
+	.ux-form input[type="week"],
+	.ux-form input[type="number"],
+	.ux-form input[type="search"],
+	.ux-form input[type="tel"],
+	.ux-form input[type="color"],
+	.ux-form label,
+	.ux-form textarea,
+	.ux-form select,
+	.ux-field {
+		margin-bottom: 0.3em;
+		display: block;
+		width: 98% !important;
+		min-width: 98% !important;
+	}
+
+	.ux-group input:not([type]),
+	.ux-group input[type="text"],
+	.ux-group input[type="password"],
+	.ux-group input[type="email"],
+	.ux-group input[type="url"],
+	.ux-group input[type="date"],
+	.ux-group input[type="month"],
+	.ux-group input[type="time"],
+	.ux-group input[type="datetime"],
+	.ux-group input[type="datetime-local"],
+	.ux-group input[type="week"],
+	.ux-group input[type="number"],
+	.ux-group input[type="search"],
+	.ux-group input[type="tel"],
+	.ux-group input[type="color"],
+	.ux-form label,
+	.ux-form textarea,
+	.ux-form select,
+	.ux-field {
+		margin-bottom: 0;
+		width: 98% !important;
+		min-width: 98% !important;
+	}
+
+	.ux-form-aligned .ux-control-group label {
+		margin-bottom: 0.3em;
+		text-align: left;
+		display: block;
+		width: 100%;
+	}
+
+	.ux-form-aligned .ux-controls {
+		margin: 1.5em 0 0 0;
+	}
+
+	.ux-form .ux-help-inline,
+	.ux-form-message-inline,
+	.ux-form-message {
+		display: block;
+		font-size: 0.75em;
+		padding: 0.2em 0 0.8em;
+	}
+
+	.ux-menu-horizontal {
+		white-space: normal !important;
+	}
+
+}
+
+/***** END *****/

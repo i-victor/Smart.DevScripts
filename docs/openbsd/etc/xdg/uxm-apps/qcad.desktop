@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=QCad 2D
+Comment=Open Source CAD for Technical Design
+Exec=qcad %f
+Icon=/etc/xdg/uxm-icons/qcad.png
+Terminal=false
+Type=Application
+Categories=CAD;Graphics;GTK;
+MimeType=image/vnd.dxf;

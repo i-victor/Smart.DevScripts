@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Jabber Client
+Comment=Connect to XMPP Server
+Exec=tkabber
+Icon=/etc/xdg/uxm-icons/jabber.png
+Terminal=false
+Categories=GTK;Network;
+Type=Application

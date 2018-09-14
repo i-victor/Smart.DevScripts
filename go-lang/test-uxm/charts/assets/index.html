@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Bar Chart</title>
+	<link rel="stylesheet" type="text/css" href="css/ux-toolkit.css">
+	<link rel="stylesheet" type="text/css" href="css/ux-toolkit-responsive.css">
+	<script src="js/jquery.js"></script>
+	<script src="js/Chart.Core.js"></script>
+	<script src="js/Chart.Bar.js"></script>
+	<style>
+		body {
+			background: #FFFFFF;
+			color: #000000;
+		}
+		button {
+			color: #000000;
+		}
+	</style>
+</head>
+<body>
+<div style="width: 50%">
+	<canvas id="canvas" height="450" width="600"></canvas>
+</div>
+<div id="legend-bar" style="padding:8px; border: 1px solid #ECECEC;"></div>
+<script>
+function drawCharts() {
+
+	var randomScalingFactor = function(){ return Math.round(Math.random()*100)};
+
+	var barChartData = {
+		labels : ["January","February","March","April","May","June","July"],
+		datasets : [
+			{
+				label: "My First Bar",
+				fillColor : "rgba(220,220,220,0.5)",
+				strokeColor : "rgba(220,220,220,0.8)",
+				highlightFill: "rgba(220,220,220,0.75)",
+				highlightStroke: "rgba(220,220,220,1)",
+				data : [randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor()]
+			},
+			{
+				label: "My Second Bar",
+				fillColor : "rgba(151,187,205,0.5)",
+				strokeColor : "rgba(151,187,205,0.8)",
+				highlightFill : "rgba(151,187,205,0.75)",
+				highlightStroke : "rgba(151,187,205,1)",
+				data : [randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor(),randomScalingFactor()]
+			}
+		]
+
+	}
+
+	var ctx = document.getElementById("canvas").getContext("2d");
+	window.myBar = new Chart(ctx).Bar(barChartData, {
+		responsive : true,
+		scaleShowValues: true,
+		multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
+		legendTemplate : "<% for (var i=0; i<datasets.length; i++){%><span style=\"padding:2px; background-color:<%=datasets[i].strokeColor%>\">&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;<%if(datasets[i].label){%><%=datasets[i].label%><%}%> &nbsp; &nbsp; &nbsp; <%}%>"
+	});
+	document.getElementById('legend-bar').innerHTML = window.myBar.generateLegend();
+
+} //END FUNCTION
+</script>
+<script>
+function goRpcCall(cmd, msg, val) {
+	try{
+		window.external.invoke(JSON.stringify({ cmd: String(cmd), msg: String(msg), val: String(val) }));
+	} catch(err){}
+} //END FUNCTION
+</script>
+<script>
+window.onload = function() {
+	drawCharts();
+};
+</script>
+<button class="ux-button ux-button-primary" onClick="goRpcCall('test', 'This is a test message from Javascript', 100);">Test RPC Click</button> &nbsp;
+<button class="ux-button" onClick="goRpcCall('close');">Close Window</button>
+</body>
+</html>

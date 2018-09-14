@@ -1,0 +1,42 @@
+
+##### OpenBSD Networking
+
+## Setup the gateway
+
+#/etc/mygate
+169.254.101.1
+
+## Setup network adapters
+
+#file: /etc/hostname.nfe0
+#permanent IP address + 1 optional alias address
+inet 169.254.101.180 255.255.0.0
+	inet alias 192.168.10.199 255.255.255.0
+
+#file: /etc/hostname.em0
+#using DHCP
+dhcp
+
+#file: /etc/hostname.athn0
+#setup a wireless adapter
+nwid 'Wireless Network'
+mode 11n
+wpa
+wpaakms psk
+wpaprotos wpa2
+wpagroupcipher ccmp
+# must add "0x" prefix below before the hash passphrase generated with: wpa_passphrase "Your Network"
+wpakey 0xhexhashgoeshere
+dhcp
+
+#file: /etc/hostname.bridge0
+#network bridge ; need to be created first with command (as root): ifconfig bridge0 create
+add tap0
+add em0
+up
+
+#file:/etc/hostname.tap0
+#virtual network interface tap0 ; need to be created first with command (as root): ifconfig tap0 create ; chmod 0660 /dev/tap0
+inet 169.254.101.1 255.255.0.0
+
+### END

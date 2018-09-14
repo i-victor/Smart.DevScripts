@@ -1,0 +1,666 @@
+
+###################################################################################
+## CLOUDSERVER :: NetBSD :: for NetBSD 6.1.5 amd64
+## (c) 2008-2015 unix-world.org
+## release 2016-09-25 15:31
+## based on pkgsrc-2014Q3-r141213 with aadditions and modifications
+###################################################################################
+
+
+#################################################################
+##### BOOTSTRAP #####
+#################################################################
+##### Comments
+# Some packages fail to build with PREFER_PKGSRC=yes, so have to set PREFER_PKGSRC=no in Makefile
+# if a package (make / bmake) waits too long then a depending package that has been upgraded may be broken after upgrade in pkgsrc
+#####
+# create /_SRC-PKG
+# unpack the pkgsrc into /_SRC-PKG
+# unpack the UNIXW-automate-builds into /_SRC-PKG
+cd /_SRC-PKG
+pkgsrc/bootstrap/bootstrap --prefix=/opt/unixw --pkgdbdir=/opt/unixw/var/db/pkg --varbase=/opt/unixw/var --sysconfdir=/opt/unixw/etc
+# replace the /opt/unixw/etc/mk.conf with /_SRC-PKG/UNIXW-automate-builds/mk-etc-file/mk.conf
+##### content of mk.conf should be like:
+LDFLAGS += -m64 -O2 -R/opt/unixw/lib -L/opt/unixw/lib
+CFLAGS += -m64 -O2 -I/opt/unixw/include
+CXXFLAGS += -m64 -O2 -I/opt/unixw/include
+#CPPFLAGS += -m64 -O2 -I/opt/unixw/include
+PREFER_PKGSRC=          yes
+PREFER.Xfixes=          native
+PREFER.zlib=            pkgsrc
+PREFER.bzip2=           pkgsrc
+PREFER.openssl=         pkgsrc
+PREFER.gnutls=          pkgsrc
+PREFER.sqlite3=         pkgsrc
+PKG_DBDIR=              /opt/unixw/var/db/pkg
+LOCALBASE=              /opt/unixw
+VARBASE=                /opt/unixw/var
+PKG_SYSCONFBASE=        /opt/unixw/etc
+PKG_TOOLS_BIN=          /opt/unixw/sbin
+PKGMANDIR=              man
+######
+# delete the folder the /_SRC-PKG/work
+#################################################################
+
+
+#################################################################
+# PKG-TOOLS [9] :: 10%
+###########################
+# 00.pkg-tools							# Build all using by running in shell: /_SRC-PKG/UNIXW-automate-builds/00.unixw-build_pkg-tools.sh build
+###########################
+### PKG Tools
+#[pkgtools/bootstrap-mk-files]			# bootstrap mk files (req. by bmake)
+#[devel/bmake]							# Portable NetBSD make
+#[pkgtools/pkg_install]					# Package Install Tools
+#[pkgtools/digest]						# PKG Digest
+#[pkgtools/osabi]						# Operating System version dummy-package
+#[pkgtools/bootstrap-extras]			# bootstrap extra files
+#[pkgtools/pkg_tarup]					# Generate packages from binary instaled
+#[pkgtools/pkg_chk]						# Check Packages
+#[pkgtools/pkg_rolling-replace]			# Replace Packages inPlace Upgrades
+###
+# delete the folder /opt/unixw and re-create it (mkdir /opt/unixw) + restore dir structure from /_SRC-PKG/UNIXW-automate-builds/opt-dir-structure/unixw
+rm -R /opt/unixw
+# restore the /opt/unixw dir structure and the /opt/unixw/etc/mk.conf
+mkdir /opt/unixw
+cp -R -p /_SRC-PKG/UNIXW-automate-builds/opt-dir-structure/unixw/* /opt/unixw/
+# reinstall the above packages using the built packages which result from above steps:
+cd /_SRC-PKG-BUILD-LOG/00.unixw-build_pkg-tools.list/packages-All
+pkg_add -K /opt/unixw/var/db/pkg ./*.tgz
+# check installation:
+/opt/unixw/sbin/pkg_info
+###
+# NOTICE !! use only: /opt/unixw/bin/bmake {clean|package} for packages from pkgsrc with /opt/unixw destination / integration
+###
+# any new packages for /opt/unixw should be built using /opt/unixw/bmake package
+# use only /opt/unixw/bmake for operations like clean and others
+# any new packages for /opt/unixw should be added using:
+#/opt/unixw/sbin/pkg_add some_package-x.y.z.tgz
+# any new packages for /opt/unixw should be deleted using:
+#/opt/unixw/sbin/pkg_delete some_package-x.y.z.tgz
+###
+###########################
+# PKG-TOOLS :: END
+#################################################################
+
+
+#################################################################
+# DEV-TOOLS [101] :: 20%
+###########################
+# 01.dev-tools							# Build all using by running in shell: /_SRC-PKG/UNIXW-automate-builds/01.unixw-build_dev-tools.sh build
+###########################
+### GNU Environment
+#[devel/libtool-base]					# GNU LibTool Base
+#[devel/libtool-info]					# GNU LibTool Info
+#[devel/ncurses :: unixw]				# CRT screen handling and optimization package [FIX: remove circular dependency on gmake]
+#[converters/libiconv]					# Character set conversion library
+#[devel/gettext-lib]					# GNU GetText Lib
+#[devel/gettext-tools]					# GNU GetText Tools
+#[devel/gmake :: unixw+PKG]				# GNU make [UPGRADE to 4.1]
+#[lang/f2c]								# GNU Fortran to C compiler (can emulate Fortran 77)
+#[archivers/gtar-base]					# GNU Tar Base
+#[archivers/gtar-info]					# GNU Tar Info
+#[archivers/gtar]						# GNU Tar
+#[lang/g95 :: unixw+PKG]				# Fortran 95 compiler from g95.org [DOWNGRADE to 0.93 because the default have early dependency on automake and autoconf]
+#[devel/libtool-fortran]				# Generic shared library support script (the script itself, incl. Fortran)
+#[devel/libtool]						# GNU LibTool
+#[devel/libf2c]							# f2c Fortran support library
+#[devel/pkg-config]						# PKG Config (Manage Library compile/link flags)
+#[pkgtools/x11-links]					# PKG X11 Links
+#[archivers/xz]							# XZ utilities
+#[devel/zlib :: unixw+PKG]				# ZLib [FIX: DOWNGRADE to the same version (1.2.3) as NetBSD, check in /usr/lib/zlib.h ; this is necessary because the build-in Xorg server is used and will conflict with other zlib versions in this case ...]
+#[devel/yasm]							# BSD Licensed NASM Assembler
+#[devel/m4]								# GNU m4 (macro processor for Unix)
+#[lang/perl5]							# Perl Language (MultiThreaded Version)
+#[devel/bison]							# GNU yacc replacement
+#[devel/flex]							# GNU Fast clone of lex
+#[devel/binutils]						# GNU BinUtils
+#[devel/readline]						# GNU Readline
+#[devel/p5-gettext]						# Perl5 module interface to C I18N functions (req. by help2man)
+#[converters/help2man]					# Generate simple manual pages from program output (req. by autoconf and flex)
+#[devel/autoconf]						# Generates automatic source code configuration scripts
+#[devel/automake]						# GNU Standards-compliant Makefile generator
+#[devel/autoconf213]					# Generates automatic source code configuration scripts
+#[devel/automake14]						# GNU Standards-compliant Makefile generator
+#[devel/gmp :: unixw+PKG]				# Library for arbitrary precision arithmetic [DOWNGRADE to 5.1]
+#[math/mpfr]							# GMP-based library for multiple-precision floating-point computations
+#[lang/gawk]							# GNU AWK
+#[textproc/gsed]						# GNU SED
+#[devel/gperf]							# GNU Perf
+#[misc/p5-Locale-libintl]				# Perl internationalization library
+#[textproc/p5-Text-Unidecode]			# Perl5 module that transliterates Unicode to US-ASCII
+#[converters/p5-Unicode-EastAsianWidth]	# Perl5 module that provides properties of East Asian characters
+#[devel/gtexinfo]						# GNU TexInfo
+#[sysutils/gnuit]						# GNU IT
+#[devel/libgetopt]						# Library for handling --long options
+#[devel/libidn]							# Internationalized Domain Names command line tool
+#[devel/gettext-asprintf]				# GNU GetText Asprintf
+#[devel/gettext-m4]						# GNU GetText M4
+#[devel/gettext]						# GNU GetText
+#[archivers/bsdtar]						# BSD Tar Archiver (req. by MySQL5)
+#[archivers/gzip]						# GNU GZip
+#[archivers/bzip2]						# BZip 2
+#[archivers/unzip]						# Zip Unarchiver
+#[archivers/zip]						# Zip Archiver
+#[archivers/zziplib]					# ZipLib
+#[archivers/p7zip :: unixw]				# Extremely Strong and Secure Zip Type Archiver [LGPL License]
+#[archivers/lzo]						# LZO Archiver
+#[archivers/liblzo]						# Lib LZO
+#[archivers/pax]						# POSIX standard archiver with many extensions
+#[archivers/unzoo]						# Extract ZOO Archives
+#[archivers/lzip]						# Lossless data compressor based on the LZMA algorithm
+#[devel/ucl]							# Portable lossless data compression library (req. by upx)
+#[archivers/upx]						# Ultimate packer for executables
+#[devel/p5-perl-headers]				# Perl header files
+#[devel/pcre]							# Perl Compatible Regular Expressions library
+#[devel/re2c]							# Deterministic Finite State Automaton generator (req. by PHP if changed)
+#[shells/bash]							# GNU Bourne Again Shell
+#[devel/libcfg+]						# Command line and configuration file parsing library (req. by GNU TLS)
+#[devel/libltdl]						# Generic shared library support - libltdl abstraction library (req. by Guile)
+#[lang/guile]							# GNU's Ubiquitous Intelligent Language for Extension (recommended for GnuTLS)
+#[lang/mawk]							# Fast AWK clone
+#[devel/p5-Perl4-CoreLibs]				# Libraries historically supplied with Perl 4 [req. by OpenSSL 1.x]
+#[security/openssl :: unixw+PKG]		# OpenSSL Crypto (no zlib !!) [UPGRADE] [check OPTIONS += m2 threads] + [add to options: CONFIGURE_ARGS+=enable-camellia ; add to PLIST.common if missing: include/openssl/camellia.h]
+#[security/libgpg-error]				# Definitions of common error values for all GnuPG components
+#[security/libgcrypt]					# GNU cryptographic library (req. by LibTasn1) [OPTIONS]
+#[security/libtasn1]					# GNU ASN.1 structure parser library (req. by GNU TLS)
+#[security/opencdk]						# Open Crypto Development Kit (req. by GNU TLS)
+#[security/nettle]						# Cryptographic library (req. by GnuTLS)
+#[devel/editline]						# NetBSD Editline library (libedit) for generic line editing (req. by GnuTLS)
+#[security/gnutls :: unixw+PKG]			# GNU TLS (Transport Layer Security) [UPGRADE]
+#[devel/libntlm]						# NTLM authentication (req. by GNU SASL)
+#[databases/sqlite3 :: unixw+PKG] 		# SQLite v3 (req. for Heimdal) [DISABLE Built-in] [UPGRADE]
+#[security/heimdal]						# Kerberos 5 implementation (req. by GSasl)
+#[security/gsasl]						# GNU SASL (Simple Authentication and Security Layer)
+#[textproc/expat]						# XML parser library written in C
+#[textproc/xmlcatmgr]					# XML and SGML catalog manager (devel required)
+#[textproc/libxml2]						# GNOME XML Parser (req. by Apache / PHP)
+#[devel/autogen]						# GNU The Automated Text and Program Generation Tool
+#[devel/libelf]							# ELF object file access library (req. by glib2)
+#[devel/libffi]							# Foreign function interface (req. by glib2)
+#[devel/glib2]							# Useful routines for C programming - glib2
+#[security/libssh2]						# SSH2 protocol library (req. by CURL)
+#[www/curl]								# Client that groks URLs
+#[lang/python27]						# Interpreted, interactive, object-oriented programming language
+#[devel/libslang2]						# Routines for rapid alpha-numeric terminal applications development (req. by mc)
+#[security/libmcrypt]					# Crypto algorithms library
+#[security/mhash]						# Hash algorithms library
+#[security/tcp_wrappers]				# Monitor and filter incoming requests for network services
+#[net/net-snmp]							# SNMP Library (req. by UPS software)
+#[devel/libusb]							# USB Library (req. by UPS software)
+#[devel/libevent]						# Asynchronous event notification library (req. by Trickle and PgBouncer)
+#[databases/gdbm] 						# GNU Database Manager
+#[databases/db4]						# Berkeley DB
+###########################
+# DEV-TOOLS :: END
+#################################################################
+
+
+################################################################
+# BASE [130] :: 50%
+###########################
+# 02.base
+###########################
+### SYS [13]
+#[net/lftp :: unixw]					# Special FTP Client with SSH and partial WebDAV support [OPTIONS += gnutls]
+#[www/lynx]								# Lynx - Text based Browser
+#[net/wget :: unixw+PKG]				# WGet Browser [UPGRADE, the old core dumps]
+#[sysutils/mc 	:: unixw]				# Midnight Comander (File Manager) [OPTIONS = mc-charset mc-edit mc-samba mc-subshell mc-vfs slang]
+#[editors/nano]							# Nano Editor (base required)
+#[security/cyrus-sasl]					# Cyrus SASL Client
+#[security/cyrus-saslauthd]				# Cyrus SASL Daemon
+#[security/gnupg]						# GNU Privacy Guard v.1
+#[mail/mutt-devel :: unixw]				# Mail Utility (base required) [OPTIONS = idn ssl smime ncurses]
+#[sysutils/mktemp]						# Temporary files - safe creation
+#[sysutils/whowatch]					# display real-time user information
+#[sysutils/mbmon]						# hardware MotherBoard monitor
+#[sysutils/pciutils]					# PCI Utils (lspci ; setpci)
+### Graph [9]
+#[fonts/fontconfig]  					# Font rendering engine and library API (req. by GD and Poppler)
+#[graphics/freetype2]  					# Font rendering engine and library API
+#[graphics/giflib]   					# GIF library to be used as replacement for libungif (patents expired)
+#[graphics/jpeg] 						# JPEG library
+#[graphics/jasper] 						# JPEG-2000 codec
+#[graphics/png] 						# PNG library
+#[graphics/tiff :: unixw+PKG] 			# TIFF library [DOWNGRADE to 3.9, hylafax and poppler are not supporting 4.x]
+#[multimedia/libvpx]					# VP8 codec from Google (req. by GD)
+#[graphics/gd] 							# Graphics library for the dynamic creation of images
+### UPS [4]
+#[sysutils/apcupsd :: unixw]			# APC UPS Monitor Daemon [Disable CGI Option]
+#[sysutils/ups-nut]						# NUT UPS Tools
+#[sysutils/ups-nut-snmp]				# NUT UPS Tools - SNMP
+#[sysutils/ups-nut-usb]					# NUT UPS Tools - USB
+### Net [28]
+#[net/rinetd]							# TCP redirect IP:Port
+#[net/rsync]							# Secure File Sync
+#[net/ipcalc]							# IP addr related calculations
+#[net/ipv6calc]							# IPV6 addr related calculations
+#[net/6tunnel]							# IPV4/IPV6 protocol translation
+#[net/hf6to4]							# Enables 6to4 IPv6 automatic tunnels
+#[net/httping]							# Ping HTTP servers
+#[net/httptunnel]						# HTTP tunneling for TCP/IP
+#[net/mtr]								# Advanced Trace Route
+#[net/bmon]								# Bandwidth Monitor
+#[net/dlint]							# DNS Error check tools
+#[net/dnstracer]						# DNS Trace
+#[net/nslint]							# Perform consistency checks on DNS zone files
+#[net/queryperf]						# DNS Performance and Load Tester
+#[net/totd]								# DNS Proxy IPv6 <-> IPv4
+#[net/libpcap]							# UserLevel packet Capture (for NMap)
+#[net/nmap]								# Security Network Port scanner
+#[net/balance]							# Professional Load Balancing solution (TCP/IP proxy)
+#[net/pen]								# Load Balancing for simple TCP/IP
+#[net/dante]							# SOCKS 4/5 Server
+#[net/connect]							# SOCKS4/5 or HTTP proxy server
+#[net/trickle]							# bandwidth shaper
+#[misc/cstream]							# bandwidth stream handling
+#[net/vtun]								# Virtual Tunnels over TCP/IP with traffic shaping
+#[security/zkt]							# DNSSEC Zone Key Tool
+#[www/http_load]						# Multiprocessing http test client
+#[www/neon]								# HTTP and WebDAV client library
+#[www/cadaver] 							# Command-line WebDAV client
+### Sysutils [5]
+#[sysutils/gpart]						# Tool to show the partitions on a PC type harddisk
+#[sysutils/sformat]						# SCSI disk maintainance, formating, and ultimative repair tool with support for NetBSD labels
+#[sysutils/dd_rescue]					# Disk Data Rescue
+#[sysutils/ddrescue]					# GNU Data Rescue from Disk
+#[sysutils/memtester]					# Memory (fault) Tester
+### Benchmark [14]
+#[benchmarks/flops]						# Floating Point Benchmark
+#[benchmarks/ubench]					# The Unix Benchmark utility
+#[benchmarks/thrulay]					# TCP and UDP network capacity tester
+#[benchmarks/httperf]					# Web server Benchmarking program
+#[benchmarks/postal]					# Tool for benchmarking SMTP/POP servers
+#[benchmarks/pipebench]					# Measures the speed of a pipe
+#[benchmarks/lmbench]					# Complete benchmark that gives a large amount of information
+#[benchmarks/randread]					# Benchmark random disk read performance
+#[benchmarks/nttcp]						# New TCP testing and performance measuring tool
+#[benchmarks/netperf]					# Network performance benchmarking package
+#[benchmarks/nbench]					# Benchmark tool for CPU, FPU and memory
+#[benchmarks/sysbench]					# Modular, cross-platform and multi-threaded benchmark tool
+#[benchmarks/libmicro]					# Set of utilities to benchmark productivity of system calls
+#[benchmarks/bytebench]					# BYTE Magazine's Public Domain benchmark for UNIX
+### Some Perl Modules
+#[devel/p5-Error]						# Perl Error
+#[converters/p5-MIME-Base64]			# Perl Mime Base64
+#[net/p5-Socket6]						# Perl Socket6
+#[net/p5-IO-Socket-INET6]				# Perl Socket Inet6
+### GIT
+#[devel/git-base :: unixw]				# SCM Git Base [FIX: disable depends for git-send-mail / perl auth sasl module in Makefile]
+### ImageMagick
+#[graphics/libart]						# High-performance 2D graphics library (req. by RrdTool)
+#[graphics/lcms]						# Little Color Management System
+#[print/pdflib :: unixw]				# PDF library (fix lic. restr.)
+#[graphics/libexif]						# EXIF file library
+#[graphics/libwebp]						# WebP image format library and tools (req. by ImageMagick)
+#[graphics/lcms2]						# Little Color Management System (v2)
+#[graphics/ilmbase]						# Threading abstraction for OpenEXR
+#[graphics/openexr]						# High dynamic-range (HDR) image file format library and tools
+#[math/fftw]							# Collection of fast C routines to compute DFTs
+#[graphics/ImageMagick :: unixw]		# Package for display and interactive manipulation of images [OPTIONS: +jasper -x11]
+### PDF
+#[www/htmldoc]							# HTML to PDF converter
+#[print/poppler :: unixw+PKG]			# PDF Utils Library [DOWNGRADE (new version crashed pdf2htmlex); CONFIGURE_ARGS += --enable-zlib ; .include "../../devel/zlib/buildlink3.mk" ; .include "../../graphics/tiff/buildlink3.mk"]
+#[print/poppler-utils :: unixw+PKG]		# PDF Utils Binaries [DOWNGRADE (new version crashed pdf2htmlex) ; CONFIGURE_ARGS += --enable-zlib ; .include "../../devel/zlib/buildlink3.mk" ; .include "../../graphics/tiff/buildlink3.mk"]
+#[print/poppler-data :: unixw+PKG]		# Support files for poppler [DOWNGRADE (new version crashed pdf2htmlex)]
+#[print/poppler-includes :: unixw+PKG]	# Poppler Xpdf includes [DOWNGRADE (new version crashed pdf2htmlex) ; CHECK: if missing add includes/fofi/*.h in PLIST as they are required by pdf2htmlex]
+### PS
+#[fonts/t1lib :: unixw]					# Library for generating bitmaps from Adobe Type 1 fonts [OPTIONS: -x11]
+#[print/psutils]						# Utilities for manipulating PostScript documents
+#[print/libpaper]						# Paper size handling library
+#[fonts/ghostscript-fonts]				# Postscript fonts for Ghostscript
+#[print/ghostscript-gpl :: unixw]		# Postscript interpreter [OPTIONS: -x11]
+#[print/ghostscript]					# MetaPackage
+### MS Convert
+#[textproc/antiword]					# MS Word to text/postscript
+#[textproc/catdoc :: unixw]				# MS Word to text/html [DISABLE: link to desktop file utils]
+#[converters/xlreader]					# MS Excel to text
+#[converters/xlhtml]					# MS Excel and PPoint to text/html
+#[converters/rtf2html]					# RTF to text/html
+### OOffice Convert
+#[converters/odt2txt :: unixw]			# OpenFormat ODT to TXT [DISABLE LINK TO iconv]
+#[textproc/o3read]						# OpenOffice documents converter
+## OCR
+#[graphics/netpbm]						# image conversions toolkit
+#[graphics/gocr]						# OCR text recognition package
+#[graphics/tesseract]					# Commercial Grade OCR software from Google
+### MONITOR
+#[databases/rrdtool12]					# Data analysis tool generating graphical representations
+#[net/mrtg]								# The Multi-Router Traffic Grapher
+### MULTIMEDIA
+#[multimedia/libogg]					# Ogg project codecs library
+#[audio/libvorbis]						# Library for the Ogg Vorbis audio encoding format
+#[multimedia/libtheora]					# Video codec for Ogg multimedia streaming
+#[audio/speex]							# Open-source, patent-free voice codec
+#[audio/lame :: unixw]					# Fast, high quality MP3 encoder [FIX restr.]
+#[audio/flac]							# Free Loseless Audio Codec (Replacement for ALAC)
+#[multimedia/x264-devel]				# H.264 encoder
+#[multimedia/xvidcore]					# ISO MPEG-4 compliant video codec
+#[textproc/texi2html]					# Texinfo-to-HTML direct translator (req. by FFMpeg)
+#[multimedia/ffmpeg1 :: unixw]			# Decoding, encoding and streaming software [OPTIONS = lame libvpx theora vorbis x264 xvid ; DISABLE texi2html]
+#[multimedia/ffmpegthumbnailer]			# Lightweight video thumbnailer that can be used by file managers
+#[multimedia/ming]						# SWF output library [SWFTools fails with new versions of GifLib)
+### CMAKE
+#[archivers/libarchive]					# Library to read/create different archive formats
+#[www/libwww]							# The W3C Reference Library
+#[textproc/xmlrpc-c]					# Library for writing an XML-RPC server or client in C or C++
+#[devel/libexecinfo]					# BSD Licensed clone of backtrace facility found in GNU libc (req. by CMake)
+#[devel/cmake]							# Cross platform make
+#[fonts/fontforge :: unixw !!!!]		#NOT-FIXED# Postscript font editor [DISABLE LINKS: pango cairo] ; [OPTIONS -x11] ; [create buildlink3 for html2pdfex]
+#[converters/pdf2htmlex :: unixw+PKG+SRC] 	# Pdf2HtmlEx
+###########################
+# BASE :: END#1
+###########################
+	### PDFHTMLEX :: how to build manually (separate from pkgsrc)
+	#cd ./pdf2htmlex [needs GCC 4.6 or 4.5 ; with 4.7 throws error: C++0x Status]
+	## modify CMakeLists.txt, add: include_directories(/opt/unixw/include/)
+	## add from poppler source includes to /opt/unixw/include/poppler/fofi/
+	#/opt/unixw/bin/cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/unixw/ ./
+	#/opt/unixw/bin/bmake
+	#cp -p ./pdf2htmlEX /opt/unixw/bin/
+	#mkdir /opt/unixw/share/pdf2htmlEX/
+	#cp -p ./share/* /opt/unixw/share/pdf2htmlEX/
+	#chmod 0644 /opt/unixw/share/pdf2htmlEX/*
+	#chmod 0755 /opt/unixw/share/pdf2htmlEX/
+	###
+###########################
+# BASE :: END#2
+#################################################################
+
+
+#################################################################
+# SERVERS [229] :: 100%
+###########################
+# 03.servers
+###########################
+### Distributed Cache
+#[databases/redis :: unixw+PKG]					# Persistent key-value database with built-in net interface [UPGRADE to latest]
+#[devel/libmemcached]							# C/C++ client library and tools for the memcached server
+#[devel/memcached]								# High-performance distributed memory object caching system
+### PostgreSQL
+#[databases/postgresql94-client :: unixw]		# PostgreSQL Client [OPTIONS(databases/postgresql92): xml]
+#[databases/postgresql94-server :: unixw]		# PostgreSQL Server [OPTIONS(databases/postgresql92): xml]
+#[databases/postgresql94-replicationtools]		# PostgreSQL Replication Tools
+#[databases/postgresql94-plperl]				# PL/Perl procedural language for the PostgreSQL backend
+#[databases/postgresql94-plpython]				# PL/Python procedural language for the PostgreSQL backend
+#[databases/postgresql94-pgcrypto]				# Module providing cryptographic functions for PostgreSQL
+#[databases/postgresql94-adminpack]				# Admin pack module for pgAdmin management
+#[databases/postgresql94-monitoring]			# PostgreSQL monitoring tools
+#[databases/postgresql94-upgrade]				# PostgreSQL binary upgrade tool
+#[databases/postgresql-pgbench]					# PostgreSQL benchmarking tools
+#[databases/pgpool2 :: unixw+PKG]				# PgSQL Replication [http://pkgsrc-wip.sourceforge.net/snapshots/ ; http://svnweb.freebsd.org/ports/head/databases/pgpool-II/]
+#[databases/pgbouncer]							# Lightweight connection pooler for PostgreSQL
+#[databases/slony1]								# PgSQL Replication
+#[geography/geos]								# Topology Suite (req. by postgis)
+#[geography/proj]								# Cartographic Projection Software (req. by postgis)
+#[databases/postgresql-postgis :: unixw+PKG]	# Spatial database capabilities for PostgreSQL [UPGRADE to 1.5.8 to support PostgreSQL 9.2]
+#[devel/ossp-uuid]								# C-API and command line tool for generating UUIDs
+#[databases/postgresql-uuid :: unixw+PKG]		# PostgreSQL UUID [FIXED PACKAGE]
+#[databases/postgresql92-datatypes]				# DataTypes module of PgSQL
+#[databases/postgresql92-dblink]				# Dblink module for remote database connections
+### MySQL
+#[databases/mysql51-client]						# MySQL Client
+#[databases/mysql51-server]						# MySQL Server
+### Comms
+#[comms/hylafax :: unixw+PKG]					# Hylafax Server  !!! [DOWNGRADE ; the newest does not supports tiff 3.x]
+#[comms/asterisk :: unixw+PKG]					# Asterisk Phone PBX :: [DOWNGRADE] ; [OPTIONS = +speex -ldap -jabber] ; [*Possible FIX*: uninstall unixodbc before MAKE]
+### DNS
+#[net/bind96 :: unixw]							# Bind DNS Server [OPTIONS+= pgsql ; Auto-OPTIONS= threads inet6]
+### Mail
+#[mail/dovecot :: unixw+PKG]					# Dovecot IMAP Server [OPTIONS= ssl gssapi kqueue pgsql sqlite ; CONFIGURE_ARGS+= --with-passwd-file --with-static-userdb]
+#[net/libasr :: unixw+PKG]						# Free, simple and portable asynchronous resolver library for OpenSMTPD
+#[mail/opensmtpd :: unixw+PKG]					# The OpenSMTPD mail transfer agent, a replacement for sendmail with Virtual Domains/Users and much more
+#[mail/opensmtpd-extras :: unixw+PKG]			# OpenSMTPD Extras: table-sqlite, table-pgsql, filter-pause, filter-perl, filter-regex, filter-dkim-signer, filter-dnsbl, filter-spamassassin, filter-clamav
+#[mail/avenger :: unixw]						# SMTP Server with Filter Capabilities [OPTIONS = sasl ; remove conflict (with dovecot2 if dovecot2 installed) in PLIST: man/man1/deliver.1]
+#[mail/fetchmail :: unixw]						# Fetch Mail Retrieval Utility [OPTIONS = ssl gssapi kerberos]
+#[devel/sysexits]								# Substitute <sysexits.h> for OS's which do not have one (req. by ImapUW)
+#[mail/imap-uw]									# University of Washington's IMAP, POP2, and POP3 servers
+#[mail/ripmime]									# Extract eMail attachments
+#[security/clamav :: unixw+PKG]					# ClamAV antivirus [UPGRADE to latest]
+#[mail/clamsmtp]								# ClamSMTP
+#[math/gsl]										# The GNU Scientific Library (req. by BogoFilter)
+#[mail/bogofilter :: unixw]						# Another (smart) Spam Filter [OPTIONS: sqlite]
+#[mail/xmail :: unixw+PKG+SRC]					# XMail SMTP / POP3 Server
+### Jabber
+#[net/udns]										# Lightweight DNS resolver supporting asynchronous queries (req. by Jabberd2)
+#[chat/jabberd2 :: unixw+PKG]					# Jabberd2 XMPP Server [DOWNGRADE to 2.2.17 because mu-conference crashes with newer versions] [DISABLE LINK TO: cppunit ; CONFIGURE_ARGS+= --disable-anon ; REMOVE FROM PLIST: authreg_anon.la ; OPTIONS= sasl-gnu mio-poll auth-pgsql storage-pgsql auth-sqlite storage-sqlite]
+#[chat/mu-conference :: unixw+PKG]				# Jabberd2 Multi-User Conference / Implementation of the XEP-0045 Multi-User Chat protocol [DOWNGRADE to 0.8]
+### Net
+#[net/pure-ftpd :: unixw]						# Secure FTP daemon with optional SQL support [CONFIGURE_ARGS+= --without-pam --with-altlog --without-unicode --with-virtualhosts --with-cookie --with-throttling --with-ratio ; OPTIONS= pgsql ssl virtualchroot]
+#[www/nginx :: unixw]							# N-Ginx Web Server [OPTIONS= inet6 pcre ssl dav mail-proxy status memcache realip dav status encrypted-session push uwsgi luajit pcre mail-proxy array-var form-input perl]
+#[lang/LuaJIT]									# Just-In-Time Compiler for the Lua programming language (for nginx)
+#[www/mini_httpd]								# mini HTTP(S) server with SSL
+#[www/thttpd]									# tiny / turbo / throttling HTTP server
+#[www/squid3 :: unixw]							# PostHarvest Cached WWW Proxy cache and accelerator [OPTIONS -= *-pam]
+#[www/ffproxy]									# Filtering HTTP(S) proxy server
+#[www/dansguardian]								# Fast, featureful web content filter for Squid proxy servers
+#[security/stunnel]								# Universal SSL tunnel
+#[textproc/libxslt]								# XSLT Parser (req. by php-xsl)
+### Apache
+#[devel/apr]									# Apache Portable Runtime
+#[devel/apr-util :: unixw+PKG]					# Apache Portable Runtime utilities :: Provide extra Auth DBD [OPTIONS = db4 sqlite3 pgsql]
+#[www/apache22 :: unixw]						# Apache Server [OPTIONS= apache-shared-modules apache-mpm-prefork ecc]
+#[www/ap-fastcgi]								# New, improved CGI-like interface module for Apache
+#[www/ap2-fcgid]								# High performance alternative to mod_cgi or mod_cgid
+#[www/ap22-limitipconn]							# Limits per-IP connections to an Apache 2 server
+#[www/ap2-perl]									# Apache Mod Perl
+#[www/ap2-python]								# Apache Mod Python
+#[www/ap2-wsgi]									# Apache Mod Python WSGI
+#[devel/scons]									# SCons Build Tool (req. by Serf)
+#[www/serf]										# High Performance Async HTTP Library (req. by subversion 1.8)
+#[devel/subversion-base :: unixw+PKG]			# Subversion Base [UPGRADE to 1.8.11, latest]
+#[www/ap2-subversion :: unixw+PKG]				# Apache Mod Subversion [UPGRADE to 1.8.x latest]
+### PHP
+#[lang/php55 :: unixw+PKG]						# PHP 5.5 [UPGRADE to latest ; add in lang/php/ext.mk : USE_PHP_EXT_PATCHES= yes ; add buildlink to sqlite3 ; --with-sqlite3=${PREFIX} to sqlite3 to force use it ; ++ some builtin extensions as follows ; use regex system because zendoptimizerplus will not compile with regex php ; see the modified Makefile.php]
+#[www/ap-php]									# Apache PHP Module
+#[www/ap2-suphp]								# SuEXEC-like wrapper for PHP scripts
+#[www/php-fpm]									# PHP interface to FPM
+#[www/php-zendopcache :: unixw+PKG]				# PHP Zend Opcache (replaces: Optimizer Plus: php-zendoptimizerplus / 7.0.3) to 7.0.4
+#[devel/php-xdebug]								# PHP X-Debug
+#[devel/php-memcached]							# PHP Caching interfacing with memcached via libmemcached library
+#[databases/php-redis :: unixw+PKG]				# PHP extension for Redis distributed cache (key-store) [UPGRADE to latest]
+	#builtin#[net/php-sockets]								# PHP module Sockets
+	#builtin#[converters/php-mbstring]						# PHP module multibyte
+	#builtin#[math/php-bcmath]								# PHP module BCMath (arbitrary precision)
+	#builtin#[security/php-mcrypt]							# PHP module MCrypt
+	#builtin#[archivers/php-zlib]							# PHP module ZLib
+	#builtin#[archivers/php-zip]							# PHP module Zip
+	#builtin#[databases/php-pgsql]							# PHP module PgSQL
+	#builtin#[databases/php-pdo_sqlite]						# PHP module PDO-SQLite
+	#builtin#[databases/php-pdo_pgsql]						# PHP module PDO-PgSQL
+	#builtin#[graphics/php-gd]								# PHP module GD
+	#builtin#[textproc/php-json]							# PHP module JSON
+#[databases/php-mysqli]							# PHP module MySQLi
+#[databases/php-pdo :: unixw]					# PHP module PDO [BUILTIN ; DISABLE the .so module, use only development files because is built-in]
+#[databases/php-pdo_mysql :: unixw]				# PHP module PDO-MySQL
+#[www/php-curl]									# PHP module CURL
+#[net/php-soap]									# PHP module SOAP
+#[archivers/php-bz2]							# PHP module BZip2
+#[devel/php-gmp]								# PHP module GMP (arbitrary precision)
+#[mail/php-imap]								# PHP module IMAP
+#[net/php-ftp]									# PHP module FTP
+#[textproc/php-dom]								# PHP module DOM
+#[devel/php-gettext]							# PHP module GetText
+#[net/php-xmlrpc]								# PHP module XML RPC
+#[textproc/php-wddx]							# PHP module WDDX
+#[graphics/php-exif]							# PHP module Exif
+#[time/php-calendar]							# PHP module Calendar
+#[databases/php-dba :: unixw]					# PHP module DBA [OPTIONS: bdb gdbm]
+#[databases/php-dbx]							# PHP module DBX
+#[databases/freetds]							# Implementation of TDS protocol used by Sybase and MS-SQL servers
+#[databases/php-pdo_dblib]						# PHP extension for PHP Data Objects (FreeTDS/Sybase/MS SQL)
+#[devel/php-posix]								# PHP module POSIX
+#[devel/php-shmop]								# PHP module SHM Op.
+#[devel/php-sysvmsg]							# PHP module SysV Msg
+#[devel/php-sysvshm]							# PHP module SysV SHM
+#[devel/php-pcntl]								# PHP extension for Process Control functions
+#[converters/php-iconv]							# PHP module IConv
+#[textproc/icu]									#20m# Robust and full-featured Unicode services
+#[textproc/php-intl]							# PHP extension for i18n
+#[graphics/php-imagick]							# PHP ImageMagick extension
+#[security/php-ssh2]							# PHP SSH2 extension
+#[textproc/libyaml]								# YAML library in C
+#[textproc/php-yaml :: unixw+PKG]				# PHP module YAML Parser (using libyaml)
+#[security/php-scrypt :: unixw+PKG]				# PHP module SCrypt [FIX: Add patch to sysendian.h to remove duplicate functions]
+#[security/scrypt]								# Encrypt And Decrypt Files using OpenSSL
+###
+#[devel/libatomic_ops]							# Multi-platform library of atomic operations by Hans Boehm
+#[devel/boehm-gc]								# Garbage collection and memory leak detection for C and C++
+#[devel/argp]									# Argument parsing function from glibc
+#[filesystems/glusterfs :: unixw+PKG]			# Distributed Cluster filesystem [DOWNGRADE to 3.4.6 Ultra-Stable ; OPTIONS = georeplication]
+#[sysutils/lockf]								# FreeBSD's lockf (req. by Node.js) - apply, test or remove a POSIX lock on an open file
+#[lang/nodejs]									# Node.js - V8 JavaScript for clients and servers
+###
+#[mail/procmail]								# Local mail delivery agent
+#[mail/isync :: unixw+PKG]						# Synchronize a maildir with an imap server [DOWNGRADE, new fails]
+#[mail/dspam :: unixw]							# Extremely scalable, statistical-hybrid anti-spam filter [DSPAM_STORAGE_DRIVER = pgsql ; OPTIONS = clamav largescale long-usernames dspam-virtualusers dspam-preferences-extension]
+### SPAMASSASSIN
+#[security/p5-Digest-MD5]						# * Perl5 extension interface for MD5 algorithm
+#[security/p5-Digest-SHA1]						# * Perl5 extension interface for SHA1 algorithm
+#[security/p5-Crypt-UnixCrypt :: unixw+PKG]		# * Perl5 UnixCrypt (req. by Webmin)
+#[devel/p5-File-DirSync]						# * Perl5 module to synchronize two directories rapidly
+#[devel/p5-Sub-Uplevel]							# * Perl5 Apparently run a function in a higher stack frame
+#[devel/p5-Test-Exception]						# * Perl5 Test exception based code
+#[devel/p5-File-Slurp-Tiny]						# * Perl5 Simple, sane and efficient file slurper
+#[devel/p5-Tree-DAG_Node]						# * Perl5 Class for representing nodes in a tree
+#[devel/p5-Test-Warn]							# * Perl5 extension to test methods for warnings
+#[security/p5-Net-SSLeay]						# * Perl5 module for using OpenSSL
+#[devel/p5-Test-Manifest]						# * Perl5 module to choose test order
+#[security/p5-Crypt-Rijndael]					# * Perl5 Crypt::CBC compliant Rijndael encryption module
+#[security/p5-Crypt-CBC]						# * Perl5 cipher block chaining mode for various crypto algorithms
+#[security/p5-Crypt-ECB]						# * Perl5 Electronic Codebook mode for various crypto algorithms
+#[security/p5-Crypt-Blowfish]					# * Perl5 Blowfish implementation
+#[devel/p5-Compress-Raw-Zlib]					# * Perl5 module interface to the zlib compression library
+#[devel/p5-Compress-Raw-Bzip2]					# * Perl5 low-level interface to bzip2 compression library
+#[devel/p5-IO-Compress]							# * Perl5 IO Interface to compressed data files/buffers
+#[devel/p5-IO-Zlib]								# * Perl5 IO:: style interface to Compress::Zlib
+#[devel/p5-IO-String]							# * Perl5 module for I/O on in-core objects like strings and arrays
+#[devel/p5-Algorithm-Diff]						# * Perl5 module for diffing similar to diff(1)
+#[textproc/p5-Text-Diff]						# * Perl5 High-level text diffing module for Perl
+#[archivers/p5-Archive-Tar]						# * Perl5 module interface to manipulate tar files
+#[archivers/p5-Archive-Zip]						# * Perl5 module interface to manipulate zip files
+#[databases/p5-DB_File]							# * Perl5 module to use Berkeley DB version 1 API
+#[www/p5-HTML-Tagset]							# * Perl5 module of data tables useful in parsing HTML
+#[misc/p5-Business-ISBN-Data]					# * Perl5 Data for the p5-Business-ISBN package
+#[misc/p5-Business-ISBN]						# * Perl5 module to work with International Standard Book Numbers (ISBNs)
+#[www/p5-URI]									# * Perl5 Uniform Resource Identifiers class (URI, RFC 2396)
+#[www/p5-HTML-Parser]							# * Perl5 module to parse HTML text documents
+#[devel/p5-Module-Build]						# * Perl5 Build and install Perl modules
+#[devel/p5-Test-Pod]							# * Perl5 module to check for POD errors in files
+#[net/p5-NetAddr-IP]							# * Perl5 module for managing IP addresses
+#[security/p5-Digest-SHA]						# * Perl5 module for SHA-1/224/256/384/512 algorithms
+#[security/p5-Digest-SHA3]						# * Perl5 module for SHA-3
+#[security/p5-Digest-HMAC]						# * Perl5 module for HMAC
+#[net/p5-Net-IP]								# * Perl5 extension for manipulating IPv4/IPv6 addresses
+#[net/p5-Net-DNS]								# * Perl5 module for DNS resolution
+#[time/p5-Time-HiRes]							# * Perl5 module for high resolution time, sleep, and alarm
+#[textproc/p5-Encode-Locale]					# * Perl5 Determine the locale encoding for Encode
+#[www/p5-HTTP-Date]								# * Perl5 module providing date conversion routines
+#[devel/p5-File-Listing]						# * Perl5 module providing a directory parser
+#[www/p5-LWP-MediaTypes]						# * Perl5 Guess media type for a file or a URL
+#[devel/p5-IO-HTML]								# * Perl5 Open an HTML file with automatic charset detection
+#[www/p5-HTTP-Message]							# * Perl5 Construct HTTP style messages
+#[www/p5-HTTP-Cookies]							# * Perl5 HTTP cookie jars
+#[www/p5-HTTP-Daemon]							# * Perl5 Simple http server class
+#[www/p5-HTTP-Negotiate]						# * Perl5 Negotiate HTTP service parameters
+#[www/p5-Net-HTTP]								# * Perl5 module for low-level HTTP connections (client)
+#[www/p5-WWW-RobotRules]						# * Perl5 module database of robots.txt-derived permissions
+#[net/p5-Net-LibIDN]							# * Perl5 bindings for GNU Libidn
+#[security/p5-IO-Socket-SSL]					# * Perl5 SSL socket interface class
+#[security/p5-Mozilla-CA]						# * Perl5 Mozilla's CA cert bundle
+#[www/p5-LWP-Protocol-https]					# * Perl5 Provide https support for LWP::UserAgent
+#[devel/p5-Path-Class]							# * Perl5 Cross-platform path specification manipulation (req. by SSLeay)
+#[devel/p5-Try-Tiny]							# * Perl5 Minimal try/catch with proper preservation of $@ (req. by SSLeay)
+#[devel/p5-Capture-Tiny]						# * Perl5 Capture STDOUT and STDERR from Perl, XS or external programs (req. by SSLeay)
+#[security/p5-Crypt-SSLeay]						# * Perl5 Crypt::SSLeay - OpenSSL glue that provides LWP https support
+#[www/p5-libwww]								# * Perl5 library for WWW access
+#[net/p5-Net-DNS-Resolver-Programmable]			# * Perl5 Net::DNS::Resolver descendant class for offline emulation of DNS
+#[mail/p5-Mail-SPF]								# * Perl5 Perl implementation of the Sender Policy Framework
+#[textproc/p5-Encode-Detect]					# * Perl5 module that detects the encoding of data
+#[security/p5-Crypt-OpenSSL-Bignum]				# * Perl5 wrapper module for the OpenSSL Bignum functions
+#[security/p5-Crypt-OpenSSL-RSA]				# * Perl5 wrapper module for the OpenSSL RSA functions
+#[security/p5-Crypt-OpenSSL-DSA]				# * Perl5 wrapper module for the OpenSSL DSA functions
+#[security/p5-Crypt-OpenSSL-AES]				# * Perl5 wrapper module for the OpenSSL AES functions
+#[security/p5-Crypt-OpenSSL-Random]				# * Perl5 wrapper module for OpenSSL pseudo-random number generator
+#[net/p5-Net]									# * Perl5 modules to access and use network protocols
+#[time/p5-TimeDate]								# * Perl5 TimeDate distribution
+#[mail/p5-MailTools]							# * Perl5 modules related to mail applications
+#[mail/p5-Mail-DKIM]							# * Perl5 module for DKIM-based mail-signing and -verifying
+#[mail/spamassassin]							# Mail filter to identify spam
+###
+#[devel/libusb1]								# USB access library version 1 (req. by cups)
+#[net/openslp]									# Open-source implementation of the Service Location Protocol (req. by CUPS)
+#[print/cups :: unixw+PKG]						# Common Unix Printing System [DOWNGRADE to 1.3 ; OPTIONS = poppler slp]
+#[print/cups-pdf]								# CUPS PDF Backend
+#[print/ijs]									# Protocol library for raster page transmission
+#[print/mpage]									# Print multiple pages per sheet
+#[print/papersize]								# set papersize in certain packages
+#[print/foomatic-filters]						# Independent Postscript print filters (foomatic-gswrapper , foomatic-rip)
+#[print/foomatic-ppds]							# Independent Postscript print ppds
+#[print/foomatic-ppds-cups]						# Independent Postscript print ppds for CUPS
+#[print/foomatic4-db-engine]					# Foomatic's database engine
+#[print/foomatic4-db]							# Printer database
+#[print/foomatic-filters-cups]					# Independent postscript print filters for CUPS
+#[print/foo2zjs]								# Printer driver for Zenographics ZjStream wire protocol
+###
+#[sysutils/ncdu]								# Disk usage visualisation tool
+#[net/gnetcat]									# Read and write data across network connections (Gnu version)
+#[net/netcat-openbsd]							# Arbitrary TCP and UDP connections and listens
+#[net/nload]									# Network Load Monitor
+#[net/tcpflow]									# Captures data transmitted as part of TCP connections
+#[security/ssldump]								# SSL Network Dump
+#[www/webalizer :: unixw]						# Webalizer Log Analizer [OPTIONS = bzip2]
+###
+#[sysutils/dmidecode]							# bios info tool
+#[sysutils/ipmitool]							# Command-line utility for managing IPMI devices
+###
+#[comms/lrzsz]									# Receive/Send files via X/Y/ZMODEM protocol
+#[comms/conserver8]								# Application that allows multiple users to watch serial consoles
+###
+#[textproc/py-expat]							# Python interface to expat
+#[devel/py-setuptools]							# New Python packaging system
+#[www/py-curl]									# Python module interface to the cURL library
+#[security/py-backports.ssl_match_hostname]		# Python SSL support module for Python 2
+#[www/py-tornado]								# Fast and non-blocking web framework (server)
+###
+#[textproc/docbook-xml]							# XML DTD designed for computer documentation
+#[textproc/docbook-xsl]							# Docbook XSL modular stylesheet
+#[misc/getopt]									# Program to help shell scripts parse command-line parameters
+#[textproc/xmlto]								# Tool to help transform XML documents into other formats
+#[geography/gpsd]								# GPS information daemon
+#[geography/gpsutils]							# Capture and convert data from a Garmin GPS receiver
+#[geography/garmin-utils]						# Utilities for Garmin GPS receivers
+###
+#[security/skey]								# Port of OpenBSD s/key implementation
+#[security/openssh :: unixw+PKG]				# OpenSSH server [UPGRADE to latest]
+###
+###########################
+# SERVERS :: END
+#################################################################
+
+#################################################################
+#################################################################
+
+@@@@@@@@ HINTS
+
+## Create new package:
+	## build (create an empty PLIST or remove PLIST)
+	# bmake
+	## install to .destdir
+	# bmake install
+	## create PLIST
+	# bmake print-PLIST > PLIST
+	# bmake clean
+	# bmake package
+
+# Download: /opt/unixw/bin/wget --recursive --no-verbose --tries=5 --retry-connrefused --no-host-directories --cut-dirs=6 ftp://...
+# mounting ISO: vnconfig -r vnd0 /path/my.iso && mount -t cd9660 /dev/vnd0a /mnt && umount /mnt && vnconfig -u vnd0
+
+##### create recurseive checksums
+# find . -type f -exec md5 '{}' \; > /__distfiles-nd615-unixw-160925.md5
+# find . -type f -exec sha1 '{}' \; > /__distfiles-nd615-unixw-160925.sha1
+# find . -type f -exec cksum -a SHA512 '{}' \; > /__distfiles-nd615-unixw-160925.sha512
+#####
+
+
+# END

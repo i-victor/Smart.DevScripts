@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Network Wireless Settings
+GenericName=Wireless Network WPA GUI
+Comment=Manage the Wireless Connections
+Categories=System;
+Exec=wpa_gui
+Icon=/etc/xdg/uxm-icons/wireless.png
+Terminal=false
+Type=Application

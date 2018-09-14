@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Putty SSH / Telnet
+Comment=Connect to a SSH or Telnet Server
+Exec=putty
+Icon=/etc/xdg/uxm-icons/rdp.png
+Terminal=false
+Type=Application
+Categories=GTK;Network;

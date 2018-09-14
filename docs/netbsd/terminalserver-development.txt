@@ -1,0 +1,1543 @@
+
+###################################################################################
+## TERMINALSERVER :: NetBSD 6.1.5
+## (c) 2008-2015 unix-world.org
+## release 2016-09-25 15:31
+## based on pkgsrc-2015Q1 with additions and modifications
+###################################################################################
+
+
+#################################################################
+##### BOOTSTRAP #####
+#################################################################
+##### Comments
+# Some packages fail to build with PREFER_PKGSRC=yes, so have to set PREFER_PKGSRC=no in Makefile
+# if a package (make / bmake) waits too long then a depending package that has been upgraded may be broken after upgrade in pkgsrc
+#####
+# create /_SRC-PKG
+# unpack the pkgsrc into /_SRC-PKG
+# unpack the UNIXW-automate-builds into /_SRC-PKG
+cd /_SRC-PKG
+pkgsrc/bootstrap/bootstrap --prefix=/opt/unxts --pkgdbdir=/opt/unxts/var/db/pkg --varbase=/opt/unxts/var --sysconfdir=/opt/unxts/etc
+# replace the /opt/unxts/etc/mk.conf with /_SRC-PKG/UNIXW-automate-builds/mk-etc-file/mk.conf as # /opt/unxts/etc/mk.conf : LDFLAGS += -m64 -O2 -Wl,-R/opt/unxts/lib -L/opt/unxts/lib ; CFLAGS += -m64 -O2 -I/opt/unxts/include ; CXXFLAGS += -m64 -O2 -I/opt/unxts/include ; #CPPFLAGS += -m64 -O2 -I/opt/unxts/include
+##### content of mk.conf should be like:
+LDFLAGS += -m64 -O2 -Wl,-R/opt/unxts/lib -L/opt/unxts/lib
+CFLAGS += -m64 -O2 -I/opt/unxts/include
+CXXFLAGS += -m64 -O2 -I/opt/unxts/include
+#CPPFLAGS += -m64 -O2 -I/opt/unxts/include
+PREFER.zlib=native
+PREFER.bzip2=native
+PREFER.openssl=pkgsrc
+PREFER.gnutls=pkgsrc
+PREFER.sqlite3=pkgsrc
+PREFER.libpciaccess=pkgsrc
+PREFER.libdrm=pkgsrc
+PKG_DBDIR=              /opt/unxts/var/db/pkg
+LOCALBASE=              /opt/unxts
+VARBASE=                /opt/unxts/var
+PKG_TOOLS_BIN=          /opt/unxts/sbin
+PKGINFODIR=             info
+PKGMANDIR=              man
+######
+# delete the folder the /_SRC-PKG/work
+#################################################################
+
+
+#################################################################
+# PKG-TOOLS [10] :: 10%
+###########################
+# 00.pkg-tools							# Build all using by running in shell: /_SRC-PKG/UNIXW-automate-builds/00.unixw-build_pkg-tools.sh build
+###########################
+### PKG Tools
+#[pkgtools/bootstrap-mk-files]			# bootstrap mk files (req. by bmake)
+#[devel/bmake]							# Portable NetBSD make
+#[pkgtools/pkg_install]					# Package Install Tools
+#[pkgtools/digest]						# PKG Digest
+#[pkgtools/osabi]						# Operating System version dummy-package
+#[pkgtools/x11-links]					# PKG X11 Links
+#[pkgtools/bootstrap-extras]			# bootstrap extra files
+#[pkgtools/pkg_tarup]					# Generate packages from binary instaled
+#[pkgtools/pkg_chk]						# Check Packages
+#[pkgtools/pkg_rolling-replace]			# Replace Packages inPlace Upgrades
+###
+# delete the folder /opt/unxts and re-create it (mkdir /opt/unxts) + restore dir structure from /_SRC-PKG/UNIXW-automate-builds/opt-dir-structure/unxts
+rm -R /opt/unxts
+# restore the /opt/unxts dir structure and the /opt/unxts/etc/mk.conf
+mkdir /opt/unxts
+cp -R -p /_SRC-PKG/UNIXW-automate-builds/opt-dir-structure/unxts/* /opt/unxts/
+# reinstall the above packages using the built packages which result from above steps:
+cd /_SRC-PKG-BUILD-LOG/00.unixw-build_pkg-tools.list/packages-All
+pkg_add -K /opt/unxts/var/db/pkg ./*.tgz
+# check installation:
+/opt/unxts/sbin/pkg_info
+###
+# NOTICE !! use only: /opt/unxts/bin/bmake {clean|package} for packages from pkgsrc with /opt/unxts destination / integration
+###
+# any new packages for /opt/unxts should be built using /opt/unxts/bmake package
+# use only /opt/unxts/bmake for operations like clean and others
+# any new packages for /opt/unxts should be added using:
+#/opt/unxts/sbin/pkg_add some_package-x.y.z.tgz
+# any new packages for /opt/unxts should be deleted using:
+#/opt/unxts/sbin/pkg_delete some_package-x.y.z.tgz
+###
+###########################
+# PKG-TOOLS :: END
+#################################################################
+
+
+#################################################################
+# DEV-TOOLS [184] :: 20%
+###########################
+# 01.dev-tools
+###########################
+### GNU Environment
+#[devel/gmake]							# GNU make
+#[lang/f2c]								# GNU Fortran to C compiler (can emulate Fortran 77)
+#[devel/libtool-base]					# GNU LibTool Base
+#[devel/libtool-info]					# GNU LibTool Info
+#[devel/libf2c]							# f2c Fortran support library
+#[devel/zlib :: unixw]					# ZLib [DOWNGRADE to 1.2.3 as the built-in to avoid desktop apps conflicts]
+#[devel/yasm]							# BSD Licensed NASM Assembler
+#[lang/perl5]							# Perl Language (MultiThreaded Version)
+#[devel/m4]								# GNU m4 (macro processor for Unix)
+#[devel/bison]							# GNU yacc replacement
+#[devel/binutils]						# GNU BinUtils
+#[devel/readline]						# GNU Readline
+#[devel/p5-gettext]						# Perl5 module interface to C I18N functions (req. by help2man)
+#[converters/help2man]					# Generate simple manual pages from program output (req. by autoconf and flex)
+#[devel/autoconf]						# Generates automatic source code configuration scripts
+#[devel/gmp]							# Library for arbitrary precision arithmetic (req. by GCC)
+#[math/mpfr]							# GMP-based library for multiple-precision floating-point computations (req. by GCC)
+#[lang/gawk]							# GNU AWK
+#[devel/automake]						# GNU Standards-compliant Makefile generator
+#[devel/autoconf213]					# Generates automatic source code configuration scripts (OLD Version)
+#[devel/automake14]						# GNU Standards-compliant Makefile generator (OLD Version)
+#[devel/flex]							# GNU Fast clone of lex
+#[textproc/gsed]						# GNU SED
+#[math/mpcomplex]						# Multiprecision complex arithmetic library (req. by GCC 4.8)
+#[math/isl]								# Integer set library (req. by GCC 4.8)
+#[math/cloog]							# Code generator for loop optimization (req. by GCC 4.8)
+#[lang/gcc47]							#3h# GNU Compiler 4.7
+#[lang/gcc47-libs]						# GNU Compiler Support Shared Libs 4.7
+#[lang/gcc49]							#3h# GNU Compiler 4.9
+#[lang/gcc49-libs]						# GNU Compiler Support Shared Libs 4.9
+#[devel/gperf]							# GNU Perf (req. by GCC)
+#[shells/bash]							# GNU Bourne Again Shell (req. by GCC ; if error, downgrade to 4.0)
+#[misc/p5-Locale-libintl]				# Perl internationalization library
+#[textproc/p5-Text-Unidecode]			# Perl5 module that transliterates Unicode to US-ASCII
+#[converters/p5-Unicode-EastAsianWidth] # Perl5 module that provides properties of East Asian characters
+#[devel/gtexinfo]						# GNU TexInfo
+#[sysutils/gnuit]						# GNU IT
+#[devel/pkg-config]						# PKG Config (Manage Library compile/link flags)
+#[x11/xorg-cf-files]					# Xorg imake rules
+#[devel/tradcpp]						# Traditional (K&R-style) C preprocessor (req. by imake)
+#[devel/imake]							# Imake and other utilities from modular X.org
+#[pkgtools/xpkgwedge]					# PKG Wedge
+#[devel/libidn]							# Internationalized Domain Names command line tool
+#[devel/gettext-lib]					# GNU GetText Lib
+#[devel/gettext-tools]					# GNU GetText Tools
+#[devel/gettext-asprintf]				# GNU GetText Asprintf
+#[devel/gettext-m4]						# GNU GetText M4
+#[devel/gettext]						# GNU GetText
+#[archivers/9e]							# Explode Plan9 Archives
+#[archivers/gtar-base]					# GNU Tar Base
+#[archivers/gtar-info]					# GNU Tar Info
+#[archivers/gtar]						# GNU Tar
+#[archivers/gzip]						# GNU GZip
+#[archivers/bzip2]						# BZip 2
+#[archivers/unzip]						# Zip Unarchiver
+#[archivers/zip]						# Zip Archiver
+#[archivers/zziplib]					# ZipLib
+#[archivers/xz]							# XZ Archiver
+#[archivers/lzo]						# LZO Archiver
+#[archivers/liblzo]						# Lib LZO
+#[archivers/bsdtar]						# BSD Tar Archiver (req. by MySQL5)
+#[archivers/pax]						# POSIX standard archiver with many extensions
+#[archivers/unzoo]						# Extract ZOO Archives
+#[archivers/p7zip :: unixw]				# Extremely Strong and Secure Zip Type Archiver [Accpt / comment License]
+#[devel/ucl]							# Portable lossless data compression library (req. by upx)
+#[archivers/upx]						# Ultimate packer for executables
+#[archivers/lzip]						# Lossless data compressor based on the LZMA algorithm
+#[devel/p5-perl-headers]				# Perl header files
+#[devel/pcre]							# Perl Compatible Regular Expressions library
+#[devel/libatomic_ops]					# Multi-platform library of atomic operations by Hans Boehm
+#[devel/boehm-gc]						# Garbage collection and memory leak detection for C and C++
+#[devel/nasm]							# General-purpose x86 assembler (req. by GCC)
+#[lang/tcl :: unixw+PKG]				# Ousterhout's Tool Command Language [DOWNGRADE to 8.5.x]
+#[lang/tcl-expect]						# Extensions to Tcl to support scripting of interactive programs (req. by dejagnu)
+#[devel/tcllib]							# Collection of utility modules for Tcl
+#[devel/tclreadline]					# GNU Readline library for interactive tcl shells
+#[devel/dejagnu]						# TCL/Expect-based framework for regression testing (req. to test GCC build)
+#[shells/standalone-tcsh]				# Standalone version of the Extended C-shell
+#[devel/libelf]							# ELF object file access library (req. by GCC 4.5)
+#[devel/libffi]							# Foreign function interface
+#[devel/p5-Perl4-CoreLibs]				# Libraries historically supplied with Perl 4
+#[security/openssl]						# OpenSSL Crypto
+#[lang/python27]						# Interpreted, interactive, object-oriented programming language
+#[devel/libcfg+]						# Command line and configuration file parsing library (req. by GNU TLS)
+#[devel/libltdl]						# Generic shared library support - libltdl abstraction library (req. by Guile)
+#[lang/guile]							# GNU's Ubiquitous Intelligent Language for Extension (recommended for GnuTLS)
+#[lang/mawk]							# Fast AWK clone
+#[math/gsl]								# GNU Scientific Library
+#[textproc/expat]						# XML parser library written in C (req. by Apache, CMake and FontConfig)
+#[textproc/xmlcatmgr]					# XML and SGML catalog manager (devel required)
+#[textproc/libxml2]						# GNOME XML Parser (req. by Apache / PHP)
+#[security/libgpg-error]				# Definitions of common error values for all GnuPG components
+#[security/libgcrypt]					# GNU cryptographic library (req. by LibTasn1) [OPTIONS]
+#[security/libtasn1]					# GNU ASN.1 structure parser library (req. by GNU TLS)
+#[security/opencdk]						# Open Crypto Development Kit (req. by GNU TLS)
+#[security/nettle]						# Cryptographic library (req. by GnuTLS)
+#[security/gnutls]						# GNU TLS (Transport Layer Security)
+#[databases/sqlite3] 					# SQLite v3 (req. for Heimdal, Subversion, Mozilla, ...)
+#[devel/libntlm]						# NTLM authentication (req. by GNU SASL)
+#[security/heimdal]						# Kerberos 5 implementation (req. by gsasl)
+#[security/gsasl]						# GNU SASL (Simple Authentication and Security Layer)
+#[devel/autogen]						# GNU The Automated Text and Program Generation Tool
+#[textproc/libxslt]						# GNOME XSLT Parser
+#[net/lftp]								# Special FTP Client with SSH and partial WebDAV support [check: OPTIONS += ssl]
+#[devel/glib]							# GLib v1 (req. by GTKv1)
+#[devel/ncurses]						# CRT screen handling and optimization package (must build after MC)
+#[sysutils/fam]							# File Alteration Monitor (req. by glib2)
+#[converters/libiconv]					# Character set conversion library (req. by glib2)
+#[devel/glib2]							# Useful routines for C programming - glib2
+#[devel/libsigc++]						# Type-safe callback system for C++ programs
+#[devel/glibmm]							# C++ bindings for glib2
+#[devel/libslang2]						# Routines for rapid alpha-numeric terminal applications development (req. by mc)
+#[www/libwww]							# W3C Reference Library (req. by cmake)
+#[security/libssh2]						# SSH2 protocol library (req. by CURL)
+#[www/curl]								# Client that groks URLs
+#[textproc/xmlrpc-c]					# Library for writing an XML-RPC server or client in C or C++
+#[textproc/json-c]						# JSON library in C
+#[textproc/libyaml]						# YAML library in C
+#[devel/boost-jam]						# Free, peer-reviewed portable C++ source libraries (jam utility)
+#[devel/boost-headers]					# Free, peer-reviewed portable C++ source libraries (headers)
+#[devel/boost-libs]						# Free, peer-reviewed portable C++ source libraries (libs)
+#[devel/boost-python]					# Free, peer-reviewed portable C++ source libraries (boost python lib)
+#[devel/liboil]							# Library of simple, CPU-optimized functions
+#[archivers/libarchive]					# Library to read/create different archive formats
+#[devel/libexecinfo]					# BSD Licensed clone of backtrace facility found in GNU libc
+#[devel/cmake]							#2h# Cross-Platform Make
+#[lang/clang :: unixw+PKG]				# Low Level Virtual Machine compiler infrastructure (LLVM) [UPGRADE + ADD GCC49 to allowed compilers]
+#[textproc/jsoncpp]						# JSON reader and writer in C++
+#[textproc/yaml-cpp]					# YAML parser and emitter for C++
+#[x11/inputproto]						# Input extension headers from X.org (req. by XPM)
+#[x11/xextproto]						# XExt extension headers from X.org
+#[devel/gdb6 :: unixw]					# GNU Debugger [DISABLE in PLIST (because conflicts with binutils): info/bfd.info ; share/locale/{$lang}/LC_MESSAGES/bfd.mo ; share/locale/{$lang}/LC_MESSAGES/opcodes.mo]
+#[devel/tmake]							# Cross-platform Makefile Tool from TrollTech
+#[devel/xmake]							# Portable make utility
+#[devel/cpuflags]						# Determine compiler flags to best target current cpu
+#[devel/diffutils]						# GNU diff utilities - find the differences between files
+#[devel/nbpatch]						# Patch files using diff output
+#[devel/patch]							# GNU Patch files using diff output
+#[devel/patchutils]						# Some programs for manipulating patch files
+#[security/libmcrypt]					# Crypto algorithms library
+#[security/mhash]						# Hash algorithms library
+#[devel/pth]							# GNU Portable PThread Library (req. by GnuPG2)
+#[devel/libevent]						# Asynchronous event notification library (req. by PgBouncer)
+#[devel/libusb]							# USB Library (req. by UPS software)
+#[devel/libusb1]						# USB access library version 1 (req. by cups)
+#[net/libfetch]							# Library to access HTTP/FTP server (req. by openldap)
+#[security/libksba]						# X.509 library
+#[security/libassuan2]					# IPC Library (req. by GnuPG2)
+#[net/libpcap]							# UserLevel packet Capture (for NMap)
+#[devel/librfuncs]						# Provides missing POSIX *_r functions (req. by GPGMe)
+#[sysutils/dbus]						# Message Bus System [FIX-POSTINST: symlink /var/lib/dbus of /var/db/dbus as most applications will look there]
+#[www/neon]								# HTTP and WebDAV client library
+#[net/net-snmp]							# SNMP Library (req. by UPS software)
+#[graphics/freetype2]					# Font rendering engine and library API
+#[fonts/fontconfig]						# Font rendering engine and library API (req. by GD and Poppler)
+#[graphics/giflib]						# GIF library to be used as replacement for libungif (patents expired)
+#[graphics/png]							# PNG library
+#[graphics/jpeg]		 				# JPEG library
+#[graphics/jasper]						# JPEG-2000 codec
+#[graphics/jbigkit]						# JBIG-KIT lossless image compression library
+#[graphics/tiff]						# TIFF library
+#[multimedia/libvpx]					# VP8 codec from Google (req. by Firefox)
+#[graphics/gd]							# Graphics library for the dynamic creation of images
+#[graphics/libart]						# High-performance 2D graphics library (req. by RrdTool)
+#[graphics/lcms]						# Little Color Management System
+#[graphics/lcms2]						# Little Color Management System version 2 (req. by cups)
+##[print/pdflib :: unixw]				# PDF library [LICENSE: accept]
+#[textproc/docbook-xml]					# XML DTD designed for computer documentation
+#[textproc/docbook-xsl]					# Docbook XSL modular stylesheet
+#[misc/getopt]							# Program to help shell scripts parse command-line parameters
+#[textproc/asciidoc]					# ASCII to formatted document converter
+#[textproc/icu]							#20m# Robust and full-featured Unicode services
+#[devel/ossp-uuid]						# C-API and command line tool for generating UUIDs
+#[devel/re2c]							# Deterministic Finite State Automaton generator (req. by PHP and many others to regenerate)
+#[time/zonetab]							# WWW indexing and searching system
+#[time/libical]							# Reference implementation of the iCalendar data type and format
+#[mail/gmime]							# C++ Library for the creation and parsing of MIME messages
+#[textproc/xmlto]						# Tool to help transform XML documents into other formats
+#[textproc/py-expat]					# Python XML
+#[devel/py-setuptools]					# New Python packaging system (req. by Python Fuse Bindings)
+#[devel/scons]							# Python-based, open-source build system
+#[devel/snappy]							# General purpose data compression library (req. by Mongo)
+#[math/fftw]							# Collection of fast C routines to compute DFTs
+#[graphics/libwebp]						# WebP image format library and tools (req. by ImageMagick)
+#[graphics/ImageMagick :: unixw]		# Package for display and interactive manipulation of images [DISABLE ghostscript ; OPTIONS -= x11 jasper wmf]
+###########################
+# DEV-TOOLS :: END
+#################################################################
+
+
+#################################################################
+# BASE [109] :: 25%
+###########################
+# 02.base
+###########################
+### SYS [24]
+#[www/lynx]								# Lynx - Text based Browser
+#[net/wget]								# WGet Browser
+#[sysutils/mc :: unixw]					# Midnight Comander (File Manager) [OPTIONS = mc-charset mc-edit mc-samba mc-subshell mc-vfs slang] ; Note: mc4.7 may have bugs in syntax highlights [CHECK !]
+#[editors/nano]							# Nano Editor (base required)
+#[security/sudo]						# Allow others to run commands as root
+#[security/keychain]					# SSH Agent Frontend
+#[security/cyrus-sasl]					# Cyrus SASL
+#[security/cyrus-saslauthd]				# SASL authentication daemon
+#[security/dirmngr :: unixw]			# X.509 certificate and CRL downloader [DISABLE link to OpenLDAP]
+#[security/pinentry]					# Applications for entering PINs or Passphrases
+#[security/gnupg]						# GNU Privacy Guard v.1 (req. by Thunderbird Plugins)
+#[security/gnupg2 :: unixw]				# GNU Privacy Guard v.2 [DISABLE link to OpenLDAP]
+#[security/gpgme]						# GnuPG Made Easy
+#[mail/mutt-devel :: unixw]				# Mail Utility (base required) [OPTIONS = gpgme idn ssl smime sasl ncurses]
+#[sysutils/mktemp]						# Temporary files - safe creation
+#[sysutils/magicrescue]					# File(s) - undelete / rescue
+#[sysutils/cdrtools :: ]				# CD Record Tools (extra required) NOTE: in the past it was (cdrecord) ; [FIX: remove conflict with cdrkit]
+#[sysutils/mklivecd]					# Make a Live NetBSD CD/DVD
+#[sysutils/mksunbootcd]					# Combines filesystems for Sun computers to make bootable CD-ROM images
+#[sysutils/dvdrecord]					# DVD v2 creation (extra for cdrtools)
+#[sysutils/dvd+rw-tools]				# Tools for writing DVD+R(W) Disks
+#[misc/udfclient]						# UDF file system reader / writer for CD/CD-RW/DVD*RW/DVD-RAM
+#[sysutils/whowatch]					# display real-time user information
+#[sysutils/mbmon]						# hardware MotherBoard monitor
+#[sysutils/ipmitool]					# Command-line utility for managing IPMI devices
+#[sysutils/pciutils]					# PCI Utils (lspci ; setpci)
+#[net/gnetcat]							# Read and write data across network connections (Gnu version)
+#[net/netcat-openbsd]					# Arbitrary TCP and UDP connections and listens
+#[sysutils/dmidecode]					# bios info tool
+#[devel/libftdi]						# Userland driver library for FTDI USB chips
+#[sysutils/flashrom]					# Universal flash utility for OpenBios: coreboot / LinuxBIOS
+### UPS [4]
+#[sysutils/apcupsd :: unixw]			# APC UPS Monitor Daemon [Disable CGI Option]
+#[sysutils/ups-nut]						# NUT UPS Tools
+#[sysutils/ups-nut-snmp]				# NUT UPS Tools - SNMP
+#[sysutils/ups-nut-usb]					# NUT UPS Tools - USB
+## Net [13]
+#[net/wpa_supplicant]					# Wireless WPA Supplicant (use latest)
+#[www/tinyproxy :: unixw]				# Lightweight HTTP/SSL proxy [Disable Option: socks5)
+#[net/rinetd]							# TCP redirect IP:Port
+#[net/rsync]							# Secure File Sync
+#[net/srsh]								# Emulate RSH using SSH
+#[net/ipcalc]							# IP addr related calculations
+#[net/ipv6calc]							# IPV6 addr related calculations
+#[net/6tunnel]							# IPV4/IPV6 protocol translation
+#[net/hf6to4]							# Enables 6to4 IPv6 automatic tunnels
+#[net/httping]							# Ping HTTP servers
+#[net/httptunnel]						# HTTP tunneling for TCP/IP
+#[net/mtr]								# Advanced Trace Route
+#[net/bmon]								# Bandwidth Monitor
+### DNS [7]
+##[net/host]							# DNS Analysis Tool
+#[net/bind99]							# Bind DNS Server
+#[net/dlint]							# DNS Error check tools
+#[net/dnstracer]						# DNS Trace
+#[net/nslint]							# Perform consistency checks on DNS zone files
+#[net/queryperf]						# DNS Performance and Load Tester
+#[net/totd]								# DNS Proxy IPv6 <-> IPv4
+### Security Utils [6]
+#[net/nmap]								# Security Network Port scanner
+#[net/nbtscan]							# Network NetBIOS scanner
+#[net/nload]							# Network Load Monitor
+#[net/tcpdump]							# Network monitoring tool
+#[net/tcpflow]							# Captures data transmitted as part of TCP connections
+#[security/ssldump]						# SSL Network Dump
+### Load Balancing / Proxy [13]
+#[net/openvpn]							# VPN Server
+#[net/openslp]							# Open-source implementation of the Service Location Protocol (req. by CUPS and OpenLDAP)
+#[net/balance]							# Professional Load Balancing solution (TCP/IP proxy)
+#[net/pen]								# Load Balancing for simple TCP/IP
+#[net/dante]							# SOCKS 4/5 Server
+#[net/connect]							# SOCKS4/5 or HTTP proxy server
+#[net/trickle]							# bandwidth shaper
+#[math/py-roman]						# Integer to Roman numerals converter for Python
+#[textproc/py-docutils]					# Python tool to generate documents
+#[www/varnish]							# High-performace HTTP accelerator
+#[misc/cstream]							# bandwidth stream handling
+#[net/vtun]								# Virtual Tunnels over TCP/IP with traffic shaping
+#[security/zkt]							# DNSSEC Zone Key Tool
+### Misc [7]
+#[www/http_load]						# Multiprocessing http test client
+#[www/cadaver] 							# Command-line WebDAV client
+#[net/mirror]							# Mirror packages on remote sites
+#[net/fmirror]							# Mirror program for FTP sites
+#[net/autonet]							# Automatically configure network interface & WEP keys
+#[net/GeoIP]							# GeoIP DB
+#[net/mDNSResponder]					# Apple's mDNS Responder (req. by CUPS)
+### Sys [4]
+#[sysutils/ncdu]						# Disk usage visualisation tool
+#[sysutils/gpart]						# Tool to show the partitions on a PC type harddisk
+#[sysutils/sformat]						# SCSI disk maintainance, formating, and ultimative repair tool with support for NetBSD labels
+#[sysutils/dd_rescue]					# Disk Data Rescue
+#[sysutils/ddrescue]					# GNU Data Rescue from Disk
+### Bench [15]
+#[benchmarks/flops]						# Floating Point Benchmark
+#[benchmarks/ubench]					# The Unix Benchmark utility
+#[benchmarks/thrulay]					# TCP and UDP network capacity tester
+#[benchmarks/httperf]					# Web server Benchmarking program
+#[benchmarks/postal]					# Tool for benchmarking SMTP/POP servers
+#[benchmarks/pipebench]					# Measures the speed of a pipe
+#[benchmarks/lmbench]					# Complete benchmark that gives a large amount of information
+#[benchmarks/randread]					# Benchmark random disk read performance
+#[benchmarks/nttcp]						# New TCP testing and performance measuring tool
+#[benchmarks/netperf]					# Network performance benchmarking package
+#[benchmarks/nbench]					# Benchmark tool for CPU, FPU and memory
+#[benchmarks/sysbench]					# Modular, cross-platform and multi-threaded benchmark tool
+#[benchmarks/libmicro]					# Set of utilities to benchmark productivity of system calls
+#[benchmarks/bytebench]					# BYTE Magazine's Public Domain benchmark for UNIX
+#[sysutils/memtester]					# Memory (fault) Tester
+### PPTP
+#[net/pppd]								# PPP Daemon
+#[net/pptp]								# PPTP client package for Microsoft VPN servers
+###
+#[devel/ncursesw]						# Wide character CRT screen handling and optimization package
+#[sysutils/desktop-file-utils]			# Utilities to manage desktop entries
+#[sysutils/htop]						# Enhanced version of top utility
+#[net/iftop]							# Display bandwidth usage on an interface
+#[security/ike-scan]					# Fingerprinting IKE implementation
+### Fast Malloc
+#[devel/gperftools]						# Fast, multi-threaded Malloc (tcmalloc)
+#[wip/jemalloc]							# Fast, multi-threaded Malloc (jemalloc)
+###
+###########################
+# BASE :: END
+#################################################################
+
+
+#################################################################
+# DB [47] :: 30%
+###########################
+# 03.db
+###########################
+### Embedded
+#[databases/gdbm] 							# GNU Database Manager
+#[databases/db4]							# Berkeley DB
+### MemCached and Redis
+#[databases/redis :: unixw+PKG]				# Persistent key-value database with built-in net interface [UPGRADE to latest + set to tcmalloc]
+#[devel/libmemcached]						# C/C++ client library and tools for the memcached server
+#[devel/memcached]							# High-performance distributed memory object caching system
+### PostgreSQL
+#[databases/postgresql94-client :: unixw]	# PostGreSQL Client [OPTIONS(databases/postgresql94): xml] + Upgrade
+#[databases/postgresql94-server :: unixw]	# PostgreSQL Server [OPTIONS(databases/postgresql94): xml] + Upgrade + Disable Patch plPerl-GnuMake to Fix PlPerl
+#[databases/postgresql94-replicationtools]	# PostgreSQL Replication Tools
+#[databases/postgresql94-plperl]			# PL/Perl procedural language for the PostgreSQL backend
+#[databases/postgresql94-plpython]			# PL/Python procedural language for the PostgreSQL backend
+#[databases/postgresql94-pltcl]				# PL/Tcl procedural language for the PostgreSQL backend
+#[databases/postgresql94-pgcrypto]			# Module providing cryptographic functions for PostgreSQL
+#[databases/postgresql94-adminpack]			# Admin pack module for pgAdmin management
+#[databases/postgresql94-monitoring]		# PostgreSQL monitoring tools
+#[databases/postgresql94-upgrade]			# PostgreSQL binary upgrade tool
+#[databases/postgresql-pgbench]				# PostgreSQL benchmarking tools
+#[databases/pgpool2 :: unixw+PKG]			# PgSQL Replication [http://pkgsrc-wip.cvs.sourceforge.net/viewvc/pkgsrc-wip/wip/pgpool2/ ; OPTIONS = memcached ssl]
+#[databases/pgbouncer]						# Lightweight connection pooler for PostgreSQL
+#[databases/slony1]							# PgSQL Replication
+#[databases/postgresql-uuid :: unixw+PKG]	# PostgreSQL UUID [FIXED PACKAGE]
+#[databases/postgresql94-datatypes]			# DataTypes module of PgSQL
+#[databases/postgresql94-dblink]			# Dblink module for remote database connections
+#[databases/py-postgresql]					# Python DB Module to PostgreSQL
+#[geography/geos]							# Topology Suite (req. by postgis)
+#[geography/proj]							# Cartographic Projection Software (req. by postgis)
+#[textproc/xerces-c]						# Validating C++ XML parser with DOM and SAX support
+#[devel/hdf5]								# Hierarchical Data Format (new generation)
+#[devel/netcdf]								# Library for array-oriented data access
+#[geography/gdal-lib :: unixw]				# Translator library for raster geospatial data formats [DISABLE fortran77 ; add link to libxml2]
+#[databases/postgresql-postgis2] 			# Spatial database capabilities for PostgreSQL [DISABLE: CUnit ; ADD LINK to: textproc/json-c]
+#[lang/lua52]								# Powerful light-weight language for extending applications
+#[devel/protobuf]							# Google protocol buffers
+#[geography/osm2pgsql :: unixw+PKG+SRC]		# OpenStreetMap data to PostgreSQL converter [https://github.com/wiedi/pkgsrc-skylime/tree/master/osm2pgsql]
+#[fonts/ttmkfdir2]							# Tool that creates a fonts.scale file
+#[fonts/dejavu-ttf]							# Dejavu TTF Fonts (req. by some packages)
+#[geography/mapnik]							# Mapnik Renderer
+### MySQL
+#[databases/mysql55-client]					# MySQL Client
+#[databases/mysql55-server]					# MySQL Server [RC.D-FIX: add after mysqld_safe this: (> /dev/null 2>&1) &]
+#[databases/py-mysqldb]						# Python DB Module to MySQL
+### Misc
+#[databases/unixodbc]						# UNIX ODBC
+#[databases/odbc-postgresql :: unixw]		# ODBC interface to PostgreSQL [ Disable #CONFIGURE_ARGS+= --with-iodbc #CONFIGURE_ARGS+= --without-unixodbc ; add CONFIGURE_ARGS+= --with-unixodbc ; comment depending on iodbc ; add depending on unixodbc ]
+#[databases/freetds :: unixw]				# TDS Protocol to talk natively with MS-SQL and Sybase servers [OPTIONS= gnutls unixodbc kerberos]
+### LDAP
+#[databases/openldap-client :: unixw]		# LDAP Client for UNIX :: [BUILD OPTIONS += kerberos sasl slp inet6]
+#[databases/openldap-server :: unixw]		# LDAP Server for UNIX :: [BUILD OPTIONS += bdb inet6 sasl slp unixodbc]
+#[databases/openldap-smbk5pwd]				# LDAP Samba and Kerberos 5 Password Sync
+#[databases/openldap-nops]					# Remove null-ops for OpenLDAP
+#[databases/openldap-cloak]					# Allows cloaking of selected attribute
+###
+###########################
+# DB :: END
+#################################################################
+
+
+#################################################################
+# GFX-PRN [37] :: 35%
+###########################
+# 04.gfx-prn
+###########################
+### Graph Extra
+#[graphics/gdchart]							# Easy to use, fast C API for creating charts and graphs
+##[print/tcl-pdflib :: unixw]				# Tcl interface to PDFLib add LDFLAGS / CFLAGS with disabled -fPIC [BUILD MANUAL IF ERROR]
+#[print/libpaper]							# Paper size handling library
+### Print System
+#[www/htmldoc]								# HTML to PDF converter
+#[graphics/openjpeg]						# JPEG 2000 library
+#[print/poppler :: unixw]					# PDF Utils Library [DOWNGRADE if epdf wrong colors] (pdftohtml replacement) [in Makefile.common : CONFIGURE_ARGS += --enable-zlib ; .include "../../devel/zlib/buildlink3.mk" ; .include "../../graphics/tiff/buildlink3.mk" ; .include "../../fonts/fontconfig/buildlink3.mk" ; .include "../../graphics/openjpeg/buildlink3.mk" ; .include "../../graphics/png/buildlink3.mk" ; .include "../../graphics/giflib/buildlink3.mk"]
+#[print/poppler-utils]						# PDF Utils Binaries [DOWNGRADE] (pdftohtml replacement)
+#[print/poppler-data]						# Support files for poppler [DOWNGRADE]
+#[print/poppler-includes]					# Poppler Xpdf includes [DOWNGRADE]
+#[print/cups :: unixw]						# CUPS (Common Unix Printing System) :: requires the Perl MultiThreaded :: (it may crash on add printer if default options are used) [DOWNGRADE to 1.5 (2.x have many issues to print ...) ; OPTIONS= acl kerberos poppler slp tcpwrappers ; libusb]
+#[print/cups-pdf]							# CUPS PDF Backend
+#[print/ijs]								# Protocol library for raster page transmission
+#[print/mpage]								# Print multiple pages per sheet
+#[print/papersize]							# set papersize in certain packages
+#[print/enscript]							# ASCII to PostScript filter
+#[print/psutils]							# PostScript Utils
+#[print/a2ps]								# ASCII to PostScript printing
+#[fonts/ghostscript-fonts]					# GhostScript Fonts Package
+#[print/ghostscript-gpl :: unixw]			# Postscript interpreter [OPTIONS: -x11 -cups +fontconfig +utf8]
+#[print/ghostscript]						# GhostScript
+#[print/foomatic4-filters :: unixw]			# Independent Postscript print filters (foomatic-gswrapper , foomatic-rip) [OPTIONS += cups]
+#[print/foomatic-ppds]						# Independent Postscript print ppds
+#[print/foomatic-ppds-cups]					# Independent Postscript print ppds for CUPS
+#[print/foomatic4-db-engine]				# Foomatic's database engine
+#[print/foomatic4-db]						# Printer database
+#[print/foomatic-filters4-cups :: unixw+PKG]# Independent postscript print filters for CUPS
+#[print/foo2zjs]							# Printer driver for Zenographics ZjStream wire protocol
+##[print/foomatic-filters :: unixw]			# Independent Postscript print filters (foomatic-gswrapper , foomatic-rip) [OPTIONS += cups]
+##[print/foomatic-filters-cups]				# Independent postscript print filters for CUPS
+### MS Convert
+#[textproc/antiword]						# MS Word to text/postscript
+#[textproc/catdoc :: unixw]					# MS Word to text/html [comment link to desktop-file-utils]
+#[converters/xlreader]						# MS Excel to text
+#[converters/xlhtml]						# MS Excel and PPoint to text/html
+#[converters/rtf2html]						# RTF to text/html
+### OOffice Convert
+#[converters/odt2txt]						# OpenFormat ODT to TXT
+#[textproc/o3read]							# OpenOffice documents converter
+## OCR
+#[graphics/netpbm]							# Image conversions toolkit
+#[graphics/gocr]							# OCR text recognition package
+#[graphics/leptonica]						# Software for image processing and image analysis applications
+#[graphics/tesseract :: unixw]				# Commercial Grade but Free / Opensource OCR software from Google [ADD LANGUAGE: ron = romanian]
+###
+###########################
+# GFX-PRN :: END
+#################################################################
+
+
+#################################################################
+# SRV [125] :: 45%
+###########################
+# 05.srv
+###########################
+###
+#[security/openssh]							# OpenSSH server
+###
+#[net/libasr :: unixw]						# Free, simple and portable asynchronous resolver library for OpenSMTPD
+#[mail/opensmtpd :: unixw+PKG]				# The OpenSMTPD mail transfer agent, a replacement for sendmail with Virtual Domains/Users and much more
+#[mail/dovecot2 :: unixw+PKG]				# IMAP Server with MailDir support ; [FIX: ad link to "../../security/cyrus-sasl/buildlink3.mk" ; OPTIONS += ssl gssapi kqueue ldap mysql pgsql sqlite tcpwrappers]
+#[mail/dovecot2-pigeonhole]					# Dovecot 2 Sieve / ManageSieve support
+#[mail/fetchmail :: unixw]					# Fetch Mail Retrieval Utility [OPTIONS = ssl gssapi kerberos]
+#[mail/ripmime]								# Extract eMail attachments
+#[mail/imap-uw]								# University of Washington's IMAP, POP2, and POP3 servers
+#[mail/avenger :: unixw]					# SMTP Server with Filter Capabilities [OPTIONS = sasl ; remove conflict (with dovecot2) in PLIST: man/man1/deliver.1]
+###
+#[devel/apr]								# Apache Portable Runtime
+#[devel/apr-util :: unixw]					# Apache Portable Runtime utilities :: Provide extra Auth DBD [OPTIONS = db4 ldap mysql pgsql sqlite3]
+#[www/apache24 :: unixw]					# Apache 2.4 Web Server [OPTIONS = apache-mpm-prefork apache-mpm-worker apache-mpm-event ; COMMENT OUT ldap because it fails ; UPGRADE: add latest patches for nb2]
+#[www/ap2-fcgid]							# High performance alternative to mod_cgi or mod_cgid
+#[www/serf :: unixw]						# High-performance asynchronous HTTP client library [FIX: add link to databases/db4]
+#[devel/subversion-base :: unixw]			# SVN Base [CONFIGURE_ARGS += --with-gpg-agent
+#[www/ap2-subversion]						# SVN Apache Module
+#[devel/p5-subversion]						# Perl Subversion
+#[devel/py-subversion]						# Python Subversion
+#[www/ap2-wsgi]								# Apache Mod Python WSGI
+#[textproc/sphinxsearch]					# Sphinx FullTEXT Search
+###
+#[lang/php56 :: unixw]						# PHP 5.6 [UPDATE ; add in lang/php/ext.mk : USE_PHP_EXT_PATCHES= yes]
+#[www/ap-php]								# Apache PHP Module
+#[www/php-fpm]								# PHP interface to FPM
+#[www/php-zendopcache :: unixw]				# PHP Zend opcode cache and optimizer for PHP [Enable the built-in opcache module]
+#[databases/php-redis]						# PHP extension for Redis distributed cache (key-store)
+#[devel/php-memcached]						# PHP Caching Memcache
+#[converters/php-mbstring]					# PHP module multibyte
+#[net/php-sockets]							# PHP module Sockets
+#[math/php-bcmath]							# PHP module BCMath (arbitrary precision)
+#[devel/php-gmp]							# PHP module GMP (arbitrary precision)
+#[databases/php-pgsql]						# PHP module PgSQL
+#[databases/php-mysqli]						# PHP module MySQLi
+#[databases/php-ldap]						# PHP module LDAP
+#[www/php-curl]								# PHP module CURL
+#[net/php-ftp]								# PHP module FTP
+#[mail/php-imap]							# PHP module IMAP
+#[graphics/php-gd]							# PHP module GD
+#[textproc/php-json]						# PHP module JSON
+#[archivers/php-zlib]						# PHP module ZLib
+#[archivers/php-bz2]						# PHP module BZip2
+#[archivers/php-zip]						# PHP module Zip
+#[databases/php-pdo]						# PHP module PDO
+#[databases/php-pdo_mysql]					# PHP module PDO-MySQL
+#[databases/php-pdo_pgsql]					# PHP module PDO-PgSQL
+#[databases/php-pdo_sqlite]					# PHP module PDO-SQLite
+#[databases/php-dba]						# PHP module DBA
+#[databases/php-dbx]						# PHP module DBX
+#[databases/php-mongo]						# PHP module MongoDB
+#[security/php-mcrypt]						# PHP module MCrypt
+#[net/php-soap]								# PHP module SOAP
+#[net/php-xmlrpc]							# PHP module XML RPC
+#[textproc/php-dom]							# PHP module DOM
+#[textproc/php-wddx]						# PHP module WDDX
+#[textproc/php-intl]						# PHP module Intl
+#[devel/php-gettext]						# PHP module GetText
+#[converters/php-iconv]						# PHP module IConv
+#[graphics/php-exif]						# PHP module Exif
+#[time/php-calendar]						# PHP module Calendar
+#[devel/php-posix]							# PHP module POSIX
+#[devel/php-shmop]							# PHP module SHM Op.
+#[devel/php-sysvmsg]						# PHP module SysV Msg
+#[devel/php-sysvshm]						# PHP module SysV SHM
+#[devel/php-xdebug]							# PHP module XDebug
+#[textproc/php-sphinx :: unixw+PKG]			# PHP module Sphinx (FullTEXT search client)
+#[databases/php-solr :: unixw+PKG]			# PHP module Solr [FIX: add php_json.h from the current PHP version]
+#[textproc/php-yaml :: unixw+PKG]			# PHP module YAML Parser (using libyaml)
+#[security/php-scrypt :: unixw+PKG]			# PHP module SCrypt [FIX: Add patch to sysendian.h to remove duplicate functions]
+#[security/scrypt]							# Encrypt And Decrypt Files using OpenSSL
+##[textproc/php-xsl]						# PHP module XSL # Does not Work !!! #
+###
+#[www/webalizer :: unixw]					# Webalizer Log Analizer [OPTIONS = bzip2 geoip]
+#[www/mini_httpd]							# mini HTTP(S) server with SSL
+#[www/nginx :: unixw]						# lightweight http server and proxy [OPTIONS = inet6 pcre ssl dav mail-proxy status memcache realip push sub uwsgi] ; upload module is not needed as it provides different upload methods than PHP is using (it fails to compile)
+#[www/cherokee :: unixw]					# Flexible and fast web server [OPTIONS -= pam]
+#[www/thttpd]								# tiny / turbo / throttling HTTP server
+#[www/w3c-httpd]							# W3C Httpd
+#[www/wwwoffle]								# WWW proxy with support for Offline Browsing
+#[security/clamav]							# ClamAV antivirus
+#[mail/clamsmtp]							# ClamSMTP
+#[mail/bogofilter :: unixw]					# Another (smart) Spam Filter [OPTIONS = sqlite]
+#[www/squid3] 								# PostHarvest Cached WWW Proxy cache and accelerator
+#[www/ffproxy]								# Filtering HTTP(S) proxy server
+#[www/dansguardian]							# Fast, featureful web content filter for Squid proxy servers
+#[devel/popt]								# Command line option parsing library (req. by SAMBA)
+#[databases/tdb]							# Small database system which uses files to store data
+#[net/samba :: unixw]						# Windows/CIFS server for UNIX :: Samba [OPTIONS = ads cups fam ldap winbind ; CONFIGURE_ARGS+= --with-sys-quotas=yes --with-aio-support]
+###
+#[devel/p5-Error]							# Perl Error
+#[converters/p5-MIME-Base64]				# Perl Mime Base64
+#[devel/git-base :: unixw]					# SCM Git Base [FIX: disable depends for git-send-mail / perl auth sasl module in Makefile]
+###
+#[devel/p5-Sub-Uplevel]						# Perl5 Apparently run a function in a higher stack frame
+#[devel/p5-Test-Exception]					# Perl5 Test exception based code
+#[devel/p5-Test-Warn]						# Perl5 extension to test methods for warnings
+#[security/p5-Net-SSLeay]					# Perl5 module for using OpenSSL
+#[security/p5-Crypt-UnixCrypt :: unixw+PKG]	# Perl5 UnixCrypt (req. by Webmin)
+#[time/p5-Time-HiRes]						# Perl5 module for high resolution time: sleep / usleep
+###
+#[www/litmus]								# WebDAV test suite
+#[devel/argp]								# Argument parsing from glibc
+#[filesystems/glusterfs :: unixw+PKG]		# Distributed Cluster filesystem [UPGRADE to latest ; OPTIONS = georeplication]
+#[www/py-curl]								# Python module interface to the cURL library
+#[security/py-backports.ssl_match_hostname]	# Python SSL support module for Python 2
+#[www/py-tornado]							# Fast and non-blocking web framework (server)
+#[mail/procmail]							# Local mail delivery agent
+#[mail/dspam :: unixw]						# Extremely scalable, statistical-hybrid anti-spam filter [DSPAM_STORAGE_DRIVER = pgsql ; OPTIONS = clamav largescale long-usernames dspam-virtualusers dspam-preferences-extension]
+#[mail/isync :: unixw]						# Synchronize a maildir with an imap server [FIX: disable ssl]
+#[sysutils/lockf]							# FreeBSD's lockf
+#[lang/nodejs]								# V8 JavaScript for clients and servers
+#[databases/py-sqlite3]						# SQLite3 module for Python
+#[textproc/py-markupsafe]					# Implements a XML/HTML/XHTML Markup safe string for Python
+#[textproc/py-jinja2]						# Small but fast and easy to use stand-alone template engine
+#[textproc/py-pygments]						# Python syntax highlighter
+#[textproc/py-sphinx]						# Python documentation generator
+#[textproc/py-numpydoc]						# Sphinx extension to support docstrings in Numpy format
+#[security/fail2ban]						# Scans log files and bans IP that makes too many password failures
+#[www/tidy :: unixw]						# Fixes and tidies up HTML files :: [OPTIONS -= doc]
+#[www/swish-e]								# Simple web indexing for humans - enhanced
+###
+#[devel/nspr :: unixw]						# Mozilla's Platform-neutral API for system level and libc like functions [CONFIGURE_ARGS+= --enable-64bit]
+#[lang/spidermonkey :: unixw]				# Spidermonkey (Mozilla) Js engine [OPTIONS: threads unicode ; it will fix also the req. link to devel/nspr] ; FIX: (remove -m64 build parameter as it fails): add in Makefile after bsd.prefs: LDFLAGS:= $(filter-out -m64,$(LDFLAGS)) CFLAGS:= $(filter-out -m64,$(CFLAGS))
+#[lang/erlang :: unixw]						# Erlang (req. by eJabberd) [Lic. comment ; FIX: (remove -m64 build parameter as it fails): add in Makefile after bsd.prefs: LDFLAGS:= $(filter-out -m64,$(LDFLAGS)) CFLAGS:= $(filter-out -m64,$(CFLAGS)) ]
+#[databases/couchdb]						# NoSQL DB Server for documents storage with JSON api
+#[wip/spidermonkey185]						# Mozilla Sipdermonkey JS 1.8.5
+###
+#[devel/gyp]								# Python GYP (req. by mongodb)
+#[wip/v8]									# JS v8 from Chromium [renamed from v8-316] (req. by mongodb)
+#[databases/mongodb :: unixw+PKG]			# MongoDB, a NoSQL distributed document-oriented database [FIX: license accept ; OPTIONS+= ssl]
+#[lang/go]									# Go language (req. for mongo-tools)
+#[databases/mongo-tools]					# MongoDB Tools
+#[databases/libmongo-client]				# Alternative C driver for MongoDB
+#[devel/libbson :: unixw+PKG]				# BSON utility library [create from version 1.0.2]
+###
+##[mail/postfix :: unixw]					# Postfix SMTP Server [OPTIONS = tls sasl pcre ldap mysql pgsql sqlite bdb]
+##[databases/mongo-c-driver unixw+PKG]		# MongoDB client library written in C [create from version 1.0.2]
+###
+###########################
+# SRV :: END
+#################################################################
+
+
+#################################################################
+# COMMS [17] :: 50%
+###########################
+# 06.comms
+###########################
+###
+#[comms/gkermit]							# HyperTerminal Application
+#[comms/lrzsz]								# Receive/Send files via X/Y/ZMODEM protocol
+#[comms/conserver8]							# Application that allows multiple users to watch serial consoles
+###
+#[comms/hylafax :: unixw]					# Hylafax Server [DOWNGRADE to 4.2.5, the newest 6.0.6 is not compiling]
+#[textproc/iksemel]							# XML parser library mainly designed for Jabber applications
+#[multimedia/libogg]						# Ogg project codecs library
+#[audio/speex]								# Open-source, patent-free voice codec
+#[audio/speexdsp]							# Open-source, patent-free voice codec DSP library
+#[devel/libuuid]							# Generate unique identifiers for objects
+#[comms/asterisk :: unixw]					# Asterisk Phone PBX + SIP :: [OPTIONS = ldap jabber speex unixodbc] :: *Possible FIX*: uninstall unixodbc before MAKE
+###
+#[net/udns]									# Lightweight DNS resolver supporting asynchronous queries
+#[chat/ejabberd :: unixw]					# eJabberd 2 XMPP Server [OPTIONS = sqlite]
+##[chat/jabberd2 :: unixw]					# Jabberd2 XMPP Server [UPGRADE ; DISABLE LINK TO: cppunit ; CONFIGURE_ARGS+= --disable-anon ; REMOVE FROM PLIST: authreg_anon.la ; OPTIONS= mio-poll auth-pgsql storage-pgsql auth-sqlite storage-sqlite]
+##[chat/mu-conference :: unixw]				# Jabberd2 Multi-User Conference / Implementation of the XEP-0045 Multi-User Chat protocol [UPGRADE]
+###
+#[chat/ninja]								# Another IRC client (Webrtc) based on ircII
+#[net/ortp]									# Real-time Transport Protocol stack (LinPhone)
+###
+#[geography/gpsd]							# GPS information daemon
+#[geography/gpsutils]						# Capture and convert data from a Garmin GPS receiver
+#[geography/garmin-utils]					# Utilities for Garmin GPS receivers
+###
+###########################
+# COMMS :: END
+#################################################################
+
+
+#################################################################
+# VIRTUAL [21] :: 55%
+###########################
+# 07.virtuals
+###########################
+### Fuse
+#[filesystems/fuse-wdfs]					# FUSE-based webdav filesystem
+#[filesystems/fuse-archivemount]			# FUSE gateway to libarchive
+#[filesystems/fuse-cryptofs]				# FUSE encrypted filesystem
+#[filesystems/fuse-curlftpfs]				# FUSE filesystem for acessing FTP hosts
+#[devel/librlog]							# C++ logging library
+#[filesystems/fuse-encfs]					# FUSE Encrypted Filesystem
+#[filesystems/fuse-loggedfs]				# FUSE filesystem which logs all operations
+#[filesystems/fuse-lzofs]					# FUSE filesystem which allows you to use transparently compressed files
+#[filesystems/fuse-svnfs]					# FUSE filesystem for accessing SVN repositories
+#[filesystems/fuse-chironfs]				# FUSE replicating filesystem
+#[filesystems/py-fuse-bindings]				# Python bindings for FUSE and refuse
+### Misc
+#[devel/dev86]								# Linux 8086 development environment
+#[devel/py-readline]						# Line editing support for Python
+#[textproc/py-xml]							# Collection of libraries to process XML with Python
+#[devel/py-curses]							# Curses module for Python
+#[sysutils/acpica-utils]					# Intel ACPI CA Unix utilities
+#[lang/ocaml]								# The latest implementation of the Caml dialect of ML
+#[devel/ocaml-findlib]						# Library finder for OCaml
+#[devel/yajl]								# Small JSON library written in ANSI C
+#[x11/pixman]								# Library of low-level pixel manipulation routines
+#[misc/rump]								# Virtualized NetBSD kernel components in userspace
+###
+###########################
+# VIRTUAL :: END
+#################################################################
+
+
+#################################################################
+# X11-DESKTOP [549] :: 90%
+###########################
+# 08.x11-desktop
+###########################
+### Blackbox / IceWM
+#[wm/blackbox70]							# BlackBox - the minimalist window manager
+#[x11/stalonetray]							# Standalone SysTray for X11
+#[x11/libXft]								# Library for configuring and customizing font access
+#[x11/fspanel]								# Taskbar for lightweight wm such as Blackbox
+#[sysutils/xbattbar]						# Battery Status
+#[audio/xmix]								# X Mixer
+###
+#[audio/libaudiofile]						# Sound Library for SGI Audio (req. by icewm)
+#[audio/esound]								# Enlightement sound daemon (req. by icewm)
+#[textproc/py-cElementTree]					# C implementation of Python ElementTree API (req. by gobject-introspection and py-xcbgen)
+#[devel/gobject-introspection]				# GObject Introspection (req. by atk)
+#[graphics/gdk-pixbuf2]						# Image loaders for gtk2 (req. by icewm)
+#[graphics/gdk-pixbuf2-jasper]				# Image loaders for gtk2 - jasper module (req. by icewm)
+#[graphics/gdk-pixbuf2-xlib]				# Image loaders for gtk2 - xlib (req. by icewm)
+#[wm/icewm3 :: unixw+PKG]					# IceWM 1.3.7 Window Manager with patches !! this does not work with QT5 (must upgrade to 1.3.8 or later)
+##[wm/icewm13 :: unixw+PKG]					# IceWM 1.3.8 Window Manager [ONLY DOWNLOAD] :: it works with QT5 but must be patched to FIX bugs with key combinations
+##[wm/icewm :: unixw]						# IceWM 1.2.x Window Manager [ONLY DOWNLOAD]
+#[math/nickle]								# Desk calculator language
+#[x11/randrproto]							# Randr Proto
+#[x11/libXrandr]							# Lib XRandr
+### Terminals
+#[shells/lshell]							# Restricted Shell (to specific commands)
+#[x11/rxvt-unicode]							# Color Terminal for X11 (Unicode)
+#[x11/rxvt]									# Color Terminal for X11
+#[net/rdesktop :: unixw+PKG]				# Remote Desktop Client [UPGRADE]
+### Fonts
+#[fonts/font-alias]							# X11 Fonts Alias
+#[fonts/encodings]							# X11 Font Encodings
+#[fonts/freefonts]							# Collection of 79 freely available fonts
+#[fonts/freefont-ttf]						# Free UCS Outline Fonts: FreeMono, FreeSans, and FreeSerif
+#[fonts/efont-unicode]						# Unicode fonts made by /efont/ project
+#[fonts/font-util]							# Tool for truncating ans subseting BDF fonts
+#[fonts/font-jis-misc]						# Japanese PCF fixed fonts
+#[fonts/font-adobe-100dpi]					# Adobe Fonts 100dpi
+#[fonts/font-adobe-75dpi]					# Adobe Fonts 75dpi
+### 3D
+#[devel/xorg-util-macros]					# Xorg autotool macros
+#[sysutils/libpciaccess]					# PCI access utility library from X.org
+#[x11/xf86driproto]							# XF86DRI extension headers from modular X.org
+#[x11/libdrm]								# Userspace interface to kernel DRM services
+#[graphics/MesaLib]							# Graphics library similar to SGI's OpenGL [if fail, DOWNGRADE]
+#[graphics/glu]								# GLU polygon tessellation facility for Mesa [if fail, DOWNGRADE ; FIX: have issues with libdrm version: in Makefile / Buildlink3 : .include "../../x11/libdrm/buildlink3.mk" ; PREFER.libdrm= pkgsrc]
+#[graphics/glut]							# GLUT Graphics library similar to SGI's OpenGL [if fail, DOWNGRADE ; FIX: have issues with libdrm version: in Makefile / Buildlink3 : .include "../../x11/libdrm/buildlink3.mk" ; PREFER.libdrm= pkgsrc]
+#[graphics/Mesa]							# Graphics library meta package, similar to SGI's OpenGL [if fail, DOWNGRADE]
+#[graphics/glx-utils]						# OpenGL glxgears and glxinfo [if fail, DOWNGRADE]
+### Protos
+#[x11/fltk13]								# Fast Light Tool Kit for graphical user interfaces
+#[x11/fontsproto]							# Fonts extension headers
+#[fonts/libfontenc]							# Library to handle fonts with different encodings
+#[x11/libXfont]								# XFont Library
+#[x11/presentproto]							# X11 ext. for efficient window updates
+#[x11/xtrans]								# Network api translation layer to insulate X
+#[x11/dri2proto]							# Dri2 ext. headers for X
+#[x11/glproto]								# GL ext. headers
+#[x11/damageproto]							# Damage ext. headers
+#[x11/fixesproto]							# Fixes ext. headers
+#[x11/compositeproto]						# Composite ext. headers
+#[x11/xcursor]								# Cursor extension headers
+#[x11/libXinerama]							# X Panoramix ext. lib.
+#[x11/libXtst]								# X Tst Lib.
+#[x11/xcb-proto]							# XCB protocol descriptions (in XML)
+#[x11/py-xcbgen]							# XCB protocol descriptions (in XML)
+#[x11/libxcb]								# X protocol C-language Binding
+#[x11/xlockmore-lite]						# XLock Lite
+### Stats
+#[sysutils/xosview]							# OS Stats for X11
+#[sysutils/xenvstat]						# Display environmental sensor readings
+### VNC
+#[net/tightvnc :: unixw]					# TightVNC Server :: [FIX conflicts with vncviewer ; remove in PLIST vncserver as will be replaced with vncdesktop custom script]
+#[wip/realvncviewer :: unixw+PKG]			# RealVNC Viewer
+#[net/tigervncviewer :: unixw]				# TigerVNC Viewer ; DERIVE from tigervnc PLIST ; [FIX: add to Makefile: PREFER.xtrans=pkgsrc ; PREFER.dri2proto=pkgsrc ; PREFER.glproto=pkgsrc ; PREFER.inputproto=pkgsrc ; DISABLE glx]
+##[net/tigervnc :: unixw]					# TigerVNC Viewer and Server [FIX: add to Makefile: PREFER.xtrans=pkgsrc ; PREFER.dri2proto=pkgsrc ; PREFER.glproto=pkgsrc ; PREFER.inputproto=pkgsrc ; DISABLE glx]
+##[wip/tigervncviewer :: unixw+PKG]			# TigerVNC Viewer *pkgsrc-wip* [FIX: add GnuTLS PAtch or disable]
+##[wip/tigervnc :: unixw+PKG]				# TigerVNC *pkgsrc-wip* :: [ONLY MAKE NOT BUILD ; FIX: in Makefile add: CMAKE_ARGS=-DENABLE_GNUTLS=0 because it fails with newer GnuTLS ; Xvnc will be provided by tightvnc]
+##[net/vncviewer :: unixw]					# TightVNC Viewer :: [PLIST remove: vncpasswd ; FIX conflicts with tightvnc] ; [Download only: net/tightvncviewer ; net/vnc]
+### X11 Dev
+#[x11/tk :: unixw]							# Graphical Toolkit for TCL [DOWNGRADE]
+#[lang/tcl-itcl]							# Object oriented extension for TCL ; [tcl-otcl can be a replacement if this does not compile]
+#[x11/tk-Tix]								# Powerful widget library for Tcl/Tk
+#[x11/tk-BWidget]							# High Level Widget Set for Tcl/Tk
+#[x11/blt :: unixw]							# Extension to Tcl/Tk [FIX: remove in PLIST conflict: mann/graph.n , mann/container.n]
+#[security/tcl-tls]							# TLS (aka SSL) Channel for the Tcl language
+#[textproc/tcl-expat]						# XML parser implemented entirely in Tcl
+#[databases/sqlite3-tcl :: unixw]			# TCL SQLite 3 DB Extension [FIX: sqlite version the same as in pkgsrc]
+#[wip/tkhtml3]								# TK HTML 3 Component
+#[wip/tkpng]								# TK PNG Component
+#[www/p5-HTML-Tagset]						# Perl5 HTML Tagset
+#[misc/p5-Business-ISBN-Data]				# Perl5 ISBN Data
+#[misc/p5-Business-ISBN]					# Perl5 ISBN
+#[www/p5-URI]								# Perl5 URI
+#[www/p5-HTML-Parser]						# Perl5 HTML Parser
+#[x11/p5-Tk]								# Perl5 interface to Tk
+### GTK
+#[x11/gtk]									# GTK+1.2 Framework
+#[textproc/p5-XML-Parser]					# Perl XML Parser
+#[textproc/intltool]						# Intl Tool
+#[devel/atk]								# Set of interfaces for accessibility
+#[graphics/glitz]							# OpenGL 2D graphics library and a backend for gl output in cairo
+#[graphics/cairo]							# Vector graphics library with cross-device output support
+#[graphics/cairo-gobject]					# Vector graphics library
+#[fonts/harfbuzz]							# OpenType text shaping engine
+#[devel/pango]								# Library for layout and rendering of text
+#[databases/shared-mime-info]				# Core database of common types
+#[graphics/hicolor-icon-theme]				# Standard icon theme called hicolor
+#[x11/gtk2 :: unixw]						# GTK+2 [OPTIONS = x11 cups]
+#[devel/gdbus-codegen]						# Generate code / docs for DBus interfaces
+#[devel/at-spi2-core]						# Assistive Technology Service Provider Interface Core
+#[devel/at-spi2-atk]						# Assistive Technology Service Provider Interface A11y Toolkit
+#[x11/gtk3 :: unixw]						# GTK+3 [OPTIONS = x11 cups] ; can disable atk bridge to be lighter
+### Terminals
+#[wm/bbrun]									# BlackBox Run ...
+#[sysutils/dbus-glib]						# GLib bindings for the D-BUS message bus system
+#[x11/vte]									# Terminal widget with accessibility and i18n support
+#[wip/roxterm]								# ROXTerm is a terminal emulator [UPGRADE to 2.2.2 or later]
+#[x11/vte029]								# Terminal widget with accessibility and i18n support (new version)
+#[x11/sakura]								# Sakura Terminal based on GTK3
+### libs
+#[databases/py-sqlite2]						# Python Bindings to SQLite (req. by Firefox)
+#[net/libIDL]								# CORBA Interface Definition Language parser (req. by mozilla)
+#[textproc/hunspell]						# Improved spellchecker
+#[textproc/ispell]							# Interactive Spell Checker (req. by some lang in hunspell)
+#[textproc/hunspell-en_US]					# Hunspell :: US English
+#[textproc/hunspell-en_GB]					# Hunspell :: UK English
+#[textproc/hunspell-de]						# Hunspell :: German
+#[textproc/hunspell-nl_NL]					# Hunspell :: Dutch
+#[textproc/hunspell-da_DK]					# Hunspell :: Danish
+#[textproc/hunspell-sv_SE]					# Hunspell :: Swedish
+#[textproc/hunspell-es_ES]					# Hunspell :: Spanish
+#[textproc/hunspell-fr_FR]					# Hunspell :: French
+#[textproc/hunspell-it_IT]					# Hunspell :: Italian
+#[textproc/hunspell-pl_PL]					# Hunspell :: Polish
+#[textproc/hunspell-sk_SK]					# Hunspell :: Slovak
+#[textproc/hunspell-cs_CZ]					# Hunspell :: Czech
+#[textproc/hunspell-hu_HU]					# Hunspell :: Hungarian
+#[textproc/hunspell-ro_RO :: unixw+PKG+SRC] # Hunspell :: Romanian :: [FIX: + SRC]
+#[textproc/hunspell-el_GR]					# Hunspell :: Greek
+#[textproc/hunspell-bg_BG]					# Hunspell :: Bulgarian
+#[textproc/hunspell-lv_LV]					# Hunspell :: Latvian
+#[textproc/hunspell-ru_RU]					# Hunspell :: Russian
+#[devel/orc]								# Compiler for vector operations
+#[multimedia/gstreamer0.10]					# Open source multimedia framework
+#[multimedia/gst-plugins0.10-base]			# Open source multimedia framework - base plugins
+#[security/policykit]						# Framework for managing admin policies and privileges
+#[audio/flac]								# Free Loseless Audio Codec (Replacement for ALAC)
+#[audio/libvorbis]							# Library for the Ogg Vorbis audio encoding format
+#[multimedia/libtheora]						# Video codec for Ogg multimedia streaming
+#[audio/libsndfile]							# Library for reading and writing audio files
+#[audio/libsamplerate]						# Sample rate converter library
+#[audio/pulseaudio :: unixw]				# PulseAudio [OPTIONS -= avahi ; DISABLE: links to hal if linked ; disable link to consolekit in Makefile]
+#[x11/xcb-util]								# XCB Utilities (replace xcb-util036)
+#[x11/startup-notification]					# X11 application startup notification library (replace startup-notification010)
+#[textproc/p5-XML-NamespaceSupport]			# Perl XML Namespace Support
+#[textproc/p5-XML-SAX-Base]					# Perl XML SAX Base
+#[textproc/p5-XML-SAX]						# Perl XML SAX
+#[textproc/p5-XML-SAX-Expat]				# Perl XML SAX Expat
+#[textproc/p5-XML-Simple]					# Perl XML Simple (req. by Gnome Icon Naming Utils)
+#[graphics/icon-naming-utils]				# Gnome Icon Naming Utils (req. by Gnome Icon Theme)
+#[textproc/libcroco]						# Toolkit to parse and manipulate CSS (Cascading Style Sheets) :: (req. by Gimp2 SVG)
+#[graphics/librsvg]							# SVG Library (req. by Gimp2)
+#[graphics/gnome-icon-theme]				# Gnome Icon Theme
+#[graphics/gnome-icon-theme-extras]			# Gnome Icon Theme Extras
+#[graphics/gnome-icon-theme-symbolic]		# Gnome Icon Theme Symbolic
+#[graphics/tango-icon-theme]				# Tango Icon Theme
+### file manager
+#[www/libproxy] 							# Library that provides automatic proxy configuration management (req. by webkit)
+#[net/glib-networking]						# Network-related giomodules for glib [UPGRADE to 2.34 or later]
+#[security/libgnome-keyring]				# Gnome Keyring (req. by libsoup24)
+#[net/ORBit2]								# High-performance CORBA ORB with C language support (req. by GConf)
+#[devel/GConf]								# Configuration database system used by GNOME (req. by libsoup24)
+#[net/libsoup24 :: unixw]					# HTTP Library in C [FIX: comment out gnome-keyring]
+#[sysutils/gvfs :: unixw+PKG]				# Userspace Virtual FileSystem :: Upgrade to version 1.22.4 (or 1.12.3) because lower versions have bugs with WebDAV [OPTIONS = samba]
+#[sysutils/menu-cache]						# Cache for freedesktop.org menu spec
+#[lang/vala]								# Compiler for gObject
+#[graphics/libexif]							# EXIF file library
+#[wip/libfm]								# LXDE FileManager - PcManFm Library
+#[wip/pcmanfm]								# LXDE FileManager - PcManFm Program
+### Backup Browser
+#[fonts/kochi-ttf]							# Japanese Font
+#[devel/nss :: unixw]						# Libraries to support development of security-enabled applications [UPGRADE to 3.19.2]
+#[www/firefox24 :: unixw]					# Firefox 24.8.1esr browser [OPTIONS = official-mozilla-branding ; X -> Mozilla-License, Restr. ; DISABLE pulseaudio] ; req. devel/nspr
+### archiver
+#[textproc/py-libxml2]						# Python wrapper for libxml2
+#[textproc/py-libxslt]						# Python wrapper for libxslt
+#[textproc/gnome-doc-utils]					# Documentation utilities for the GNOME project (req. by File-Roller)
+#[textproc/scrollkeeper-dtd]				# DTD from the Scrollkeeper package
+#[textproc/rarian]							# Documentation metadata library
+#[archivers/file-roller]					# FileRoller Gnome Archiver
+##[sysutils/xarchiver :: unixw+PKG] 		# XArchiver
+### net clients
+#[x11/wxGTK28]								# GTK-based implementation of the wxWidgets GUI library 2.8 (req. by FileZilla and PgAdmin3)
+#[x11/wxGTK28-contrib]						# WxWidgets Contrib
+##[x11/wxGTK30]								# GTK-based implementation of the wxWidgets GUI library 3.0
+#[textproc/tinyxml]							# TinyXML Lib
+#[net/filezilla :: unixw+PKG]				# FileZilla FTP(S) Client [DOWNGRADE to 3.8.1 to use wxGTK 2.8 ; later versions req. wxGTK30]
+#[databases/pgadmin3 :: unixw]				# PostgreSQL Admin [UPGRADE to latest ; OPTIONS = pgadmin-db-designer openssl zlib]
+### Base Dev
+#[fonts/gucharmap]							# Font Character Map (req. by geany)
+#[devel/geany]								# PHP Development IDE
+#[www/weblint]								# HTML validator and sanity checker (req. by bluefish)
+#[textproc/enchant]							# Generic spell checking library (req. by bluefish)
+#[www/bluefish]								# HTML Editor :: [FIX: Disable: enchant]
+### Base Graphics
+#[graphics/mng]								# Multiple-image Network Graphics (MNG) reference library (req. by gimp)
+#[www/libgtkhtml]							# Lightweight HTML rendering GTK2 widget (req. by Gimp2)
+#[graphics/aalib]							# ASCII Art library (req. by Gimp2)
+#[graphics/babl]							# Dynamic pixel conversion library (req. by Gimp2)
+#[graphics/ilmbase]							# High dynamic-range (HDR) image file format library and tools base (req. by gegl)
+#[graphics/openexr]							# High dynamic-range (HDR) image file format library and tools (req. by gegl)
+#[graphics/libwmf]							# Library for reading and converting WMF (Windows Meta Files)
+#[graphics/gegl]							# Graph based image processing framework :: sync with Gimp2 to Enable/Disable SVG
+#[devel/libgsf]								# GNOME2 structured file library (req. by Gimp2 SVG)
+#[sysutils/libnotify]						# Desktop notification framework
+#[graphics/gimp :: unixw]					# Gimp v.2 :: sync with gegl to Enable/Disable SVG [OPTIONS = mng svg pdf]
+#[graphics/gimp-color-manager]				# Color Manager for Gimp
+#[graphics/gimp-docs-en]					# Gimp Docs (english)
+#[print/gutenprint-lib :: unixw]			# Replacement for Gimp-Print-Lib [FIX: link to cups instead og cups15]
+#[textproc/py-lxml]							# XML and HTML processing with Python
+#[sysutils/gnome-vfs :: unixw]				# Gnome Virtual FileSystem [OPTIONS = fam inet6]
+#[net/gnome-vfs-smb]						# Gnome VFS SMB
+#[devel/cppunit]							# CPP Test Unit
+#[graphics/cairomm]							# C++ interface co Cairo
+#[devel/pangomm]							# C++ interface to Pango
+#[devel/atkmm]								# C++ bindings for atk
+#[x11/gtkmm]								# C++ interface to GTK2
+#[devel/mm-common]							# C++ Build Infrastructure for Gnome3
+#[x11/gtkmm3]								# C++ interface to GTK3
+#[converters/librevenge]					# Lib Revenge [DISABLE LINK TO: cppunit]
+#[converters/libwpd]						# Lib Wpd
+#[converters/libwpg]						# Lib Wpg
+#[converters/libcdr]						# CDR Lib
+#[converters/libvisio]						# Lib Visio
+#[print/poppler-glib]						# PDF rendering library GLib wrapper [DOWNGRADE] (req. by ePDFView)
+#[print/poppler-cpp]						# PDF rendering library (cpp wrapper)
+#[textproc/itstool]							# ITS Tool allows you to translate XML documents with PO files
+#[textproc/gtk-doc]							# Tools for authors of the GTK+ reference documentation
+#[textproc/gtkspell]						# GTK Spell (req. by Inkscape)
+#[graphics/inkscape :: unixw]				# Vector Graphics [FIX: add links to jpeg, jbigkit, tiff]
+### blender
+#[fonts/vera-ttf]							# Bitstream Vera TrueType fonts
+#[fonts/liberation-ttf]						# TrueType fonts from RedHat
+#[print/epdfview :: unixw]					# ePDFView PDF Viewer [OPTIONS = cups ; FIX: add patch to fix CAIRO_FORMAT_RGB24 to CAIRO_FORMAT_ARGB32 in src/PDFDocument.cxx ; WRONG COLORS WITH poppler 0.20 ; if not compile PATCH TO WORK with New GLib2.3 and remove the line: #include <glib/gmacros.h> in src/gtk/StockIcons.h]
+#[x11/Xaw3d]								# 3-D widgets based on the Athena Widget set (req. by gv)
+#[print/gv]									# GhostView PostScript Viewer [FIX: After Build link some libs from /usr/X11R7/lib to /usr/pkg/lib]
+#[x11/libXau]								# Authorization Protocol from X.org (req. by NAS)
+#[audio/nas]								# Network Audio System (req. by SDL) [FIX: dependency with x11/libXau]
+#[audio/nas-auscope]						# Network Audio System Protocol Filter
+#[devel/SDL :: unixw] 						# Simple DirectMedia Layer, a cross-platform multimedia library (req. by Blender) [OPTIONS = aalib nas pulseaudio]
+#[graphics/blender :: unixw+PKG]			# Blender 3D :: [DOWNGRADE, the new may have error with ld 64 ; Add to Makefile: PREFER.libdrm= pkgsrc ; PREFER.Mesa= pkgsrc; PREFER.MesaLib= pkgsrc; PREFER.glu= pkgsrc; PREFER.glut= pkgsrc ; .include "../../graphics/Mesa/buildlink3.mk"] (manually build devel/scons if error) :: Hint: It will raise an ERROR about GLX if MesaLib is not installed
+#[graphics/blender-doc :: unixw+PKG]		# Blender documentation [DOWNGRADE in sync with blender]
+### desktop tools
+#[editors/leafpad]							# Lightweight Text Editor
+#[devel/exempi]								# XMP library
+#[x11/gnome-desktop]						# Gnome Desktop files and library
+#[graphics/eog]								# Eye of Gnome (Image Viewer)
+#[print/libspectre]							# PS Library (for evince)
+#[print/evince]								# Document Viewer Gnome
+#[math/gcalctool]							# Standard Calculator for Gnome
+#[misc/gperiodic]							# Periodic Table of Elements
+#[devel/libwnck]							# Library to write pagers and tasklists
+#[sysutils/libgtop]							# Library to retrieve system information, used in GNOME
+### mozilla
+#[graphics/graphite2]						# Graphite v2 (req. by ffox31)
+#[graphics/libv4l]							# Video for Linux Library (optional req. by Firefox: webrtc)
+#[www/firefox31 :: unixw+PKG]				# Firefox 31.8.0esr [FIX: builink with gstreamer 0.10 instead of 1 ; OPTIONS = pulseaudio official-mozilla-branding ; X -> Mozilla-License, Restr.] ; req. devel/nspr
+#[www/firefox38 :: unixw+PKG]				# Firefox 38.2.0esr [FIX: builink with gstreamer 0.10 instead of 1 + link to gcc49 instead of gcc48 ; OPTIONS = pulseaudio official-mozilla-branding ; X -> Mozilla-License, Restr.] ; req. devel/nspr
+#[mail/thunderbird24 :: unixw+PKG]			# Thunderbird 24.8.1 [UPGRADE tb + enigmail; OPTIONS = mozilla-lightning mozilla-enigmail official-mozilla-branding ; X -> Mozilla-License, Restr.]
+#[mail/thunderbird31 :: unixw+PKG]			# Thunderbird 31.8.0 [UPGRADE tb + enigmail; OPTIONS = mozilla-lightning mozilla-enigmail official-mozilla-branding ; X -> Mozilla-License, Restr.]
+#[mail/thunderbird-enigmail :: unixw+PKG]	# Thunderbird 31 Enigmail ext.
+#[www/seamonkey :: unixw]					# Mozilla SeaMonkey Suite [OPTIONS = mozilla-lightning mozilla-enigmail]
+#[fonts/mozilla-fonts]						# Mozilla Fonts
+### planner
+#[devel/libbonobo]							# Gnome object activation framework
+#[audio/libcanberra]						# Desktop event sound library
+#[devel/libgnome]							# Core GNOME2 library (non-graphical)
+#[devel/libglade] 							# Lib Glade
+#[devel/libglademm]							# C++ interface to Lib Glade
+#[graphics/libgnomecanvas]					# Gnome Canvas Library
+#[devel/libbonoboui]						# Gnome Object Activation framework Library (graphical)
+#[devel/libgnomeui]							# Gnome Core Libraries (UI)
+#[print/libgnomeprint]						# Gnome Print Library
+#[print/libgnomeprintui]					# Gnome Print UI Library
+#[time/planner]								# Project Management tool for the GNOME desktop
+### misc devel
+#[devel/rapidsvn :: unixw]					# Rapid SVN [FIX: add link to security/cyrus-sasl]
+#[devel/git-docs]							# SCM Git Docs
+#[devel/git-gitk]							# SCM Git Tk Frontend
+#[devel/p5-Compress-Raw-Zlib]				# Perl module (req. by OOffice)
+#[devel/p5-Compress-Raw-Bzip2]				# Perl module (req. by OOffice)
+#[devel/p5-IO-Compress]						# Perl module (req. by OOffice)
+#[archivers/p5-Archive-Zip]					# Perl module (req. by OOffice)
+#[devel/xxgdb]								# Graphical X11 interface for gdb
+#[editors/poedit]							# Cross-platform gettext catalogs (.po files) editor [DISABLE link with gtkspell]
+### ooffice
+#[textproc/raptor2]							# RDF Parser Toolkit written in C (req. by OOffice)
+#[devel/xulrunner192]						# Firefox36 Base (req. by OpenOffice)
+#[misc/openoffice3 :: unixw+PKG]			#6h# OpenOffice3 [OPTIONS = cups gtk2 lang-en-US ; FIXES: disable system icu to force use icu from Ooo / or disable in patch-cw: ko charset + remove ko_charset.txt in post-extract ; update links to xulrunner192 but not selecting as option ; disable option xulrunner ; add --without-mozilla --without-system-mozilla --without-nsplugin ; Build may fail without xulrunner (nsplugin) for wrong settings ; for some reason building may fail with logs enbled, if so, build it manually ; if build error uninstall dmake because it may conflict on building]
+### anjuta
+#[databases/libgda]							# Gnu DB Access Lib
+#[databases/libgda-postgres]				# Gnu DB Access Lib PgSQL
+#[databases/libgda-mysql]					# Gnu DB Access Lib MySQL
+#[devel/gdl]								# Gnome Devtool Libs
+#[devel/glade]								# GTK 2 IDE
+#[devel/glade3 :: unixw+PKG]				# User interface builder for GTK3+ [UPGRADE to latest]
+#[x11/gtksourceview3]						# Text widget that extends GTK3's GtkTextView widget
+#[x11/gtksourceview2]						# GTK+2 Source View
+#[x11/gtksourceview]						# GTK+ Source View
+#[devel/swig]								# Simplified Wrapper and Interface Generator
+#[graphics/graphviz]						# Graph Drawing Programs from AT&T Research and Lucent Bell Labs
+#[x11/gnome-terminal]						# Gnome Terminal
+#[graphics/py-cairo]						# Python bindings for cairo
+#[devel/py-gobject3-common]					# Python GObject3 Common
+#[devel/py-gobject3]						# Python GObject3
+#[sysutils/gsettings-desktop-schemas]		# Collection of GSettings schemas for the GNOME desktop
+#[devel/meld :: unixw+PKG]					# Visual Diff [UPGRADE]
+#[devel/GConf-ui]							# Configuration database system used by GNOME, UI
+#[textproc/iso-codes]						# List of coutries, currencies
+#[www/gtkhtml314]							# Lightweight HTML Rendering Engine
+#[security/mozilla-rootcerts :: unixw]		# Mozilla Root Certs [UPGRADE]
+#[security/mozilla-rootcerts-openssl :: unixw+PKG]	# Mozilla Root Certs OpenSSL [ADD]
+#[lang/g95]									# Fortran 95 compiler from g95.org
+#[devel/libtool-fortran]					# Generic shared library support script (the script itself, incl. Fortran)
+#[devel/libtool]							# Libtool Meta Package
+#[x11/gtk2-engines-bluecurve]				# GTK2+ Theme Engine - BlueCurve
+#[x11/gtk3-engines-unico]					# GTK3+ Theme Engine - Unico
+#[graphics/adwaita-icon-theme]				# GTK3+ Theme Engine - Adwaita
+#[math/fftw2]								# Collection of fast C routines to compute DFTs
+#[devel/anjuta :: unixw+PKG]				# Anjuta IDE [FIXES: add options: shm db to /tmp, enable schema compile ; add links to glib2/buildlink3.mk and glib2/schemas.mk + dbus, glib-dbus, gtk3 ; add shm patch from FreeBSD]
+### apps
+#[graphics/dia]								# Diagram Editor
+#[converters/fribidi]						# Free Implementation of the Unicode Bidirectional Algorithm
+#[converters/wv]							# Library to access MSWord files v1
+#[converters/wv2]							# Library to access MSWord files v2
+#[editors/abiword]							# Abiword RTF Text Editor
+#[editors/abiword-plugins]					# Abiword RTF Text Editor Plugins
+#[graphics/lasem]							# SVG and MathML Rendering
+#[misc/goffice0.10]							# GOffice Library
+#[math/gnumeric112]							# gNumeric Spreadsheet
+### qt3
+#[x11/qt3-libs :: unixw]					# QT3 Libs [OPTIONS = inet6 cups]
+#[x11/qt3-mysql]							# QT3 MySQL driver
+#[x11/qt3-pgsql]							# QT3 PgSQL driver
+#[sysutils/dbus-qt3]						# QT3 DBus
+#[print/poppler-qt]							# PDF rendering library (QT wrapper)
+#[x11/qt3-tools]							# QT3 Tools
+#[x11/qt3-qscintilla]						# Scintilla C++ editor class for Qt
+#[security/qca]								# Cross-platform crypto API for QT
+#[security/qca-tls]							# Cross-platform crypto API for QT - TLS plugin
+#[x11/qt3-docs]								# QT3 Docs
+#[x11/qt3]									# QT3 Libs, Tools, Docs
+### qt4
+#[x11/qt4-libs :: unixw]					#4h# QT4 Libs [OPTIONS = gtk2 cups ; add in Makefile.common CONFIGURE_ARGS+= -no-xshape (as drag and drop does not work in VNC)]
+#[x11/qt4-tools]							#2h# QT4 Tools
+#[x11/qt4-docs]								# QT4 Docs
+#[x11/qt4]									# QT4 Libs, Tools, Docs
+#[x11/qt4-tiff]								# QT4 Tiff support
+#[x11/qt4-sqlite3]							# QT4 SQLite3 driver
+#[x11/qt4-mysql]							# QT4 MySQL driver
+#[x11/qt4-pgsql]							# QT4 PgSQL driver
+#[x11/qt4-qdbus]							# QT4 DBus Support
+#[security/qca2]							# Cross-platform crypto API for QT4
+#[security/qca2-ossl]						# Cross-platform crypto API for QT4 - OpenSSL plugin
+#[security/qca2-gnupg]						# Cross-platform crypto API for QT4 - GnuPg plugin
+#[security/botan]							# Portable, easy to use, and efficient C++ crypto library (req. by QT4 Creator)
+#[print/poppler-qt4]						# PDF rendering library (QT4 wrapper)
+#[x11/qwt-qt4 :: unixw]						# Qt widget library for technical purposes [CHECK VERSION to work with qwtplot3d]
+#[x11/qt4-qscintilla]						# Scintilla C++ editor class for Qt4
+#[x11/qt4-mng]								# QT MNG image format plugin
+#[x11/qwtplot3d-qt4 :: unixw]				# 3D widgets for QT4 [Add to Makefile: PREFER.libdrm= pkgsrc ; PREFER.Mesa= pkgsrc ; PREFER.MesaLib= pkgsrc ; PREFER.glu= pkgsrc; PREFER.glut= pkgsrc ; .include "../../graphics/Mesa/buildlink3.mk"]
+#[security/qt4-qtkeychain]					# QT4 Keychain
+#[devel/qconf]								# Configure script generator for qmake
+#[wip/qtcreator]							# QT4 Creator
+### qt apps
+#[misc/xdg-utils]							# Tools to assist applications with various desktop integration tasks (req. by vym)
+#[net/wpa_gui]								# Wireless Network GUI Settings
+#[misc/vym]									# Mind Mapping Software
+#[cad/qcad]									# QCad
+#[cad/qcad-manual-en]						# QCad manual
+#[cad/qcad-partlibrary]						# Clipart for QCad
+#[math/muparser]							# Math Parser
+#[cad/librecad]								# Cad Software
+#[print/podofo]								# Library to work with the PDF file format ; WARNING: cppunit may break building podofo
+#[print/scribus-qt4 :: unixw+PKG]			# Professional publishing software [DISABLE LINK to aspell ; enable link to hunspell]
+#[wip/pdfedit]								# PDF Editor
+### display manager
+#[security/openpam]							# Open PAM
+#[x11/libxklavier]							# High-level API for the X Keyboard Extension (XKB)
+### devel
+#[wip/grsync]								# Grsync is a GUI for rsync
+#[wip/giggle]								# Git Frontend
+#[x11/py-sip]								# Tool to create Python bindings for C++ libraries
+#[sysutils/dbus-python-common]				# Python DBus Common (req. by pidgin with DBUS option enabled)
+#[sysutils/py-dbus]							# Python DBus (req. by pidgin with DBUS option enabled)
+#[x11/py-qt4]								# Python binding for Qt4 [POSSIBLE FIX: add link to x11/qt4-qdbus ; add in PLIST QtDBus.so]
+#[wip/ninja-ide]							# Python IDE
+### chat
+#[chat/psi :: unixw]						# PSI Jabber Client :: [OPTIONS = enchant dbus ; If ERROR on start use: psi --profile=default ; If ERROR on build use: CONFIGURE_ARGS+= --disable-xss ]
+#[net/libnice :: unixw]						# IETF's draft Interactice Connectivity Establishment standard implementation (req. by pidgin) [DISABLE link to gupnp-igd in Makefile and buildlink]
+#[multimedia/farsight2 :: unixw]			# Audio/Video communications framework (req. by pidgin) [FIX: CONFIGURE_ARGS+= --disable-python ; REMOVE in PLIST ${PYSITELIB}/farsight.la ; DISABLE: PyPatchPlist and links to GuPnp-Igd and Python related stuff excpt. python]
+#[chat/libotr]								# Library for Off-The-Record encrypted messaging
+#[chat/libpurple :: unixw]					# Multi-protocol Instant Messaging Library (req. by pidgin) [OPTIONS = dbus farsight gnutls gstreamer]
+#[chat/pidgin :: unixw]						# Multi-Protocol Instant Messenger [OPTIONS = dbus gstreamer farsight x11 ; if shows a hash after name (because of dbus) it can be fixed by adding a name alias on chat list buddy names ; dbus offer more stability]
+#[chat/pidgin-libnotify]					# Pop-up support for Pidgin
+#[chat/pidgin-otr]							# Plugin for Pidgin to add OTR (Off-The-Record) encryption
+#[net/transmission-gtk]						# BitTorrent Client
+#[fonts/fontforge]							# Font Editor under X11
+### multimedia
+#[audio/libid3tag]							# ID3 tag library, part of MAD (MPEG Audio Decoder)
+#[devel/libgetopt]							# Library for handling --long options
+#[audio/lame :: unixw]						# Fast, high quality MP3 encoder [FIX restr.]
+#[multimedia/x264-devel]					# H.264 encoder
+#[multimedia/x265 :: unixw+PKG]				# H.265 encoder [UPGRADE to latest]
+#[textproc/enca]							# Charset analyzer
+#[multimedia/libass]						# Subtitles Library
+#[multimedia/xvidcore]						# ISO MPEG-4 compliant video codec
+#[multimedia/ffmpeg1 :: unixw]				# Decoding, encoding and streaming software [OPTIONS = lame ass libvpx theora vorbis x264 xvid ; DISABLE texi2html]
+#[multimedia/ffmpeg2 :: unixw]				# Decoding, encoding and streaming software [OPTIONS = lame ass libvpx theora vorbis x265 xvid gnutls ; DISABLE texi2html]
+#[multimedia/ffmpegthumbnailer]				# Lightweight video thumbnailer that can be used by file managers
+#[multimedia/ffmpeg2theora]					# Simple converter to create Ogg Theora files
+#[devel/libebml]							# Extensible Binary Meta Language Support library (req. by libmatroska)
+#[multimedia/libmatroska]					# Extensible Open Standard Audio/Video (mk1, mkv ...)
+#[multimedia/libmpeg2]						# Library for decoding MPEG 1 and 2
+#[audio/libmad]								# High-quality MPEG audio decoder
+#[audio/sweep]								# Full-featured digital sound editor
+#[audio/jack]								# Jack Audio System (send sound between different software apps)
+#[audio/alsa-lib]							# ALSA Audio Lib
+#[audio/alsa-plugins-pulse]					# ALSA Audio Plugin for PulseAudio
+#[audio/alsa-plugins-oss]					# ALSA Audio Plugin for OSS
+#[audio/alsa-utils]							# ALSA Audio Utilities
+#[audio/portaudio]							# Portable Cross Platform Audio API
+#[wip/audacity2]							# Audacity Sound Editor
+#[audio/faad2]								# AAC decoding library
+#[audio/liba52]								# Free ATSC A/52 stream decoder library
+#[multimedia/avidemux :: unixw+PKG]			# Graphical video editing program [FIX: comment links to: faac spidermonkey ; add some missing libs to PLIST]
+### Terminal clients
+#[net/libvncserver]							# VNC Server API
+#[net/freerdp :: unixw]						# Free implementation of the Remote Desktop Protocol [OPTIONS = cups ffmpeg pulseaudio]
+#[security/libssh]							# SSHv2+v1 protocol library; libssh.org version 0.5.4 (req. by remmina)
+#[x11/libunique]							# Library for writing single instance applications
+#[net/remmina]								# Remote Desktop Client (VNC, X)
+#[net/remmina-plugins :: unixw]				# Plugins for Remmina [FIX: add to PLIST: xdmcp.a xdmcp.so ; remove from PLIST *vnc* ... vnc is broken in Remmina]
+#[net/tsclient :: unixw+PKG]				# Terminal Server Client [FIX: upgrade to .150, disable gnome and applet, add link to gtk2]
+### Gnome core
+#[x11/gnome-desktop3]						# Gnome Desktop v3
+#[devel/dconf]								# Backend for gSettings (req. to solve GIO memory backend issues)
+#[devel/dconf-editor]						# Editor for gSettings
+#[textproc/json-glib]						# Json for Glib
+#[x11/zenity]								# Display GNOME dialogs from the command line
+#[x11/gtk2-engines]							# GTK2+ engines
+#[x11/gtk2-engines-murrine]					# GTK2+ engines murrine
+#[devel/gnome-common]						# Gnome Development scripts
+### Desktop
+#[wip/mate-session-manager]					# MATE Session Manager
+#[wip/mate-icon-theme]						# MATE Icon Theme
+#[wip/mate-desktop]							# MATE Desktop (based on Gnome v2)
+#[wip/mate-menus]							# MATE Menus
+#[wip/libmateweather]						# MATE Lib gWeather
+#[wip/mate-panel]							# MATE Panel
+#[wip/mate-dialogs]							# MATE Dialogs (a replacement of zenity)
+#[wip/mate-notification-daemon]				# MATE Notification system
+#[wip/mate-utils]							# MATE Utils
+#[wip/mate-media]							# MATE Media
+#[wip/mate-netspeed]						# MATE Network Speed (applet)
+#[wip/libindicator]							# MATE Lib Indicator
+#[wip/mate-indicator-applet]				# MATE Indicator Applet
+#[wip/mate-themes]							# MATE Themes
+#[wip/libmatekbd]							# MATE Lib Keyboard
+#[wip/marco]								# MATE Window Manager (a replacement of Metacity)
+#[devel/py-gobject-shared]					# Python gObject shared
+#[devel/py-gobject]							# Python gObject
+#[x11/py-gtk2]								# Python GTK2+ bindings
+#[wip/mate-applets :: unixw]				# MATE Applets (Modified package: removed buggy applets)
+#[wip/mate-system-monitor]					# MATE System Monitor
+#[wip/mate-common]							# MATE Commons
+#[wip/mate-terminal]						# MATE Desktop Terminal
+#[devel/pangox-compat]						# Pango compat (req. by caja)
+#[sysutils/py-notify]						# Python binding to libnotify
+#[security/pam-pwauth_suid]					# Pam Auth SuID
+#[wip/mate-screensaver :: unixw]			# MATE Desktop ScreenSaver [DISABLE link to consolekit]
+#[x11/gdm :: unixw]							# Gnome Display Manager [OPTION  -= consolekit]
+#[sysutils/osname]							# OS Name
+#[sysutils/sshsh]							# Run a new shell with SSH Identity
+#[sysutils/sux]								# Su for X
+#[wip/arandr]								# GUI Monitors Control for xrandr
+#[wip/lxrandr]								# GUI Monitors Control for xrandr
+### on-Screen keyboard
+#[x11/xxkb]									# XXKB - switches and indicates a current keyboard layout
+#[x11/xkbd]									# X OnScreen KeyBoard
+#[x11/xvkbd :: unixw+PKG]					# The xvkbd is a virtual (graphical) keyboard program for X [UPGRADE to 3.7 ; AFTER-BUILD-FIX: link layouts /opt/unxts/X11/app-defaults to /usr/X11R7/lib/app-defaults]
+### VLC
+#[audio/taglib]								# Library to access ID Tags in various media
+#[net/liblive]								# Libraries for Multimedia Streaming
+#[x11/xcb-util-keysyms]						# XCB Utilities
+#[multimedia/vlc2 :: unixw+PKG]				# VLC v2 [DOWNGRADE to 2.0.8 (2.0.9 have a bug with mv -T invalid arg on *BSD); FIX: minimize depends to match just the above dependencies ; OPTIONS = x11 pulseaudio ; remove xdg screensaver ; disable audio on play over VNC to avoid crash]
+###
+#[sysutils/brasero :: unixw]				# Brasero Disk Burner [FIX: disable totem buildlink]
+#[security/libsecret]						# GObject based library for accessing the Secret Service API
+#[x11/xdg-user-dirs]						# Tool to manage "well known" user directories
+#[graphics/sane-backends]					# SANE Backends
+#[graphics/sane-frontends]					# Sane Frontends (req. Gimp2)
+#[graphics/xsane]							# XSane
+#[graphics/barcode]							# Create bar codes as EPS (program and library)
+#[math/extcalc]								# Powerful Calculator
+#[net/mbrowse]								# SNMP browser (GTK based)
+#[devel/chmlib]								# CHM Library
+#[misc/xchm]								# CHM Viewer for X
+### Gtkam
+#[devel/libgphoto2]							# Digital camera access library
+#[graphics/exiv2]							# Image metadata manipulation
+#[graphics/libexif-gtk]						# EXIF file library (GTK2 interface)
+#[graphics/gtkam]							# Digital camera access graphical client (GTK2)
+#[editors/gconf-editor]						# Editor for the GConf configuration system
+### MySQL GUI Client
+#[archivers/libzip]							# Lib Zip (req. by mysql workbench)
+#[devel/ctemplate]							# Templating for C (req. by mysql workbench)
+#[databases/mysqlcc]						# MySQL Control Center
+##[databases/mysql-workbench :: unixw+PKG]	# MySQL Workbench [FIX: disable gnome keyring and lua (link+PLIST) because lua52 is not compatible]
+### Python stuff req. by HPLip
+#[graphics/py-imaging]						# Python Imaging
+#[print/py-reportlab]						# Python Reporting
+### Hardware stuff
+#[devel/libvolume_id]						# Library to provide file system type information
+#[misc/pciids]								# Repository of PCI IDs (pci.ids database)
+#[misc/usbids]								# Repository of USB IDs (usb.ids database)
+#[sysutils/hal-info]						# FreeDesktop hardware abstraction layer (info subpackage)
+#[sysutils/hal]								# FreeDesktop hardware abstraction layer
+### Emulators
+#[emulators/qemu :: unixw]					# CPU emulator using dynamic translation [DISABLE: depend on texi2html]
+#[wip/qtemu :: unixw+PKG]					# QT4 Frontend to Qemu (add patches to fix working with Qemu 2.x)
+#[sysutils/libvirt]							# Virtualisation toolkit for host operating systems
+#[sysutils/virtinst]						# Module to help in starting installations inside of virtual machines
+### Parallel machine
+#[x11/printproto]							# Print extension headers from X.org
+#[x11/libX11]								# Base X11 Libs
+#[x11/libXext]								# X Extension Library
+#[x11/libXp]								# X Print Service Extension Library
+#[parallel/pvm3]							# Parallel Virtual Machine libraries and environment for Windows and Unix
+### Misc
+#[wip/gtkfontsel]							# GTK font selector
+#[databases/gnome-mime-data]				# Gnome Mime DB
+#[security/seahorse]						# Modern Gnome Keyring Manager [Add link to cyrus-sasl ; disable link to gnome-keyring]
+#[security/pinentry-gtk2]					# GTK frontent for Applications for entering PINs or Passphrases
+#[security/pinentry-qt4]					# QT4 frontent for Applications for entering PINs or Passphrases
+### Network Debugger
+#[devel/libsmi]								# Library to access SMI MIB information
+#[net/wireshark :: unixw]					# Network protocol analyzer [UPGRADE to latest]
+### SDL components
+#[devel/physfs]								# Library providing abstract access to various archives (req. by SDL sound)
+#[audio/libmikmod]							# MikMod Sound Library (req. by SDL sound)
+#[multimedia/smpeg]							# SDL Mpeg Audio Player Utility (req. by SDL sound)
+#[audio/SDL_sound]							# SDL Sound
+#[audio/SDL_mixer]							# SDL Mixer
+#[net/SDL_net]								# SDL Networking
+#[devel/SDL_ttf]							# SDL TrueType Support
+#[devel/SDL_gfx]							# SDL Basic Draw Routines
+#[graphics/SDL_image]						# SDL Images Support
+#[devel/SDLmm]								# SDL C++ wrapper
+#[devel/SDL-intro-en]						# SDL Intro docs English
+### Gstreamer Plugins req. by Mate and Webkit
+#[multimedia/gst-plugins0.10-good]			# GStreamer Plugins Generic / Stable
+#[audio/gst-plugins0.10-alsa]				# GStreamer Plugins Alsa
+#[audio/gst-plugins0.10-esound]				# GStreamer Plugins ESound
+#[audio/gst-plugins0.10-jack]				# GStreamer Plugins Jack
+#[audio/gst-plugins0.10-oss]				# GStreamer Plugins OSS
+#[audio/gst-plugins0.10-pulse]				# GStreamer Plugins PulseAudio
+#[multimedia/gst-plugins0.10-hal]			# GStreamer Plugins HAL
+#[multimedia/gst-plugins0.10-theora]		# GStreamer Plugins Theora
+#[multimedia/gst-plugins0.10-ogg]			# GStreamer Plugins Ogg
+#[audio/gst-plugins0.10-vorbis]				# GStreamer Plugins Vorbis
+#[multimedia/gst-plugins0.10-v4l2]			# GStreamer Plugins V4L
+#[audio/gst-plugins0.10-speex]				# GStreamer Plugins Speex
+#[net/gst-plugins0.10-soup]					# GStreamer Plugins Soup
+#[multimedia/gst-plugins0.10-bad]			# GStreamer Plugins Generic / Unstable
+#[multimedia/gst-plugins0.10-vp8]			# GStreamer Plugins VP8 Webm
+#[x11/gst-plugins0.10-x11]					# GStreamer Plugins X11
+### misc cd/dvd record
+#[devel/automoc4]							# Automatic moc for QT4 packages
+#[devel/pccts]								# Purdue compiler construction set
+#[audio/libao]								# Cross Platform Audio Library
+#[audio/libao-oss]							# Cross Platform Audio Library, OSS
+#[audio/libao-nas]							# Cross Platform Audio Library, NAS
+#[audio/libao-alsa]							# Cross Platform Audio Library, Alsa
+#[audio/libao-esound]						# Cross Platform Audio Library, ESound
+#[audio/libao-pulse]						# Cross Platform Audio Library, PulseAudio
+#[audio/libao-sun]							# Cross Platform Audio Library, Sun
+#[sysutils/cdrdao]							# CD Record Disk At Once
+#[multimedia/libdvdread]					# DVD access library
+### misc
+#[security/keepassx]						# QT4 Password Manager
+#[wip/qupzilla]								# Qupzilla (Webkit) QT4 based browser
+#[textproc/iso8879]							# Character entity sets from ISO 8879:1986 (SGML)
+#[textproc/docbook]							# SGML DTD designed for computer documentation
+#[misc/yelp]								# Yelp Help Browser
+### games
+#[games/xmahjongg]							# X Game Mahjongg
+#[games/xfreecell]							# X Game Freecell
+#[games/wesnoth :: unixw]					# Strategy Game [UPGRADE to latest ; comment out link to dbus]
+#[graphics/cogl]							# Modern 3D graphics API
+#[graphics/clutter]							# Open GL based interactive canvas library
+#[graphics/clutter-gtk0.10]					# GTK2 Integration library for Clutter
+#[graphics/clutter-gtk]						# GTK3 Integration library for Clutter
+#[games/gnome-games :: unixw]				# Gnome Games [FIX: comment out link to py-gnome2 and replace with py-gtk2]
+#[games/gnome-games-extra-data]				# Gnome Games Extras (themes)
+#[games/qnetwalk]							# Game QNetWalk
+#[games/xbomber]							# Game XBomber
+#[games/rocksndiamonds]						# Game Rocks'n'Diamonds
+### misc
+#[emulators/bochs]							# IA32 and AMD64 emulator
+#[devel/atf]								# Set of interfaces for accessibility
+#[devel/shtk]								# Application toolkit for POSIX-compliant shell scripts
+#[sysutils/sysbuild]						# Automates builds of NetBSD and manages source trees
+###
+##[sysutils/consolekit]						# Framework for defining and tracking users, login sessions, and seats
+##[x11/xrandr]								# Commandline Monitors Control - Primitive command line interface to RandR extension [IF DOES NOT WORK, DOWNGRADE to 1.3.5 to be compatible with old Xrandr] :: EXAMPLE: xrandr --output LVDS1 --mode 1366x768 --pos 0x0 --rotate normal --output HDMI1 --mode 1920x1080 --pos 1366x0 --rotate normal
+##[wip/lightdm]								# LX Display Manager
+##[wip/lightdm-gtk-greeter]					# LX Display Manager Greeter
+##[sysutils/libgksu]						# GTK frontend for su and sudo
+##[wip/gksu :: unixw+PKG]					# GTK su
+##[wip/grandr]								# GUI Monitors Control (crashes !!)
+##[x11/setxkbmap]							# Keyboard Layout Switch
+##[textproc/p5-XML-Twig]					# Perl XML Twig
+##[net/p5-Net-DBus]							# Perl Net DBus
+##[wip/polkit]								# Polkit
+##[wip/system-tools-backends]				# System Tools Backend
+##[wip/liboobs]								# Lib OObs
+##[wip/mate-polkit]							# MATE Polkit
+##[wip/mate-system-tools :: unixw]			# MATE System Tools [comment out link to caja ; remove caja from PLIST ; CONFIGURE_ARGS+= --disable-caja]
+##[wip/caja]								# MATE File Manager (repl. Nautilus)
+##[wip/caja-dropbox]						# MATE File Manager DropBox plugin
+##[wip/engrampa]							# MATE Archiver (repl. for File Roller)
+##[wip/eom]									# Eye of Mate (Image Viewer)
+##[print/libgxps]							# Lib gXPS
+##[wip/atril]								# MATE Document Viewer (repl. evince)
+##[wip/mate-settings-daemon]				# MATE Settings Daemon
+##[wip/libdbusmenu-glib]					# Lib DBus Glib
+##[wip/libdbusmenu-gtk]						# Lib DBus GTK
+##[wip/libappindicator]						# Lib App Indicator
+##[wip/mate-control-center]					# MATE Control Center
+##[wip/mozo]								# MATE Menu editor
+###
+##[security/gnome-keyring]					# Gnome Keyring
+##[sysutils/gnome-system-monitor]			# Gnome System Monitor
+##[sysutils/nautilus]						# Gnome Nautilus filemanager [POSTINST-FIX: thumbnails may fail, so run: ln -s ~/.thumbnails ~/.cache/thumbnails]
+##[x11/libgnomekbd]							# Gnome keyboard configuration library
+##[sysutils/gnome-settings-daemon]			# GNOME settings daemon
+##[sysutils/gnome-menus]					# Implementation of the desktop menu specification for GNOME
+##[wm/metacity]								# Metacity Window Manager
+##[multimedia/gnome-media]					# Gnome Media
+##[devel/libgweather]						# Weather information access library
+##[x11/gnome-panel :: unixw]				# GNOME2 panel application [OPTIONS -= evolution]
+##[security/policykit-gnome]				# GNOME dialogs for PolicyKit
+##[x11/gnome-session]						# Gnome Session Manager
+##[x11/gnome-control-center :: unixw]		# GNOME2 configuration utility [OPTIONS -= evolution ; DISABLE: link to gnome-panel]
+##[audio/gnome-speech]						# Gnome Speech (req. by GOK)
+##[devel/at-spi]							# Assistive Technology Service Provider Interface (req. by GOK)
+##[misc/gok]								# Gnome OnScreen Keyboard (GOK)
+##[x11/eekboard]							# EE Keyboard
+##[devel/py-urwid]							# Python URwid
+##[wip/wicd]								# Wifi manager
+###
+##[sysutils/gentoo]							# Two-pane filemanager using GTK+, 100% GUI configurable
+##[graphics/xzgv]							# Simple Image Viewer
+##[x11/fox]									# Fast and extensive C++ GUI toolkit (req. by Xfe)
+##[sysutils/xfe :: unixw+PKG]				# X File Manager (downgrade to version 1.00 ; version 1.04 have bugs, delete / trash delete crahes the XFE)
+##[devel/vtcl :: unixw]						# Visual Tcl/Tk DevIDE :: ONLY DOWNLOAD NOT MAKE (is provided separately as /opt/vtcl)
+##[misc/visual-regexp]						# Visual Build Regular Expressions
+##[lang/python34]							# Python 3.x (Req. for latest blender)
+###
+###########################
+# X11-BASE :: END
+#################################################################
+
+
+#################################################################
+# EXTRA [150] :: 95%
+###########################
+# 11.extra
+###########################
+##[print/hplip :: unixw+PKG]				# HP Linux Imaging and Printing [UPGRADE to latest ; OPTIONS = -]
+##[sysutils/k3b]							# K3B DVD Burning
+##[sysutils/cdrkit :: unixw]				# Portable command-line CD/DVD recorder software [ FIX: remove conflict files with cdrtools ]
+##[graphics/cdlabelgen]						# CD Label generator
+##[sysutils/gcombust]						# CD Writer
+##[lang/gcc45]								# GCC 4.5
+### XEN
+##[sysutils/openstack_init]					# Autoconfigure NetBSD VM on Openstack
+##[sysutils/xenkernel45 :: unixw]			# Xen Kernel [FIX: force 64-bit add to Makefile: MAKE_ENV+= XEN_TARGET_ARCH="x86_64" XEN_COMPILE_ARCH="x86_64" ; remove -fPIC if not compile]
+##[sysutils/xentools45]						# Userland Tools for Xen [FIX: remove -fPIC if not compile]
+### Tor Onion Network support
+##[net/tor :: unixw]						# Anonymizing overlay network for TCP [UPGRADE to latest]
+##[wip/vidalia]								# GUI Tor controller based on Qt
+### Virt Manager
+##[net/py-ORBit]							# Python bindings for ORBit2
+##[x11/py-gnome2]							# Python bindings to Gnome2
+##[www/urlgrabber]							# Python package that drastically simplifies the fetching of files
+##[net/gtk-vnc]								# GTK VNC
+##[sysutils/virt-manager]					# Virtualization Manager
+### OpenSCad
+##[math/eigen2]								# C++ Template for linear algebra
+##[graphics/glew]							# OpenGL Extension Wrangler Library [FIX: add in Makefile: LDFLAGS:= $(filter-out -m64,$(LDFLAGS)) CFLAGS:= $(filter-out -m64,$(CFLAGS))]
+##[graphics/opencsg]						# Image based CSG rendering library using OpenGL
+##[math/cgal]								# Computational Geometry Algorithms Library
+##[cad/openscad]							# Solid 3D CAD Modeller
+### Mono
+##[lang/mono :: unixw+PKG]					# OpenSource C# .NET Framework v4 [UPGRADE to v4]
+##[x11/gtk-sharp :: unixw+PKG]				# GTK+ Mono Bindings
+##[devel/mono-addins :: unixw+PKG]			# Mono Addins [UPGRADE to 1.1]
+##[lang/mono-basic :: unixw+PKG]			# Mono Basic support [UPGRADE to v4]
+##[graphics/libgdiplus :: unixw+PKG]		# Implementation of the GDI+ API [UPGRADE to v3]
+##[x11/gnome-sharp :: unixw+PKG]			# Gnome C# Bindings [UPGRADE to latest]
+##[x11/gtksourceview-sharp2 :: unixw+PKG]	# GTK+2 Source View C# Bindings [UPGRADE to latest]
+##[devel/mono-tools :: unixw+PKG]			# Mono Tools [UPGRADE to v3 ; comment out link to gnome desktop sharp ; remove in PLIST GtkHtmlHtmlRender.dll]
+##[devel/monodevelop :: unixw+PKG]			# Mono IDE [UPGRADE to v5]
+###
+###########################
+# X11-EXTRA :: END
+#################################################################
+
+
+#################################################################
+#################################################################
+
+@@@@@@@@ HINTS
+
+## Create new package:
+	## build (create an empty PLIST or remove PLIST)
+	# bmake
+	## install to .destdir
+	# bmake install
+	## create PLIST
+	# bmake print-PLIST > PLIST
+	# bmake clean
+	# bmake package
+
+## For packages that requires glib 2 schemas, add link to glib2/schemas.mk
+
+## PKGSRC-WIP
+# https://github.com/joyent/pkgsrc-wip
+
+## Packages with: PKG_DESTDIR_SUPPORT= none are deleted after install !!
+# PKG_DESTDIR_SUPPORT -> = user-destdir or destdir
+
+#################################################################
+
+@@@@@@@@ CHECKSUMS
+
+##### create recurseive checksums
+# find . -type f -exec md5 '{}' \; > /__distfiles-nd615-unxts-160925.md5
+# find . -type f -exec sha1 '{}' \; > /__distfiles-nd615-unxts-160925.sha1
+# find . -type f -exec cksum -a SHA512 '{}' \; > /__distfiles-nd615-unxts-160925.sha512
+#####
+
+
+#################################################################
+
+@@@@@@@@ FIXES: paths
+
+#mc -e .profile ; #mc -e /etc/rc.d/gdm
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R7/bin
+PATH=/opt/unxts/bin:/opt/unxts/sbin:${PATH}
+export PATH
+
+LD_LIBRARY_PATH=/usr/X11R7/lib:/usr/lib:/lib
+LD_LIBRARY_PATH=/opt/unxts/lib:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+
+#################################################################
+
+@@@@@@@@ Bash security test
+
+#sh# 	/opt/unxts/bin/bash
+#bash# 	env x='() { :;}; echo vulnerable' /opt/unxts/bin/bash -c 'echo hello'
+
+#################################################################
+#################################################################
+
+
+#################################################################
+#################################################################
+# END
+#################################################################
+#################################################################

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Virtual Keyboard
+Comment=Virtual on-screen Keyboard
+Exec=xvkbd
+Icon=/etc/xdg/uxm-icons/vkeyboard.png
+Terminal=false
+Type=Application
+Categories=System;Keyboard;

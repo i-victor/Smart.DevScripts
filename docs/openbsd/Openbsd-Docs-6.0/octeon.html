@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC  "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>OpenBSD/octeon</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="description" content="the OpenBSD/octeon page">
+<meta name="copyright" content="This document copyright 2015 by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/octeon.html">
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#23238e">
+
+<h2>
+<a href="index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">octeon</font>
+</h2>
+<hr>
+<p>
+
+OpenBSD/octeon is a port intended to run on systems based upon the
+Cavium Octeon and Octeon PLUS MIPS64 CPUs.
+
+<br clear=all>
+<hr>
+
+<h3 id="history"><font color="#0000e0"><strong>History:</strong></font></h3>
+<p>
+OpenBSD/octeon began in 2010 with an SDK created by
+<a href="http://www.iij.ad.jp/en/index.html">IIJ</a> and donated to OpenBSD.
+Early work targeted the Portwell CAM-0100.
+<p>
+Due to the lack of available hardware, the port lay dormant for a few years.
+This changed in January 2013 with the release of the Ubiquiti Networks
+EdgeRouter LITE. Several developers obtained these new machines, and work
+began immediately. Due to issues with USB support, the port to the Portwell
+CAM-0100 matured first because it allowed CF cards to be used as a storage
+medium.
+<p>
+Development has been rapid, with the port to the Portwell CAM-0100 becoming
+self-hosting in April 2013.
+In August 2013 the DSR-500 model reached userland and could host OpenBSD
+via NFS.
+Support for EdgeRouter LITE Ethernet was added in
+September 2013, allowing the EdgeRouter LITE to be usable by NFS booting.
+<p>
+In June 2015 USB support was added which finally allowed installing to
+local disk on machines lacking a CF slot.
+
+<hr>
+
+<h3 id="hardware"><font color="#0000e0"><strong>Supported hardware:</strong></font></h3>
+<p>
+OpenBSD/octeon supports the following machines:
+<ul>
+<li><a href="http://www.portwell.com/products/detail.php?CUSTCHAR1=CAM-0100">
+Portwell CAM-0100</a>
+<li>D-Link
+	<a href="https://web.archive.org/web/20140803060102/http://www.dlink.com/us/en/business-solutions/security/services-routers/dsr-500-the-d-link-services-router"> DSR-500</a>,
+	<a href="http://us.dlink.com/us/en/business-solutions/security/services-routers/dsr-500n-wireless-n-unified-services-router.html"> DSR-500N</a>
+
+<li><a href="http://www.ubnt.com/edgemax/edgerouter-lite/">Ubiquiti Networks
+EdgeRouter LITE</a>
+<li><a href="http://www.ubnt.com/edgemax/edgerouter-poe/">Ubiquiti Networks
+EdgeRouter PoE</a>
+</ul>
+
+<hr>
+
+<h3 id="status"><font color="#0000e0"><strong>Current status:</strong></font></h3>
+
+<p>
+OpenBSD/octeon can be installed on all machines which have local
+Compact Flash or USB storage.
+
+<hr>
+
+<h3 id="install"><font color="#0000e0">
+<strong>Getting and installing OpenBSD/octeon:</strong>
+</font></h3>
+
+<p>
+
+The latest supported OpenBSD/octeon release is
+<a href="60.html">OpenBSD 6.0</a>.
+Here are the
+<a href="https://ftp.OpenBSD.org/pub/OpenBSD/6.0/octeon/INSTALL.octeon">
+OpenBSD/octeon 6.0 installation instructions
+</a>.
+
+<p>
+Snapshots are made available from time to time, in
+<a href="https://ftp.OpenBSD.org/pub/OpenBSD/snapshots/octeon">this location</a>
+as well as in a few
+<a href="ftp.html">mirrors</a>.
+Here are the
+<a href="https://ftp.openbsd.org/pub/OpenBSD/snapshots/octeon/INSTALL.octeon">
+OpenBSD/octeon snapshot installation instructions
+</a> as well.
+
+</body>
+</html>

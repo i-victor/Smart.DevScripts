@@ -1,0 +1,31 @@
+
+##### QEMU Howto
+
+### NETWORKING
+
+# ifconfig tap0 create
+# chmod 0660 /dev/tap0
+# edit: /etc/hostname.tap0 and add content:
+inet 169.254.101.1
+255.255.0.0
+up
+
+# ifconfig bridge0 create
+# edit: /etc/hostname.bridge0 and add content:
+add tap0
+add iwm0
+up
+
+# Networking Options: tap0 is 10.1.1.1/255.0.0.0 and guest net is 10.1.1.100/255.0.0.0;gw:10.1.1.1;dns:10.1.1.1
+-net nic,model=ne2k_pci -net tap,name=tap0,script=no
+
+# Hints:
+- to work must nat egress in pf.conf:
+set skip on tap0
+set skip on bridge0
+match out on egress inet from !(egress:network) to any nat-to (egress:0)
+
+### CPU
+
+# additional qemu options:
+-cpu max

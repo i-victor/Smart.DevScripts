@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=PostgreSQL Admin
+Comment=PostgreSQL Database Admin
+Exec=pgadmin3
+Icon=/etc/xdg/uxm-icons/pgadmin3.png
+Terminal=false
+Type=Application
+Categories=Application;Database;Development;

@@ -1,0 +1,535 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!-- If you make edits to any FAQ documents, please start each sentence
+     on a new line, and try to keep the general formatting consistent
+     with the rest of the pages -->
+
+<title>OpenBSD FAQ: General Questions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name= "copyright"     content= "This document copyright 1998-2016
+                                      by OpenBSD.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="../openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/faq/faq8.html">
+</head>
+
+<body bgcolor= "#ffffff" text= "#000000">
+
+<h2>
+<a href="../index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">FAQ - General Questions</font>
+<small>
+<a href="index.html" style="font-weight:normal; float:right">[FAQ Index]</a>
+</small>
+</h2>
+<hr>
+
+<ul>
+<li><a href="#LostPW"    >I forgot my root password</a>
+<li><a href="#Bootloader">The boot loader</a>
+<li><a href="#OpenNTPD"  >Using OpenNTPD</a>
+<li><a href="#NTPerror"  >Why is my clock off by twenty-some seconds?</a>
+<li><a href="#TimeZone"  >Time zones</a>
+<li><a href="#locales"   >Character sets and localization</a>
+<li><a href="#RevDNS"    >Reverse DNS</a>
+<li><a href="#GenNotConf">Device "not configured" in dmesg</a>
+</ul>
+
+<hr>
+
+<h2 id="LostPW">I forgot my root password</h2>
+
+The basic process to regain root is to boot into single user mode, mount the
+<tt>/</tt> and <tt>/usr</tt> partitions and run
+<a href="http://man.openbsd.org/passwd">passwd(1)</a> to change the root
+password:
+
+<ul>
+  <li><b>Boot into single user mode.</b>
+    This part of the process varies from <a href="../plat.html">platform</a>
+    to platform.
+    For amd64 and i386 platforms, the
+    <a href="faq14.html#BootAmd64">second stage boot loader</a>,
+    <a href="http://man.openbsd.org/OpenBSD-current/i386/boot">boot(8)</a>,
+    pauses for a few seconds to give you a chance to provide parameters
+    to the kernel.
+
+    <blockquote><pre>
+    probing: pc0 com0 com1 apm mem[636k 190M a20=on]
+    disk: fd0 hd0+
+    >> OpenBSD/i386 BOOT 3.26
+    boot> <b>boot -s</b>
+    </pre></blockquote>
+
+  <li><b>Mount the partitions.</b>
+    Both <tt>/</tt> and <tt>/usr</tt> will need to be mounted read-write.
+
+    <blockquote><pre>
+    # <b>fsck -p / &amp;&amp; mount -uw /</b>
+    # <b>fsck -p /usr &amp;&amp; mount /usr</b>
+    </pre></blockquote>
+
+  <li><b>Run <a href="http://man.openbsd.org/passwd">passwd(1)</a>
+    to change the root password.</b>
+    From being in single-user mode, you already have root privileges, so it
+    will not ask you to provide your current password.
+
+  <li><b>Boot into multiuser mode.</b>
+    This can be done by either entering "CTRL-D" to resume the normal boot
+    process, or by entering the
+    <a href="http://man.openbsd.org/reboot">reboot(8)</a> command.
+</ul>
+
+If this is a non-personal machine, you should probably use
+<a href="http://man.openbsd.org/doas">doas(1)</a>
+to give multiple (trusted) people the ability to execute root commands.
+
+<p>
+<b>"Wait.  That looked too easy!  That isn't very secure!"</b>
+If an attacker has physical access to your system, they win, regardless of the
+OS on the computer.
+There are ways to force the use of a password on single-user mode, see
+<a href="http://man.openbsd.org/ttys">ttys(5)</a>,
+or eliminate the pause on i386/amd64, see
+<a href="http://man.openbsd.org/boot.conf">boot.conf(8)</a>.
+Getting around those tricks is also pretty easy.
+One way would be to boot from a CD or USB drive and edit (or replace) the
+password file.
+You can try to prevent that, but then someone will pull the hard disk out of
+your computer.
+Making your computer difficult to manage properly isn't real security,
+and if you don't have the physical machine secured, you have no real security.
+
+<p>
+Note: many "remote management" systems give most of the functionality of
+physical access to the computer, and that needs to be considered.
+Don't tell yourself the system is secure if there is a way for an attacker
+to grab console, insert a virtual floppy and force a reboot of the machine.
+They might as well have physical access to the system.
+The console management system is likely not as secure as OpenBSD.
+
+<h2 id="Bootloader">The boot loader</h2>
+
+The OpenBSD boot loader is documented in the architecture-specific
+<a href="http://man.openbsd.org/boot.8">boot(8)</a> man page.
+If no commands are issued at the <tt>boot&gt;</tt> prompt, the boot loader will
+automatically try to boot <tt>/bsd</tt>.
+You can specify a kernel by typing:
+
+<blockquote><pre>
+boot> <b>boot hd0a:/bsd</b>
+</pre></blockquote>
+
+This will boot the kernel named <tt>bsd</tt> from the <tt>a</tt> partition of
+the first BIOS recognized hard disk.
+
+<p>
+The following options are available.
+
+<ul>
+  <li><tt>-a</tt>:
+    Specify an alternate root device after booting the kernel.
+  <li><tt>-c</tt>:
+    Enter the <a href="faq5.html#BootConfig">boot time configuration</a>.
+  <li><tt>-d</tt>:
+    Enter the kernel debugger ddb.
+  <li><tt>-s</tt>:
+    Boot into single user mode.
+</ul>
+
+The format is <tt>boot [image [-acds]]</tt>.
+
+<h2 id="OpenNTPD">Using OpenNTPD</h2>
+
+<a href="http://www.openntpd.org">OpenNTPD</a> is a trivial-to-administer, safe
+and simple NTP-compatible way to have accurate time on your computer.
+OpenBSD's <a href="http://man.openbsd.org/ntpd">ntpd(8)</a> is controlled with a
+simple configuration file,
+<a href="http://man.openbsd.org/ntpd.conf">ntpd.conf(5)</a>.
+
+<p>
+The OpenNTPD daemon is enabled by default at install time, which results in your
+computer's clock slowly moving into synchronization with the
+<a href="http://www.pool.ntp.org">pool.ntp.org</a> time servers.
+Once your clock is accurately set, <tt>ntpd</tt> will hold it at a high degree
+of accuracy.
+However, if your clock is more than a few minutes off, it is recommended that
+you bring it close to accurate initially, as it may take days or weeks to bring
+a very-off clock to sync.
+You can do this using the <tt>-s</tt> option of ntpd(8) or any other way to
+accurately set your system clock.
+
+<h3 id="OpenNTPDNoServe">Why can't my other machines synchronize to ntpd?</h3>
+
+OpenNTPD does not listen on any address by default.
+In order to use it as a server, you have to add a <tt>listen on *</tt> line to
+<a href="http://man.openbsd.org/ntpd.conf">/etc/ntpd.conf</a> and restart the
+daemon.
+Of course, if you want it to listen on a particular IP address rather than all
+available addresses and interfaces, replace the "*" with the desired address.
+
+<p>
+When you have ntpd(8) listening, it may happen that other machines still can't
+synchronize to it!
+A freshly started ntpd(8) daemon (for example, if you just restarted it after
+modifying ntpd.conf) refuses to serve time information to other clients until
+it adjusts its own clock to a reasonable level of stability first.
+When ntpd(8) considers its own time information stable, it announces it by a
+"clock now synced" message in <tt>/var/log/daemon</tt>.
+Even if the system clock is pretty accurate in the beginning, it can take up to
+10 minutes to get in sync, and hours or days if the clock is not accurately set
+at the start.
+
+<h2 id="NTPerror">Why is my clock off by twenty-some seconds?</h2>
+
+When using
+<a href="http://man.openbsd.org/rdate">rdate(8)</a>
+to synchronize your clock to a NTP server, you may find your clock is
+off by twenty-some seconds from your local definition of time.
+
+<p>
+This is caused by a difference between UTC (Coordinated Universal
+Time, based on astronomical observations) and TAI (International
+Atomic Time, based on atomic clocks).
+To compensate for variations in the earth's rotation, "leap seconds" are
+inserted into UTC, but TAI is unadjusted.
+These leap seconds are the cause of this discrepancy.
+For a more detailed description, search the web for <tt>leap seconds
+UTC TAI</tt>.
+
+<p>
+Addressing the problem is fairly simple.
+In most countries you will get the correct time if you use the <tt>-c</tt>
+parameter to
+<a href="http://man.openbsd.org/rdate">rdate(8)</a>
+and use a time zone out of the directory <tt>/usr/share/zoneinfo/right</tt>.
+For example, if you are located in Germany, you could use these commands:
+
+<pre>
+     # <b>cd /etc && ln -sf /usr/share/zoneinfo/right/CET localtime</b>
+     # <b>rdate -ncv ptbtime1.ptb.de</b>
+</pre>
+
+In other countries, the rules may differ.
+
+<h2 id="TimeZone">Time zones</h2>
+
+By default, OpenBSD assumes your hardware clock is set to UTC (Universal
+Coordinated Time) rather than local time, assumed by some other
+operating systems, which can cause problems when
+<a href="faq4.html#Multibooting">multibooting</a>.
+
+<p>
+Many other operating systems can be configured to do the same, which avoids
+this problem altogether.
+
+<p>
+If having the hardware clock set to UTC is a problem, you can change the
+default behavior of OpenBSD using
+<a href="http://man.openbsd.org/config">config(8)</a>.
+For example, to configure OpenBSD to use a hardware clock set to
+US/Eastern (5 hours behind UTC, so 300 minutes):
+
+<blockquote><pre>
+# <b>config -ef /bsd</b>
+[...]
+Enter 'help' for information
+ukc> <b>timezone 300</b>
+timezone = 300, dst = 0
+ukc> <b>quit</b>
+Saving modified kernel.
+</pre></blockquote>
+
+See
+<a href="http://man.openbsd.org/options">options(4)</a>
+and search for option "TIMEZONE=value" for more information.
+
+<p>
+Normally, the time zone is set during install.
+If you have need to change the time zone, you can create a new symbolic
+link to the appropriate time zone file in <tt>/usr/share/zoneinfo</tt>.
+For example, to set the machine to use EST5EDT as the new local time
+zone:
+
+<blockquote><pre>
+# <b>ln -fs /usr/share/zoneinfo/EST5EDT /etc/localtime</b>
+</pre></blockquote>
+
+See also the <a href="http://man.openbsd.org/date">date(1)</a> manual and the
+section on <a href="#OpenNTPD">OpenNTPD</a> above.
+
+<h2 id="locales">Character sets and localization</h2>
+
+The OpenBSD base system fully supports the ASCII character set and encoding, and
+partially supports the UTF-8 encoding of the Unicode character set.
+No other encodings or character sets are supported by the base system, but ports
+can be used to handle them.
+
+<p>
+The level of UTF-8 support and the default encoding configuration vary greatly
+with the program or library.
+For example, <a href="http://man.openbsd.org/xterm">xterm(1)</a> has full UTF-8
+support enabled by default, while the
+<a href="http://man.openbsd.org/re_format">regular expression library</a>
+does not have any UTF-8 support yet.
+
+<p>
+To use the Unicode character set in UTF-8 encoding whereever supported, set the
+<tt>LC_CTYPE</tt> environment variable to the value <tt>en_US.UTF-8</tt>:
+
+<ul>
+  <li>
+    If logging in via <a href="http://man.openbsd.org/xdm">xdm(1)</a>, add
+    <tt>export LC_CTYPE="en_US.UTF-8"</tt> to your <tt>~/.xsession</tt> before
+    starting the window manager.
+    See <a href="faq11.html#CustomizingX">customizing X</a> for more details.
+  <li>
+    If logging in via the text console, add
+    <tt>export LC_CTYPE="en_US.UTF-8"</tt> to your <tt>~/.profile</tt>.
+    The text console's UTF-8 support is a work in progress, and some non-ASCII
+    characters may not display properly.
+</ul>
+
+When logging into remote systems with
+<a href="http://man.openbsd.org/ssh">ssh(1)</a>, the <tt>LC_CTYPE</tt>
+environment variable is not propagated, and you have to make sure that the local
+terminal is set to the character encoding used by the remote server before
+starting the ssh(1) client program.
+If that encoding is unknown or unsupported by OpenBSD, make sure you use the
+default <a href="http://man.openbsd.org/xterm">xterm(1)</a> configuration and
+set <tt>LC_CTYPE=en_US.UTF-8</tt> in the remote shell after connecting.
+
+<p>
+The OpenBSD base system completely ignores all locale-related environment
+variables except <tt>LC_CTYPE</tt>; even <tt>LC_ALL</tt> and <tt>LANG</tt> only
+affect the character encoding.
+Some ports may respect other <tt>LC_*</tt> variables, but using them or setting
+<tt>LC_CTYPE</tt> to any value other than <tt>C</tt>, <tt>POSIX</tt> or
+<tt>en_US.UTF-8</tt> is not recommended.
+
+<h2 id="RevDNS">Reverse DNS</h2>
+
+Many new users to OpenBSD experience a two minute login delay when using
+services such as
+<a href="http://man.openbsd.org/ssh">ssh(1)</a> or
+<a href="http://man.openbsd.org/ftp">ftp(1)</a>.
+This can also be experienced when using a proxy, such as
+<a href="http://man.openbsd.org/ftp-proxy">ftp-proxy(8)</a>,
+or when sending mail.
+
+<p>
+This is almost always due to a reverse-DNS problem.
+DNS is the Domain Name Service, the system the Internet uses to convert a name,
+such as "www.openbsd.org", into a numeric IP address.
+Another task of DNS is the ability to take a numeric address and convert it
+back to a name.
+This is known as a Reverse DNS entry.
+
+<p>
+In order to provide better logging, OpenBSD performs a reverse DNS
+lookup on any machine that attaches to it in many different ways,
+including
+<a href="http://man.openbsd.org/ssh">ssh(1)</a>,
+<a href="http://man.openbsd.org/ftp">ftp(1)</a>,
+<a href="http://man.openbsd.org/ftp-proxy">ftp-proxy(8)</a>.
+Unfortunately, in some cases, the machine that is making the connection
+does not have a proper reverse DNS entry.
+
+<h3>An example of this situation:</h3>
+
+A user sets up an OpenBSD box as a firewall and gateway to their
+internal home network, mapping all their internal computers to one
+external IP using <a href="pf/nat.html">NAT</a>.
+They may also use it as an outbound mail relay.
+They follow the installation guidelines, and are very happy with the results,
+except for one thing -- every time they try to attach to the box in any way,
+they end up with a two minute delay before things happen.
+
+<h3>What is going on:</h3>
+
+From a workstation behind the NAT of the gateway with an
+<a href="http://tools.ietf.org/html/rfc1918">unregistered IP</a>
+address of 192.168.1.35, the user uses
+<a href="http://man.openbsd.org/ssh">ssh(1)</a>
+to access the gateway system.
+The <a href="http://man.openbsd.org/ssh">ssh(1)</a>
+client prompts for username and password, and sends them to the gateway box.
+The gateway then tries to figure out who is trying to log in by performing a
+reverse DNS lookup of 192.168.1.35.
+The problem is 192.168.0.0 addresses are for private use, so a properly
+configured DNS server outside your network knows it should have no information
+about those addresses.
+Some will quickly return an error message.
+In these cases, OpenBSD will assume there is no more information to be gained,
+and it will quickly give up and just admit the user.
+Other DNS servers will not return ANY response.
+In this case, you will find yourself waiting for the OpenBSD name resolver to
+time out, which takes about two minutes before the login will be permitted to
+continue.
+In the case of
+<a href="http://man.openbsd.org/ftp-proxy">ftp-proxy(8)</a>,
+some ftp clients will timeout before the reverse DNS query
+times out, leading to the impression that ftp-proxy isn't working.
+
+<p>
+This can be quite annoying.
+Fortunately, it is an easy thing to fix.
+
+<h3>Fix, using <tt>/etc/hosts</tt>:</h3>
+
+The simplest fix is as follows:
+Populate your
+<a href="http://man.openbsd.org/hosts">hosts(5)</a>
+file with all the workstations you have in your internal network.
+Make sure that your
+<a href="http://man.openbsd.org/resolv.conf">resolv.conf(5)</a>
+file contains the line <tt>lookup file bind</tt>.
+This tells the resolver to start with the
+<a href="http://man.openbsd.org/hosts">hosts(5)</a> file,
+and failing that, to use the DNS servers specified by the <tt>nameserver</tt>
+lines in your
+<a href="http://man.openbsd.org/resolv.conf">resolv.conf(5)</a> file.
+
+<p>
+Your <tt>/etc/hosts</tt> file will look something like this:
+
+<blockquote><pre>
+::1 localhost.in.example.org localhost
+127.0.0.1 localhost.in.example.org localhost
+192.168.1.1 gw.in.example.org gw
+192.168.1.20 scrappy.in.example.org scrappy
+192.168.1.35 shadow.in.example.org shadow
+</pre></blockquote>
+
+Your <tt>/etc/resolv.conf</tt> file will look something like this:
+
+<blockquote><pre>
+search in.example.org
+nameserver 24.2.68.33
+nameserver 24.2.68.34
+lookup file bind
+</pre></blockquote>
+
+A common objection to this is "But, I use DHCP for my internal network!
+How can I configure my <tt>/etc/hosts</tt>?"
+Rather easily, actually.
+Just enter lines for all the addresses your DHCP server is going to
+give out, plus any static devices:
+
+<blockquote><pre>
+::1 localhost.in.example.org localhost
+127.0.0.1 localhost.in.example.org localhost
+192.168.1.1 gw.in.example.org gw
+192.168.1.20 scrappy.in.example.org scrappy
+192.168.1.35 shadow.in.example.org shadow
+192.168.1.100 d100.in.example.org d100
+192.168.1.101 d101.in.example.org d101
+192.168.1.102 d102.in.example.org d102
+         [... snip ...]
+192.168.1.198 d198.in.example.org d198
+192.168.1.199 d199.in.example.org d199
+</pre></blockquote>
+
+This case assumes you have the DHCP range set to 192.168.1.100
+through 192.168.1.199, plus the three static definitions as listed at
+the top of the file.
+
+<p>
+If your gateway must use DHCP for configuration, you may well find you
+have a problem --
+<a href="http://man.openbsd.org/dhclient">dhclient(8)</a>
+will overwrite your <tt>/etc/resolv.conf</tt> every time the lease is
+renewed, which will remove the <tt>lookup file bind</tt> line.
+This can be solved by putting the line <tt>lookup file bind</tt> in the file
+<tt>/etc/resolv.conf.tail</tt>.
+
+<h3>Fix, using a local DNS server</h3>
+
+Details on this are somewhat beyond the scope of this document, but the
+basic trick is to set up your favorite DNS server, and make sure it knows
+it is authoritative for both forward and reverse DNS resolution for all
+nodes in your network, and make sure your computers (including your
+gateway) know to use it as a DNS server.
+
+<h2 id="GenNotConf">Device "not configured" in dmesg</h2>
+
+In short, it means your device is not supported by the kernel you are using,
+so you will not be able to use it.
+
+<p>
+PCI and many other types of devices offer identifying information so that
+the OS can properly recognize and support devices.
+Adding recognition is easy, adding support is often not.
+Here are two examples of "not configured" devices:
+
+<blockquote><pre>
+[...]
+vendor "Intel", unknown product 0x5201 (class network subclass ethernet,
+rev 0x03) at pci2 dev 9 function 1 not configured
+[...]
+"Intel EE Pro 100" rev 0x03 at pci2 dev 10 function 0 not configured
+[...]
+</pre></blockquote>
+
+The first one (a network adapter) had its vendor code identified and the
+general type of card was determined, but not the precise model of the card.
+The second example is another network adapter, this one a developer had
+seen and entered into the identification file that is used to identify
+the card.
+In both cases, however, the cards will be non-functional, as both are
+shown as <tt>not configured</tt>, meaning no driver has attached to the card.
+
+<h4>What can I do about a "not configured" device?</h4>
+
+<ul>
+<li>If the device or card you are seeing is not one you need, you can safely
+ignore the <tt>not configured</tt> devices, they will not hurt your system.
+Some "special purpose" devices are deliberately left unconfigured so the
+system's BIOS will handle them.
+
+<li>In some cases, it is just a variation of an already supported device,
+in which case, it may be relatively easy for a developer to add support
+for the new card.
+In other cases, it may be a totally unsupported chip set or implementation
+(such as the above examples).
+In that case, a new driver would have to be written, which may not even
+be possible if the device is not fully documented.
+You are certainly welcome to write a driver for the device yourself.
+
+<li>If you are running an install kernel, the device may not be supported
+by the install media you used, but may be supported by a different boot disk.
+
+<li>If you are running a modified kernel, you may have removed support for
+a device you now need.
+In general, removing devices from a kernel is a bad idea.
+This is one reason why.
+
+<li>Before reporting a <tt>not configured</tt> device, make sure you
+have first tested the most recent <a href="faq5.html#Flavors">snapshot</a>,
+as support may already have been added, and check the <a href="../mail.html">
+mailing list archives</a> to see if the issue has been discussed already.
+Remember, however, if you are using an older version of OpenBSD, you
+will generally have to upgrade to get the benefit of any new drivers.
+</ul>
+
+Unfortunately, many manufacturers use product model numbers to indicate
+marketplace position, rather than the technical nature of a product.
+For this reason, you may buy a product with the same name or model number
+as a product listed in the <a href="../plat.html">platform pages</a>, but
+end up with a totally different product that may not work with OpenBSD.
+
+<p>
+For example, many early wireless network adapters were based on the Prism2
+chipset, using the <a href="http://man.openbsd.org/wi">wi(4)</a>
+driver, but later, when lower-cost chips became available, many manufacturers
+changed their product to use chips for which no open source drivers exist,
+but never changed their model numbers.
+Wireless network adapters, unfortunately, are far from the only example
+of this.
+
+<p>
+</body>
+</html>

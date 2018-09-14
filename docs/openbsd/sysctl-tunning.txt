@@ -1,0 +1,59 @@
+
+##### 16GB Ram Tunning /etc/sysctl.conf
+
+machdep.allowaperture=2 # See xf86(4)
+
+###
+net.inet.tcp.rfc1323=1
+net.inet.tcp.rfc3390=2
+###
+
+##### unixman
+#net.inet.ip.maxqueue=2048
+net.inet.ip.maxqueue=4096
+#kern.somaxconn=2048
+kern.somaxconn=4196
+net.bpf.bufsize=2097152
+net.bpf.maxbufsize=4194304
+net.inet.ip.portfirst=32768
+net.inet.ip.portlast=49151
+net.inet.ip.porthifirst=49152
+net.inet.ip.porthilast=65535
+kern.seminfo.semmni=1024
+kern.seminfo.semmns=4096
+kern.shminfo.shmall=122681
+kern.shminfo.shmmax=502500992
+###
+kern.maxclusters=32768
+kern.bufcachepercent=50
+kern.maxproc=2048
+kern.maxthread=4192
+kern.maxfiles=204800
+kern.maxvnodes=409680
+#####
+
+
+##### UNTESTED sysctl tunning !!!
+
+### Calomel.org  OpenBSD v5.1 and later /etc/sysctl.conf (https://calomel.org/network_performance.html)
+##
+#ddb.panic=0                    # do not enter ddb console on kernel panic, reboot if possible
+#kern.bufcachepercent=90        # Allow the kernel to use up to 90% of the RAM for cache (default 10%)
+#machdep.allowaperture=2        # Access the X Window System (if you use X on the system)
+#net.inet.ip.forwarding=1       # Permit forwarding (routing) of packets through the firewall
+#net.inet.ip.ifq.maxlen=512     # Maximum allowed output queue length (256*number of physical interfaces)
+#net.inet.ip.mtudisc=0          # TCP MTU (Maximum Transmission Unit) discovery off since our mss is small enough
+#net.inet.tcp.rfc3390=1         # Enable RFC3390 TCP window increasing so larger CWND can take affect
+#net.inet.tcp.mssdflt=1440      # maximum segment size (1440 from scrub pf.conf match statement)
+#net.inet.udp.recvspace=131072 # Increase UDP "receive" buffer size. Good for 200Mbit without packet drop.
+#net.inet.udp.sendspace=131072 # Increase UDP "send" buffer size. Good for 200Mbit without packet drop.
+
+
+##
+kern.maxproc=8192
+kern.maxthread=16384
+
+
+#END
+
+

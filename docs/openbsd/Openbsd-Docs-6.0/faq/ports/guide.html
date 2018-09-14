@@ -1,0 +1,1645 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!-- If you make edits to any FAQ documents, please start each sentence
+     on a new line, and try to keep the general formatting consistent
+     with the rest of the pages -->
+
+<title>OpenBSD Ports: Porting Guide</title>
+<meta name= "description"   content= "OpenBSD Porting Guide">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="../../openbsd.css">
+<link rel="canonical" href="https://www.openbsd.org/faq/ports/guide.html">
+</head>
+
+<body bgcolor= "#ffffff" text= "#000000">
+
+<h2>
+<a href="../../index.html">
+<font color="#0000ff"><i>Open</i></font><font color="#000084">BSD</font></a>
+<font color="#e00000">Ports - Porting Guide</font>
+<small>
+<a href="index.html" style="font-weight:normal;float:right">[Handbook Index]</a>
+</small>
+</h2>
+<hr>
+<p>
+
+<ul>
+  <li><a href="#Overview"         >Overview</a>
+  <li><a href="#PortsChecklist"   >Porting checklist</a>
+  <li><a href="#PortsComplex"     >Handling complex situations</a>
+  <ul>
+    <li><a href="#Know"           >Know the software</a>
+    <li><a href="#Figure"         >Figure out important options</a>
+    <li><a href="#Ideal"          >The ideal case: MULTI_PACKAGES and
+                                   PSEUDO_FLAVORS</a>
+    <li><a href="#Inter"          >Interdependencies between subpackages</a>
+    <li><a href="#True"           >True FLAVORS and PKGNAMES</a>
+  </ul>
+  <li><a href="#PortsUpdate"      >Updating ports</a>
+  <ul>
+    <li><a href="#UpdateChecklist">Update checklist</a>
+    <li><a href="#CommitUpdates  ">Committing port updates</a>
+  </ul>
+  <li><a href="#PortsPolicy"      >OpenBSD porting policy</a>
+  <li><a href="#PortsSecurity"    >Security recommendations</a>
+  <li><a href="#PortsGeneric"     >Generic porting hints</a>
+  <li><a href="#PortsOther"       >Other helpful hints</a>
+  <li><a href="#PortsAvail"       >Additional information</a>
+</ul>
+
+<hr>
+
+<h2 id="Overview">Overview</h2>
+
+So you've just compiled your favorite software package on your OpenBSD machine
+and you want to share your effort by turning it into a standard port.
+What to do?
+
+<p>
+The most important thing to do is to <b>communicate</b>.
+Ask people on <a href="mailto:ports@openbsd.org">ports@openbsd.org</a> if they
+are working on the same port.
+<i>Tell the original software authors about it</i>, including problems you may
+find.
+If licensing information appears incorrect, tell them.
+If you had to jump through hoops to make the port build, tell them what can be
+fixed.
+If they are only developing on Linux and feel like ignoring the rest of the
+Unix world, try to make them change their view.
+
+<p>
+Communication makes the difference between a successful port and a port that
+will slowly be abandoned by everyone.
+
+<p>
+First, look at the porting information on this page.
+Test, then re-test, and finally test again!
+
+<p>
+OpenBSD fully supports updates.
+This means that <a href="#PortsUpdate">some issues</a> must be taken into
+account.
+
+<p>
+Submit the port.
+Create a gzipped tarball of the port directory.
+You can then either place it on a public HTTP server, sending its URL to
+<a href="mailto:ports@openbsd.org">ports@openbsd.org</a>, or send the port
+MIME encoded to the same address.
+
+<p>
+Porting some new software takes time.
+Maintaining it over time is harder.
+It is quite okay to port software and let other people handle it afterwards.
+It is also okay to help other people update and maintain other ports, as long
+as you communicate to avoid doing the same things twice.
+
+<p>
+In OpenBSD culture, <tt>MAINTAINER</tt>ship is not a status item, but a
+responsibility.
+We have CVS and comments to give credit to the person who did the work.
+A port <tt>MAINTAINER</tt> is something else: a person who assumes
+responsibility for the working of the port, and is willing to spend some
+time ensuring it works as best as can be.
+
+<h2 id="PortsChecklist">Porting Checklist</h2>
+
+The list below is a useful reminder of things to do.
+This is neither totally accurate nor perfect.
+Direct comments and questions to
+<a href="mailto:ports@openbsd.org">ports@openbsd.org</a>.
+
+<ol>
+
+<li>
+If you want to be a maintainer, subscribe to
+<a href="mailto:ports@openbsd.org">ports@openbsd.org</a>.
+
+<ul><li>
+This is where all ports discussions take place.
+
+<li>
+Reading this list is important since many announcements are made there.
+
+<li>
+You will find a lot of porting-savvy people there.
+They can often give you good advice or test ports for you.
+</ul>
+
+<br><li>
+Being a maintainer means <b>more</b> than just submitting ports.
+It also means trying to keep them up-to-date, and answering questions
+about them.
+
+<br><br><li>
+Check out a copy of the ports tree from CVS.
+You can find instructions on how to do this at the
+<a href="../../anoncvs.html">AnonCVS page</a>.
+As a porter, you should keep your base OS, ports tree, and installed
+packages up to date.
+
+<br><br><li>
+From the names of the first level subdirectories of <tt>/usr/ports/</tt>,
+pick a primary category for your port.
+Create a new directory below <tt>/usr/ports/&lt;category&gt;/</tt>
+or <tt>/usr/ports/mystuff/&lt;category&gt;/</tt> and create the basic
+infrastructure there.
+Copy the template <tt>Makefile</tt> from
+<tt>/usr/ports/infrastructure/templates/Makefile.template</tt>.
+Fill in <tt>CATEGORIES</tt> with the primary category you have chosen.
+
+<br><br><li>
+Add the fetch portions of the Makefile.
+
+<ul><li>
+Fill in <tt>EXTRACT_SUFX</tt> if it's anything besides .tar.gz.
+Other examples are .tar.Z, or .tgz.
+
+<li>
+Fill in <tt>DISTNAME</tt> with the name of the file minus the extract suffix.
+If you have <tt>foo-1.0.tar.gz</tt>, <tt>DISTNAME</tt> is <tt>foo-1.0</tt>.
+
+<li>
+Fill in <tt>MASTER_SITES</tt> with a list of URLs to the locations where
+the distfile is kept, https://ftp.openbsd.org/pub/OpenBSD/distfiles/ for
+example.
+<b>Don't forget the trailing slash.</b>
+Try to have at least three distinct sites as well.
+Place the most easily accessible first as they are traversed in order.
+
+<li>
+Keep in mind that fetch references the file as
+<tt>${MASTER_SITES}${DISTNAME}${EXTRACT_SUFX}</tt>.
+All three are used.
+Don't set <tt>DISTNAME</tt> to point to the file directly.
+
+<li>
+You can check to see if you have filled these values in correctly by typing
+<tt><b>make fetch-all</b></tt>.
+</ul>
+
+<p>
+For more complex ports, you have more options and tools available to you:
+
+<ul><li>
+You also have the variable <tt>PATCHFILES</tt> available.
+This is a list of vendor (not OpenBSD) patches to the port.
+Common uses are things like security or reliability fixes.
+
+<li>
+If your ports are available over large public mirrors such as GNU,
+Sourceforge, or CPAN, we have already provided a list of sites for
+your use in
+<tt>/usr/ports/infrastructure/templates/network.conf.template</tt>.
+Set <tt>MASTER_SITES</tt> to <tt>${MASTER_SITE_GNU}</tt>, or
+<tt>${MASTER_SITE_SOURCEFORGE}</tt>, etc.
+To simplify this process, use the construct <tt>${MASTER_SITE_FOO:=subdir/}</tt>
+to append the distribution subdirectory.
+
+<li>
+For ports with source distributed from GitHub there are several possibilities.
+
+<ul><li>
+In some cases, for example icinga or darktable, a distribution tar file has
+been prepared and is available in a /releases/ directory.
+Where available, use these in preference to other options as they usually
+include the proper build infrastructure (configure scripts, etc) which are
+often missing from "tagged" releases.
+Specify as normal, using something like
+<tt>MASTER_SITES=https://github.com/acct/project/releases/download/relname/</tt>
+
+<li>In other cases, files have been tagged but they rely on github's
+on-the-fly archive creation.
+These can be specified using the following
+<a href="http://man.openbsd.org/bsd.port.mk">bsd.port.mk(5)</a> variables:
+<tt>GH_ACCOUNT</tt>, <tt>GH_PROJECT</tt>, <tt>GH_TAGNAME</tt>.
+The provided filename is rarely suitable for direct use as a
+<tt>DISTNAME</tt>, frequently only including the version number;
+these can be renamed at download time using the "{}" notation in
+<tt>DISTFILES</tt>.
+
+<li>Occasionally there is no alternative but to have a port reference only a
+commit id.
+In this case, <tt>GH_COMMIT</tt> should be used instead of <tt>GH_TAGNAME</tt>.
+</ul>
+
+<li>
+Ports normally correspond to given versions of software.
+Once they are retrieved, files are checksummed and compared to the recorded
+checksum(s) in distinfo.
+So, to avoid confusion, <tt>DISTFILES</tt> and <tt>PATCHFILES</tt> should have
+clearly visible version numbers:
+don't retrieve <tt>foo-latest.tar.gz</tt> if it is a link to
+<tt>foo-1.0.5.tar.gz</tt>.
+If something is only available in an unversioned file, gently ask the
+original program author to make such distinctions clear.
+In the meantime, if you must use a file like this, set <tt>DIST_SUBDIR</tt> to
+what a reasonable <tt>DISTNAME</tt> would be, like <tt>foo-1.0.5</tt>, such that
+different, identically named, versions of the distfile do not clash on the
+distribution file mirrors.
+
+<li>
+If a given port needs more than about five <tt>DISTFILES</tt> and
+<tt>PATCHFILES</tt> to work, use <tt>DIST_SUBDIR</tt> to avoid cluttering
+<tt>DISTDIR</tt> (<tt>/usr/ports/distfiles</tt> by default) too much.
+In this case, <tt>DIST_SUBDIR</tt> must not include version numbers.
+When the port is updated to a later version, some distfiles may not
+change, but will be refetched if <tt>DIST_SUBDIR</tt> is changed.
+Even if all distfiles change, it is easier for the user to track cruft.
+
+<li>
+All <tt>DISTFILES</tt> and <tt>PATCHFILES</tt> don't necessarily come from the
+same set of <tt>MASTER_SITES</tt>.
+Supplementary sites can be defined using the variables <tt>MASTER_SITES0</tt> to
+<tt>MASTER_SITES9</tt>. Just write <tt>DISTFILES=foo-1.0.5.tar.gz:5</tt> to
+retrieve <tt>foo-1.0.5.tar.gz</tt> from <tt>MASTER_SITES5</tt>.
+
+<li>
+Some ports don't always need to retrieve all files in all circumstances.
+For instance, some ports may have some compilation options, and associated
+files which are only required in such a case.
+Or they may need some files for some architectures only.
+In such a case, those supplementary optional files must be mentioned in the
+<tt>SUPDISTFILES</tt> variable.
+Targets such as <tt>makesum</tt> or <tt>mirror-distfiles</tt> will fetch those
+supplementary files that the casual user doesn't need.
+</ul>
+
+<br><li>
+Create a checksum in <tt>distinfo</tt> by typing <tt><b>make makesum</b></tt>.
+Then verify the checksum is correct by typing <tt><b>make checksum</b></tt>.
+
+<ul><li>
+In some rare cases, files checksums can't be verified reliably.
+By all means, porters should try to find sites that are reliable.
+Communicating with the software author and the archive site maintainer at this
+stage is highly desirable.
+In the worst case, non-checksummable files can be mentioned in the
+<tt>IGNOREFILES</tt> variable.
+
+<li>
+All files in <tt>DISTFILES</tt> are usually processed during
+<tt>make extract</tt>.
+<tt>EXTRACT_ONLY</tt> may be used to limit extraction to a subset of files
+(possibly empty).
+The customary use of this variable is to customize extraction: for instance,
+if some <tt>DISTFILES</tt> need some special treatment, they will be removed
+from <tt>EXTRACT_ONLY</tt> and handled manually at <tt>post-extract</tt> stage.
+For historic reasons, <tt>make extract</tt> does set up the working directory
+first along with extracting files.
+Thus, providing a <tt>pre-extract</tt> or <tt>do-extract</tt> target is highly
+unusual (and fairly suspicious behavior, indicative of a high degree of
+obfuscation in the port).
+
+<li>
+Patches that need specific treatment should be mentioned in <tt>DISTFILES</tt>,
+and removed from <tt>EXTRACT_ONLY</tt>, for historic reasons.
+</ul>
+
+<br><li>
+Extract the port with <tt>make extract</tt>.
+Pay attention to where the base of the sources are.
+Usually, it's <tt>/usr/ports/pobj/${PKGNAME}${FLAVOR_EXT}/${DISTNAME}</tt>.
+You may need to modify the <tt>Makefile</tt>'s <tt>WRKDIST</tt> variable if it
+is different.
+
+<br><br><li>
+Read the installation documentation and note what you have to do to build
+the port and any special options that might be needed.
+
+<br><br><li>
+Now is also a good time to figure out what kind of licensing restrictions
+apply to your port.
+Many are freely redistributable, but quite a few are not.
+We need three questions answered to distribute ports properly.
+These are the <tt>PERMIT_*</tt> values in the <tt>Makefile</tt>.
+
+<ul><li>
+<tt>PERMIT_PACKAGE_CDROM</tt> tells us if we can put the package on the cdrom.
+<li>
+<tt>PERMIT_PACKAGE_FTP</tt> tells us if we can put the package on the ftp sites.
+<li>
+<tt>PERMIT_DISTFILES_FTP</tt> tells us if we can mirror the distfiles on the ftp
+sites.
+</ul>
+
+<p>
+If all three are permitted, simply set <tt>PERMIT_PACKAGE_CDROM=Yes</tt>.
+Otherwise include all three variables, set to either <tt>Yes</tt>, or a
+comment string indicating that certain distribution is not allowed. 
+Pay attention to any special conditions you may need to fulfill later on.
+For example, some ports require installing a copy of the license.
+We recommend you place the license in
+<tt>/usr/local/share/doc/&lt;name&gt;/</tt>.
+
+<p>
+In addition to the <tt>PERMIT_*</tt> values, put a license marker like
+<tt># License</tt> above them as a comment, this way we know why the
+<tt>PERMIT_*</tt> values are set the way they are.
+For GPL, specify which version is applicable e.g. "GPLv2 only",
+"GPLv2+" (meaning "v2 or newer"), "GPLv3 only", etc.
+
+<br><br><li>
+Add configuration options to <tt>Makefile</tt> and/or create the configuration
+script.
+
+<ul><li>
+If GNU configure is used, run <tt>./configure --help</tt> to see what
+options are available.
+In particular, look for optional dependencies which may not be present
+on your system, but might be picked up on another system or in a bulk
+build.
+
+<li>
+Anything that you may want to override can be changed by adding the
+<tt>--option</tt> flags to the <tt>CONFIGURE_ARGS</tt> parameter in the
+<tt>Makefile</tt>.
+
+<li>
+Use <tt>CONFIGURE_ARGS+=</tt> to append to the variable.
+<tt>CONFIGURE_ARGS=</tt> will overwrite it.
+</ul>
+
+<br><li>
+Try building the port with <tt>make build</tt>.
+
+<ul><li>
+If you're lucky, the port will go all the way through without errors.
+
+<li>
+If it exits with an error, you will need to generate patches for your port.
+Figure out what needs to be changed and make a patch for it.
+
+<li>
+the sequence to make a patch for a file is usually:
+
+<ul><li>
+<tt>cd `make show=WRKSRC` ; cp foo/bar.c{,.orig}</tt>
+
+<li>
+edit <tt>foo/bar.c</tt> to fix the error.
+
+<li>
+<tt>cd - ; make update-patches</tt>
+
+<li>
+this will create <tt>patches/patch-foo_bar_c</tt> with your modifications.
+</ul>
+
+<li>
+The easiest way to reset the port and test your patches is
+<tt>make clean patch</tt>.
+This will delete the work directory, re-extract, and patch your port.
+</ul>
+
+<br><li>
+Begin a cycle of <tt>make build</tt>, generate a patch using
+<tt>make update-patches</tt> and <tt>make clean patch</tt>.
+
+<ul><li>
+Patches go in the directory <tt>patches/</tt> and should be named patch-* with
+* being something meaningful.
+The preferred naming is <tt>patch-FILENAME</tt>, where <tt>FILENAME</tt> is
+the name of the file it is patching.
+(<tt>make update-patches</tt> does this automatically for you.)
+
+<li>
+Applying <tt>PATCHFILES</tt> is the first half of the <tt>make patch</tt>
+stage.
+It can be invoked separately as <tt>make distpatch</tt>, which is a convenient
+target for porters.
+Ignore this if you haven't set it.
+
+<li>
+Only patch one source file per patch file, please.
+
+<li>
+Use <tt>make update-patches</tt> to generate patches.
+
+<li>
+All patches MUST be relative to <tt>${WRKDIST}</tt>.
+
+<li>
+Check that patches <b>DON'T</b> contain tags that cvs will replace.
+If they do, your patches won't apply after you check them in.
+You can check in your changes with <tt>-kk</tt> to avoid this.
+
+<li>
+Write a small explanation at the beginning of the patch file about its purpose
+(not mandatory, but for example often done for security patches).
+
+<li>
+<b>Please</b> feed your patches back to the author of that software.
+</ul>
+
+<br><li>
+Try setting <tt>SEPARATE_BUILD</tt>.
+
+<ul><li>
+If the port can build with object files outside its source tree,
+this is cleaner (many programs using <tt>CONFIGURE_STYLE=gnu</tt> can),
+and may help people who mount their ports tree on several arches.
+
+<li>
+This can also spare you some effort, as you will possibly be able to
+restart the cycle at configure most of the time.
+</ul>
+
+<br><li>
+Peruse the output (if any) and tweak any options in the <tt>Makefile</tt>.
+To repeat issue the command <tt>make clean configure</tt>.
+
+<p>
+Note: make sure host-dependent files go in <tt>/etc</tt> or
+<tt>/etc/&lt;name&gt;</tt>, but <b>NEVER REPLACE OR MODIFY</b>
+existing files in <tt>/etc</tt>.
+Best to have install place them in <tt>/usr/local/share/&lt;name&gt;</tt> and
+then copy to <tt>/etc</tt> or <tt>/etc/&lt;name&gt;</tt> only if the files do
+not exist.
+If the files exist, display a message that says such-and-such files need to be
+modified.
+This also guarantees that the files will be included in the package since
+everything under <tt>/usr/local</tt> is included in the <tt>PLIST</tt>.
+To handle the copying carefully, the <tt>@sample</tt> keyword is preferably used
+within the <tt>PLIST</tt>.
+After a package has been installed the contents of <tt>pkg/MESSAGE</tt> will be
+displayed if it exists.
+
+<p>
+The OpenBSD file locations are:
+
+<blockquote><pre>
+user executables:			/usr/local/bin
+system admin executables:		/usr/local/sbin
+program executables:			/usr/local/libexec
+libraries:				/usr/local/lib
+architecture dependent data:		/usr/local/lib/&lt;name&gt;
+installed include files:		/usr/local/include or
+					/usr/local/include/&lt;name&gt;
+single-machine data:			/etc or /etc/&lt;name&gt;
+local state:				/var/run
+games score files:			/var/games
+GNU info files:				/usr/local/info
+man pages:				/usr/local/man/...
+read-only architecture-independent:	/usr/local/share/&lt;name&gt;
+misc documentation:			/usr/local/share/doc/&lt;name&gt;
+examples files:				/usr/local/share/examples/&lt;name&gt;
+</pre></blockquote>
+
+<li>
+Begin a cycle of makes until the port is ready.
+Patch (see above) clean, and make until the port is generated.
+Get rid of all warnings if possible, especially security-related warnings.
+
+<br><br><li>
+Control <tt>SEPARATE_BUILD</tt> semantics.
+You have to do this only if the port builds with <tt>SEPARATE_BUILD</tt> defined.
+Ideally, the port should not modify any file in <tt>${WRKSRC}</tt> after
+<tt>make patch</tt>.
+You can check this by making sure you don't have any write access to
+<tt>${WRKSRC}</tt>.
+Then you can set <tt>SEPARATE_BUILD=concurrent</tt>.
+Someone can use the same source tree to build on distinct arches simultaneously.
+Otherwise, set <tt>SEPARATE_BUILD=simple</tt>.
+Building on distinct arches simultaneously may be met with problems, as some
+source files may be regenerated at awkward moments.
+
+<br><br><li>
+Add <tt>COMMENT</tt> in <tt>Makefile</tt>.
+<tt>COMMENT</tt> is a <b>SHORT</b> one-line description of the port (max. 60
+characters).
+Do <b>NOT</b> include the package name (or version number of the software) in
+the comment.
+Do <b>NOT</b> start with an uppercase letter unless semantically significant,
+and do <b>NOT</b> end with a period.
+<b>DON'T EVER START WITH AN INDEFINITE ARTICLE SUCH AS "a" or "an" - remove
+the article altogether.</b>
+
+<br><br><li>
+Put a longer description of the port into <tt>pkg/DESCR</tt>.
+One to a few paragraphs concisely explaining what the port does is sufficient.
+Lines should be no longer than 80 characters.
+This can be done by first editing the <tt>DESCR</tt> file and then running it
+through <tt>fmt -w 80</tt>.
+
+<br><br><li>
+If the application needs to create a user or a group, choose the lowest free
+id from <tt>/usr/ports/infrastructure/db/user.list</tt> for your port to
+use and make sure your port gets added to this file at commit time.
+
+<br><br><li>
+Install the application with <tt>make fake</tt>.
+Libraries should never be stripped.
+Executables are stripped by default; this is governed by
+<tt>${INSTALL_STRIP}</tt>.
+<tt>${INSTALL_PROGRAM}</tt> honors this automatically and is preferable to
+unconditional stripping (e.g., by an <tt>install-strip</tt> target or by
+running <tt>strip</tt> from the <tt>Makefile</tt>).
+You can use <tt>objdump --syms</tt> to determine if a binary is stripped or not.
+Stripped files have no symbols in the <tt>SYMBOL TABLE</tt>.
+
+<br><br><li>
+<b>Check port for security holes again</b>.
+This is especially important for network-facing programs.
+See <a href="#PortsSecurity">our security recommendations</a> for that.
+Log interesting stuff and fixes in the <tt>pkg/SECURITY</tt> file.
+This file should list audited potential problems, along with relevant patches,
+so that another person can see at first glance what has been done.
+Example:
+
+<blockquote><pre>
+&#36;OpenBSD&#36;
+
+${WRKDIR}/receiver.c
+   call to mktemp (wrapper function do_mktemp) does seem to be correct.
+
+The server makes extensive use of strlcpy/strlcat/snprintf.
+</pre></blockquote>
+
+<br><br><li>
+Make sure your <tt>/etc/mtree</tt> directory is up-to-date.
+(The next step uses the mtree lists to remove existing directories from
+generated packing-lists). Remember that the OpenBSD
+<tt>(U)pdate</tt> does not touch <tt>/etc</tt>...
+For automatic updating of <tt>/etc</tt>, sysmerge(8) may help.
+
+<br><br><li>
+Create <tt>pkg/PLIST</tt>.
+After the installation with <tt>make fake</tt> is complete, use the
+developer's command <tt>make plist</tt>, which creates or updates
+the file <tt>PLIST</tt> in the <tt>pkg</tt> directory.
+This file is a candidate packing list.
+
+<p>
+Peruse <tt>PLIST</tt> and verify that everything was installed and that it was
+installed in the proper locations.
+Anything not installed can be added to a port <tt>Makefile</tt>
+<tt>post-install</tt> rule.
+Note that <tt>PLIST</tt> annotations are documented in the
+<a href="http://man.openbsd.org/pkg_create">pkg_create(1)</a> manual.
+
+<br><br><li>
+It is possible some directories do not need to be in the <tt>PLIST</tt>
+as they've been installed by a dependency; if you added to <tt>LIB_DEPENDS</tt>
+or <tt>RUN_DEPENDS</tt>, re-run <tt>make plist</tt> to remove these.
+
+<br><br><li>
+Test the packaging with <tt>make package</tt>, test installation of the
+resulting package with <tt>make install</tt>, and test its removal with
+<tt>make uninstall</tt>.
+When dealing with multi-packages, it may instead be convenient to use
+<a href="http://man.openbsd.org/pkg_add">pkg_add(1)</a> and
+<a href="http://man.openbsd.org/pkg_delete">pkg_delete(1)</a> directly,
+setting <tt>PKG_PATH</tt> to <tt>/usr/ports/packages/`arch -s`/all/</tt> in the
+environment.
+
+<br><br><li>
+Verify dependencies.
+Peruse your logs to verify the port did detect what is mentioned in
+<tt>DEPENDS</tt>, and nothing more.
+Check names, particularly in the <tt>make configure</tt> stage, for hidden
+dependencies (stuff that exists elsewhere in the ports tree and might be
+detected if the user installs some other ports first).
+
+<br><br><li>
+Verify shared library dependencies.
+Run <tt>make port-lib-depends-check</tt> and add every <tt>LIB_DEPENDS</tt>
+or <tt>WANTLIB</tt> annotation that is needed until it runs cleanly.
+You may want to read <a href="#PortsUpdate">the update guidelines</a> to
+understand why this is so important.
+
+<br><br><li>
+Check for regression tests, and whether they run cleanly.
+Set <tt>NO_TEST=Yes</tt> if a port has no test infrastructure.
+If dependencies are required to run the tests, but not to build the port,
+list them in <tt>TEST_DEPENDS</tt>.
+Please note: do not set <tt>NO_TEST</tt> if a port has an empty regression
+test infrastructure.
+
+<br><br><li>
+Test that <tt>make clean</tt> succeeds.
+Sometimes the <tt>make fake</tt> stage creates files in the build directory
+which will cause this to fail.
+
+<br><br><li>
+Run the <code>/usr/ports/infrastructure/bin/portcheck</code> utility
+in your port directory and take care of problems it finds, if any.
+
+<br><br><li>
+Mail <a href="mailto:ports@openbsd.org">ports@openbsd.org</a> with a
+description, the homepage (if any), and a short note asking for comments
+and testing.
+Make sure to attach the port/patch to this email, or mention an URL where
+it can be found, and send it out (mailinglist archives just contain the
+mails itself).
+
+<p>
+Try to get others to test it on a variety of platforms for you.
+
+<ul><li>
+The AMD64 systems are good because they are fast, and because
+<tt>sizeof(int) != sizeof(long)</tt> on this platform.
+
+<li>
+sparc64 systems are good because they are fairly common, can be quite fast, and
+their byte order is the opposite of i386; if you developed on sparc64, of
+course, you'd want it tested on i386.
+</ul>
+
+<br><li>
+Incorporate any feedback you get. Test it again on your platform.
+Get those who gave you feedback to test it again from your new port.
+
+<br><br><li>
+Get the port committed to CVS.
+
+<p>
+If you are not a developer with CVS access, then you will have to find
+an OpenBSD developer to do the following steps for you (ask on
+<a href="mailto:ports@openbsd.org">ports@openbsd.org</a>).
+
+<p>
+Before you import anything, get at least one "OK" from another ports
+developer (the more the better).
+
+<p>
+If using <tt>@newuser</tt> or <tt>@newgroup</tt> in the PLIST files, check that
+no users were added to <tt>/usr/ports/infrastructure/db/user.list</tt> since
+the port was created.
+
+<p>
+For new ports we use <tt>cvs import</tt>, rather than adding new files
+individually.
+For example, to import a new <tt>lang/kaffe1</tt> port, first do a dry-run
+import:
+
+<blockquote><pre>
+$ <b>cd /usr/ports/lang/kaffe1</b>
+$ <b>cvs -ndcvs.openbsd.org:/cvs import ports/lang/kaffe1 username username_yyyymmdd</b>
+</pre></blockquote>
+
+Where <tt>username</tt> is your account username, and <tt>yyyymmdd</tt> is the
+current date.
+If this succeeds, then you can remove <tt>-n</tt> to import for real.
+Your editor will be invoked so that you can enter a commit message.
+In the commit message, at least state what you are importing and which
+developers provided OKs.
+Make sure the import path is correct; it always starts with <tt>ports/</tt>.
+
+<p>
+Alternatively, you can use <tt>ports/infrastructure/bin/portimport</tt> to
+import new ports (read the manual for usage instructions).
+
+<br><br><li>
+Last but not least, add a one-line entry for the new port in its parent
+directory's <tt>Makefile</tt>, e.g., for <tt>ports/lang/kaffe1</tt>,
+add it to <tt>ports/lang/Makefile</tt>.
+Don't forget to commit any changes made to
+<tt>/usr/ports/infrastructure/db/user.list</tt>.
+
+<br><br><li>
+Maintain the port!
+As time goes by, problems may arise, or new versions of the software may be
+released.
+You should strive to keep your port up to date.
+In other words - iterate, test, test, iterate...
+
+<br><br><li>
+When updating a port, remember to handle dependencies!
+You shouldn't break any port that depends on yours.
+In case of problems, communicate with the maintainers of such ports.
+Likewise, be alert for dependency updates, and check that the maintainer
+did their job.
+</ol>
+
+<h2 id="PortsComplex">Handling Complex Situations</h2>
+
+Assume you've managed to build the software, provide required patches,
+and you want to finish the port.
+
+<h3 id="Know">Know the software</h3>
+
+<dl>
+<dt>
+Identify options
+<dd>
+The first step is usually to identify build options.
+You will often have to read the configuration log, see what stuff your port
+auto-detects.
+Read the configure script options.
+Read the port documentation for extra stuff.
+<dt>Make options work
+<dd>
+Recompile your port with various options.
+Install extra dependencies.
+Make sure your port detects them correctly.
+Add supplementary patches to ensure compilation.
+Test the result, and verify extra stuff does work.
+<dt>Identify missing software
+<dd>Some dependencies won't be fulfilled because the missing software
+has not yet been ported.
+It is highly recommended to explicitly disable those options.
+Failure to do that breaks bulk builds all the time: people port new software
+and import it, and soon after, old ports stop building because they detect
+the dependency, try to use it, and fail to build or package.
+<dt>Check run-time dependencies versus build-dependencies
+<dd>
+Update your packing-list with make plist.
+Use <tt><b>make port-lib-depends-check</b></tt> to see what libraries your
+software needs (that will end up in <tt>LIB_DEPENDS</tt> or <tt>WANTLIB</tt>,
+usually).
+Identify various files and binaries in the dependencies that have to be present
+for the port to work.
+</dl>
+
+<p>
+By this point, you should have a fair understanding of your port's working.
+
+<h3 id="Figure">Figure out important options</h3>
+
+You won't care about some options.
+It makes no sense to disable some stuff if it always works, and if the
+dependencies are quite small.
+Take special notes of licences on dependencies, especially the <tt>PERMIT*</tt>
+stuff.
+As a rule, even if a dependency is very small, if it affects the licensing of
+the resulting package, you will have to explicitly take care of it.
+
+<p>
+Considering all possible options, you should be left with a much smaller set
+of options for your port, mostly depending on what packages are needed to run
+the software.
+For now, do not worry about build dependencies.
+Remember that the OpenBSD ports system is focused on the end user, and the end
+user will want to install binary packages, so it doesn't matter if you need a
+huge piece of software to build your port if it doesn't show up as a library
+or runtime dependency.
+
+<h3 id="Ideal">The ideal case: <tt>MULTI_PACKAGES</tt> and
+<tt>PSEUDO_FLAVORS</tt></h3>
+
+By now, you should have a fairly good idea of:
+
+<ul>
+<li>which new files show up when you activate each option
+<li>which libraries/runtime files are needed when you activate each option
+</ul>
+
+In the ideal case, build options will simply create new files, with new
+dependencies, and not affect other stuff.
+This is a fairly common scenario for plugin frameworks: you add one library,
+you end up with a new plugin.
+This also happens fairly often for core applications with a graphics front-end:
+the console application is built every time, and the x11 interface shows up
+as a separate binary.
+
+<p>
+In this case, try setting the <tt>MULTI_PACKAGES</tt> variable to a list of
+-sub packages, add corresponding <tt>COMMENTS</tt>, and look at your packaging.
+Basically, <tt>MULTI_PACKAGES</tt> only affects the packaging: if you have
+<tt>MULTI_PACKAGES=-s1 -s2</tt> all stuff relevant to the package will exist
+intwo variants:
+
+<tt>COMMENT-s1</tt> for the first package,
+<tt>COMMENT-s2</tt> for the second package,
+<tt>PLIST-s1</tt>, <tt>PLIST-s2</tt>, <tt>DESCR-s1</tt>, <tt>DESCR-s2</tt>.
+You need to write those <tt>COMMENT-s1</tt> and <tt>COMMENT-s2</tt> in the
+<tt>Makefile</tt>, and to split your <tt>PLIST</tt> into two parts, and to
+create <tt>DESCR-s1/DESCR-s2</tt>.
+You will also need to specify separate <tt>PKGNAME</tt>s for all subpackages.
+
+<p>
+It is a good idea to start with the minimal framework work required:
+just copy the existing description and comments, because you will have
+to fiddle with <tt>MULTI_PACKAGES</tt> and stuff before you polish this.
+
+<p>
+Once you've separated the files properly, you will need to check dependencies:
+<tt>LIB_DEPENDS</tt>, <tt>WANTLIB</tt>, and <tt>RUN_DEPENDS</tt> will be split
+for each subpackage.
+It is usually time to check that your multi-packaging "works," and that
+those nasty dependencies you don't want to force on the user are indeed
+relegated to a specific subpackage.
+
+<p>
+Assuming everything works, you're mostly done.
+Just pick reasonable names for the various packages, and fill in the comments
+and descriptions.
+The end-user will be able to just install the package(s) they want.
+
+<p>
+But wait.
+What about the build, you say?
+Well, having a lot of dependencies during build is not a problem.
+Most packages are built by the OpenBSD team using special build runs (known
+as bulk builds) where a developer just builds all possible packages on a
+dedicated machine (or several, for slow architectures).
+Since everything will get built, having big dependencies is not an issue.
+Building the same thing several times, is an issue, though, which is why
+<tt>MULTI_PACKAGES</tt> are the best way to handle options (when possible):
+one build, one set of packages to test, better quality overall...
+
+<p>
+If you also want to help people who build packages themselves, you may consider
+adding <tt>PSEUDO_FLAVORS</tt>.
+A pseudo-flavor is a way to tweak an option (say, disable the graphical
+interface) that's very similar to actual flavors.
+In fact, the biggest difference is a functional difference: a pseudo flavor
+should only affect the set of packages that get built, but it is never
+allowed to modify the actual package contents.
+
+<p>
+For instance, assuming you separated the graphical interface into a separate
+subpackage (<tt>MULTI_PACKAGES=-core -x11</tt>), you could create a pseudo
+flavor <tt>no_x11</tt> that avoids building the -x11 subpackage.
+The crucial point is that this flavor should NOT affect the -core package
+in any way.
+
+<p>
+You would end up with a <tt>Makefile</tt> that looks something like this:
+
+<blockquote><pre>
+CATEGORIES = app
+COMMENT-core = foo core application
+COMMENT-x11 = foo graphical interface
+V = 1.0
+DISTNAME = foo-1.0
+PKGNAME-core = foo-core-$V
+PKGNAME-x11 = foo-x11-$V
+PSEUDO_FLAVORS = no_x11
+FLAVOR ?=
+CONFIGURE_STYLE = gnu
+
+MULTI_PACKAGES = -core
+WANTLIB = c m crypto ssl
+WANTLIB-x11 = ${WANTLIB} X11 Xt
+RUN_DEPENDS-x11 = ::${BASE_PKGPATH},-core
+
+.if ${FLAVOR:L:Mno_x11}
+CONFIGURE_ARGS += --disable-x11
+.else
+MULTI_PACKAGES += -x11
+.endif
+
+.include &lt;bsd.port.mk&gt;
+</pre></blockquote>
+
+Notice that you only have to write a very small conditional section in the
+<tt>Makefile</tt>: the system doesn't care at all that you define extra variables.
+
+<h3 id="Inter">Interdependencies between subpackages</h3>
+
+<tt>MULTI_PACKAGES</tt> setups used to be asymmetric, with a -main subpackage
+and other subpackages, with the -main subpackage always built, and other
+subpackages possibly depending upon it.
+The current situation is totally symmetric: any subpackage can depend on any
+other.
+The infrastructure has specific provisions to avoid looping indefinitely.
+
+<p>
+The infrastructure takes special care of library inter-dependencies: it can
+detect which <tt>WANTLIB</tt> come from external dependencies, and which come
+from inter-dependencies.
+While external <tt>LIB_DEPENDS</tt> and <tt>WANTLIB</tt> are checked at the
+start of build, <tt>LIB_DEPENDS</tt> and <tt>WANTLIB</tt> that refer to one of
+the subpackages currently being built, will only be checked at packaging time
+(and thus packages may be created in a specific order to satisfy
+interdependencies).
+
+<p>
+The infrastructure provides specific variables to help in writing
+inter-dependencies: <tt>BUILD_PKGPATH</tt> contains the <tt>PKGPATH</tt> used
+during building the current packages, taking flavors and pseudo-flavors into
+account.
+It is highly recommended to use this variable instead of rolling your own:
+failure to do so will often trigger rebuilds in interesting flavors situations.
+For instance:
+
+<blockquote><pre>
+...
+FLAVORS = a b
+FLAVOR ?=
+MULTI_PACKAGES = -p1 -p2
+WANTLIB-p1 = foo
+LIB_DEPENDS-p1 = some/pkgpath,-p2
+...
+</pre></blockquote>
+
+If you go on and build in some/pkgpath with <tt>FLAVOR=a</tt>, then creating the
+subpackage for <tt>-p1</tt> will trigger a rebuild with <tt>FLAVOR=''</tt>.
+You would instead write:
+
+<blockquote><pre>
+LIB_DEPENDS-p1 = ${BUILD_PKGPATH},-p2
+</pre></blockquote>
+
+There is also a <tt>BASE_PKGPATH</tt> variable, which does not take
+pseudo-flavors into account.
+This variable has limited applicability: it corresponds to a transition between
+old <tt>MULTI_PACKAGES</tt> and newer ones, where the old <tt>main</tt>
+subpackage did not have any marker in its pkgpath, and thus the corresponding
+package needs a <tt>@pkgpath ${BASE_PKGPATH}</tt> in its packing-list.
+(In general, pseudo-flavors are build information, and should not make their
+way into packages and packing-lists).
+
+<h3 id="True">True <tt>FLAVORS</tt> and <tt>PKGNAMES</tt></h3>
+
+There are some cases where configuration options are too invasive, and you
+will have to add true flavors to the <tt>Makefile</tt>: those flavors will
+command some configuration options, and usually additions to various dependencies.
+Note that package naming is mostly automatic: the <tt>PKGNAME</tt> will have
+an extension built by appending the specified flavors to its name.
+So, if
+
+<blockquote><pre>
+PKGNAME = foo-1.0
+FLAVORS = f1 f2 f3
+</pre></blockquote>
+
+and you build the port with <tt>FLAVOR='f3 f1'</tt>, then 
+<tt>FULLPKGNAME=foo-1.0-f1-f3</tt> (<tt>FLAVORS</tt> is used to reorder
+specified flavors in a canonical way).
+
+<p>
+There are sometimes mixed situations, where some packages do depend on the
+<tt>FLAVOR</tt>, and some don't.
+For instance, some ports include a large set of documentation that does not
+depend on the <tt>FLAVOR</tt>, and some actual programs that depend on the
+<tt>FLAVOR</tt>.
+In such cases, you can specify the <tt>FULLPKGNAME</tt> for the documentation
+subpackage explicitly.
+Something like this:
+
+<blockquote><pre>
+CATEGORIES = app
+COMMENT-core = foo application
+COMMENT-doc = foo documentation
+V = 1.0
+DISTNAME = foo-1.0
+PKGNAME-core = foo-$V
+FULLPKGNAME-doc = foo-doc-$V
+FLAVORS = crypto
+
+MULTI_PACKAGES = -core -doc
+WANTLIB-core = c m
+
+.if ${FLAVOR:L:Mcrypto}
+WANTLIB-core += ssl crypto
+CONFIGURE_ARGS += --enable-crypto
+.endif
+</pre></blockquote>
+
+As mentioned in the documentation, all package names have the same structure:
+<tt>stem-version-flavor_extension</tt>.
+
+<p>
+By default, packages with the same stem do conflict, and update paths will
+look at candidates with the same stem.
+The right package will be the one coming from the exact same <tt>PKGPATH</tt>,
+or matching <tt>@pkgpath</tt> annotation in the packing-list.
+
+<p>
+Usually, <tt>MULTI_PACKAGES</tt> should not conflict, so they must have
+different names (and the infrastructure has no way to build those names).
+On the other hand, flavors should conflict, and thus have the same name.
+The flavor information should end at the end of the package name, except for
+pseudo-flavors, which do not change the way a package is built.
+
+<p>
+As far as dependencies go, by default, specifying a <tt>PKGPATH</tt> will just
+create a <tt>stem-*</tt> dependency, meaning any package with the right stem
+will match the dependency.
+By default, any flavor will match.
+If only specific flavors are desired, you must include them in your
+specification, e.g., <tt>stem-*-flavor</tt>.
+If some flavors are unwanted, you can remove them from matching packages,
+e.g., <tt>stem-*-!flavor</tt>.
+
+<p>
+Since OpenBSD 4.9, asking for at least some version of a dependency can be
+directly tacked to the <tt>PKGPATH</tt>, e.g., <tt>dir/foo&gt;=2.0</tt>.
+
+<h2 id="PortsUpdate">Updating ports</h2>
+
+The package tools can do updates, so maintainers have to be aware of one
+simple fact: update is not instantaneous.
+Even if a user just goes from release to release, each time they run
+<tt>pkg_add -u</tt>, the system will replace each package with a new version,
+one package at a time.
+So the user will run a mixed system, even if it is for just a few minutes.
+
+<p>
+There are basically two update models of which maintainers must be
+aware.
+
+<p>
+<ul><li>
+Some users follow current on a loose basis.
+They update their packages every few days/every few weeks.
+Either all packages, or only some selected packages.
+The update mechanism should work for them: it can force them to update some
+specific packages, or to install some new stuff, but it should not fail
+silently.
+Micro-updates must be tested.
+These users will most often be able to cope with small changes, like program
+name changes, or configuration adjustments.
+
+<li>
+Some users update every six months with a new release.
+They also will download stable updates (security and critical updates).
+During six months, a large part of the ports tree changes.
+These users do not care about individual software changes.
+They just want a system that works.
+Changing binary names is completely unfriendly to these users.
+Tweaking hundreds of configuration files will be a major pain for them.
+Maintainers can help by providing smooth update paths, and major hints
+whenever something important changes.
+</ul>
+
+<p><!-- XXXrelease - still true? -->
+You should note that part of the update process, especially the macroscopic
+changes for users who update every six months, is not yet automated.
+The global update mechanism is still a work in progress, and pkg_add will be
+able to cope with more issues in the future.
+As of now, you should focus on making sure the system updates correctly, one
+port at a time, and that one port's update takes other ports into account,
+as far as conflicts and other issues are concerned.
+<!--
+<h2>Naming packages and the update process</h2>
+<h2>Conflicts, planning for the future</h2>
+<h2>The icky business of renames and branches</h2>
+<h2>Configuration files and update issues</h2>
+<h2>Shared libraries issues</h2>
+-->
+
+<h3 id="UpdateChecklist">Update checklist</h3>
+
+Part of the work is to be done when making the port itself.
+
+<ul><li>
+Make sure the software authors are aware of your tweaks to make it run on
+OpenBSD.
+You must endeavor to get OpenBSD patches into the next release of the software.
+Otherwise, you can be prepared to rewrite most of your patches from scratch
+every release.
+
+<li>
+Make sure the software authors understand version numbering.
+If the distfiles do not contain any version numbers, or if they reference
+current stuff, communicate with the authors so that you can get some
+permanent URLs.
+
+<li>
+Document work-arounds.
+This will help you remember to check whether they are still necessary when
+you try to update a port.
+
+<li>
+Document dependencies, especially the stuff you don't use.
+Some ports can use external software that may not be available at the time
+of porting.
+Make sure you do not pick it up, and document it, so that you can update
+your port when this software becomes available later.
+
+<li>
+If the port uses libtool, copy its log from the file
+<tt>${WRKBUILD}/shared_libs.log</tt> verbatim as a basis for your
+<tt>SHARED_LIBS</tt> setup.
+This will help during updates.
+
+<li>
+Use <tt>PLIST_DB</tt> and build a database of packing-lists.
+This is useful to find out about forgotten package name bumps, and also
+to check for conflicts with older packages.
+
+<li>
+Make sure dependencies stay as loose as they can be.
+By default, <tt>RUN_</tt> and <tt>LIB_DEPENDS</tt> will be satisfied by any
+version of a package.
+Do not insist on a given version unless you have to. Use minimal versions
+whenever possible.
+
+</ul>
+
+Ports often need minor updates without a new version upstream.
+
+<ul><li>
+Each port update needs a package name bump.
+Otherwise, the update mechanism for binary packages won't work.
+Anything that affects the binary package implies a bump.
+This includes <tt>HOMEPAGE</tt>, <tt>MAINTAINER</tt> or description changes.
+
+<li>
+Version numbers always go forward.
+If something unexpected happens,and you have to go back, or if the numbering
+changes completely so that the version number appears to go backwards, you
+must use <tt>EPOCH</tt> to make sure pkg_add(1) sees the package as a newer
+package.
+
+<li>
+If the package does not build, no bump is needed: changes to restore a port
+to working order after it got broken do not warrant bumps.
+
+<li>
+Changes to make sure a port does not pick/does pick an external dependency
+warrant a bump.
+
+<li>
+Changes in dependencies generally do not affect a port version number.
+The package system uses a signature mechanism such that a binary package
+is fully identified by its package names, plus the dependencies against
+which it was built, plus the version numbers of all shared libraries it
+contains.
+</ul>
+
+Part of the work will happen before the update itself.
+
+<ul><li>
+run <tt>make patch</tt> to have an initial copy of the port before the update.
+</ul>
+
+And then the update.
+
+<ul><li>
+Edit the port's <tt>Makefile</tt> to grab the new version, run
+<tt>make makesum</tt> and <tt>make patch</tt> as a starting basis.
+
+<li>
+Once you've fixed patches that failed, run a full diff between the old and
+the new version to figure out exactly what changed.
+Take notes, be prepared to revisit things later.
+
+<li>
+Do whatever porting work is necessary to get the new version to run under
+OpenBSD: adjust dependencies, change package contents, etc.
+
+<li>
+Double check shared library versions.
+For libtool-based ports, you have the <tt>shared_libs.log</tt> to check whether
+the software authors did significant changes.
+<i>Note well that this is not enough.</i>
+Most software authors do not really understand shared library issues.
+You have to read the full diff between the old and the new version, and bump
+library versions accordingly.
+When in doubt, bump the major version.
+
+<li>
+Be aware of conflicts with already-built packages.
+For simple updates, nothing needs to be done.
+If you split a package into several subpackages, make sure the subpackages
+have proper conflict annotations: they should usually conflict with the "old"
+single package.
+
+<li>
+Help the user.
+If some specific steps must be taken beyond <tt>pkg_add -u</tt>, make sure
+they are visible in the package.
+When your packaging policy changes, document it in the package description.
+For instance, if you move the documentation into a separate package for
+space constraints, the main package description should mention that the
+documentation is now available as a separate package.
+
+</ul>
+
+<h3 id="CommitUpdates">Committing Port Updates</h3>
+
+When a port update is ready, get it in CVS.
+If you do not have a CVS account, then you will need to find a developer to do
+the following for you (ask on
+<a href="mailto:ports@openbsd.org">ports@openbsd.org</a>).
+
+<ol>
+<li>Get at least one "OK" from another ports developer.
+<br><br><li>Use <tt>cvs add</tt> to add any new files.
+<br><br><li>Use <tt>cvs rm</tt> to remove files that are no longer needed (e.g.
+upstreamed patches).
+<br><br><li>Check the output of <tt>cvs -n up -d</tt>.
+New files should be marked <tt>A</tt>, deleted files should be marked
+<tt>D</tt> and changed files should be maked <tt>M</tt>.
+Look for files marked <tt>?</tt> - did you mean to <tt>cvs add</tt> them?
+<br><br><li>If all is well, commit the new/deleted/changed files using <tt>cvs
+commit</tt>.
+When invoking <tt>cvs commit</tt>, you can either list the files individually,
+or if you provide no filenames, CVS will recursively commit (be careful with
+this feature).
+You will be asked to enter a commit message, in which you should state which
+port is being updated, and who provided an OK.
+</ol>
+
+
+<h2 id="PortsPolicy">OpenBSD Porting Policy</h2>
+
+<ul><li>
+OpenBSD does NOT use <tt>/usr/local/etc/rc.d</tt>.
+<tt>/usr/local</tt> is often shared between several machines, thanks to NFS.
+For this reason, configuration files that are specific to a given machine
+can't be stored under <tt>/usr/local</tt>.
+<tt>/etc</tt> is the central repository for per machine configuration files.
+Moreover, OpenBSD policy is to never update files under <tt>/etc</tt>
+automatically.
+Ports that need some specific boot setup should advise the administrator
+about what to do instead of blindly installing files.
+
+<li>
+OpenBSD does NOT compress man pages.
+
+<li>
+OpenBSD does NOT require <tt>-lcrypt</tt>, <tt>-ldl</tt>, or <tt>-lrt</tt>.
+The functions provided by these libraries are part of <tt>libc</tt>.
+The <tt>crypt()</tt> function does not support DES, only bcrypt.
+
+<li>
+OpenBSD has a separate namespace for users and groups created by ports.
+See <tt>/usr/ports/infrastructure/db/user.list</tt> for details.
+
+<li>
+OpenBSD is strongly security-oriented.
+You should read and understand this page's
+<a href="#PortsSecurity">security section</a>.
+
+<li>
+Be sure to add the <tt>&#36;OpenBSD&#36;</tt> CVS tag to the Makefile.
+The account name, version number, etc., will be filled in automatically
+by CVS during commit.
+
+<li>
+The goal is to get all ported applications to support OpenBSD.
+To achieve this goal you <b>must</b> feed any OpenBSD patches back to the
+application maintainer.
+</ul>
+
+<h2 id="PortsSecurity">Security Recommendations</h2>
+
+There are many security problems to worry about.
+If you are not absolutely sure of what you are doing please request help from
+the <a href="mailto:ports@openbsd.org">ports</a> mailing list.
+
+<ul><li>
+Do <i>not</i> use alpha or beta code when preparing a port.
+Use the latest regular or patch release.
+
+<li>
+Any software to be installed as a server should be scanned for buffer
+overflows, especially unsafe use of <tt>strcat/strcpy/strcmp/sprintf</tt>.
+In general, <tt>sprintf</tt> should be replaced with <tt>snprintf</tt>.
+
+<li>
+Never use filenames instead of true security.
+There are numerous race conditions where you don't have proper control.
+For instance, an attacker who already has user privileges on your machines
+may replace files in <tt>/tmp</tt> with symbolic links to more strategic
+files, such as <tt>/etc/master.passwd</tt>.
+
+<li>
+For instance, both <tt>fopen</tt> and <tt>freopen</tt> <b>create a new file
+or open an existing file</b> for writing.
+An attacker may create a symbolic link from <tt>/etc/master.passwd</tt> to
+<tt>/tmp/addrpool_dump</tt>.
+The instant you open it, your password file is hosed.
+Yes, even with an <tt>unlink</tt> right before.
+You only narrow the window of opportunity.
+Use <tt>open</tt> with <tt>O_CREAT|O_EXCL</tt> and <tt>fdopen</tt> instead.
+
+<li>
+Another very common problem is the <tt>mktemp</tt> function.
+Heed the warnings of the bsd linker about its uses.
+<b>These must be fixed</b>.
+This is not quite as simple as <tt>s/mktemp/mkstemp/g</tt>.
+Refer to <a href="http://man.openbsd.org/mktemp">mktemp(3)</a> for more
+information.
+Correct code using <tt>mkstemp</tt> includes the source to <tt>ed</tt> or
+<tt>mail</tt>.
+A rare instance of code that uses <tt>mktemp</tt> correctly can be found in
+the <tt>rsync</tt> port.
+
+<li>
+Just because you can read it doesn't mean you should.
+A well-known hole of this nature was the <tt><b>startx</b></tt> problem.
+As a setuid program, you could launch startx with any file as a script.
+If the file was not a valid shell script, a syntax error message would
+follow, along with the first line of the offending file, without any
+further permission check.
+Pretty handy to grab the first line of a shadow passwd file, considering
+these often start with root entry.
+Do not open your file, and then do an <tt>fstat</tt> on the open descriptor
+to check if you should have been able to open it (or the attacker will play
+with <tt>/dev/rst0</tt> and rewind your tape) -- open it with the correct
+uid/gid/grouplist set.
+
+<li>
+Don't use anything that forks a shell in setuid programs before dropping
+your privileges.
+This includes <tt>popen</tt> and <tt>system</tt>.
+Use <tt>fork</tt>, <tt>pipe</tt> and <tt>execve</tt> instead.
+
+<li>
+Pass open descriptors instead of filenames to other programs to avoid race
+conditions.
+Even if a program does not accept file descriptors, you can still use
+<tt>/dev/fd/0</tt>.
+
+<li>
+Access rights are attached to file descriptors.
+If you need setuid rights to open a file, open that file, then drop your
+privileges.
+You can still access the open descriptor, but you have less to worry about.
+This is double-edged: even after dropping privileges, you should still watch
+out for those descriptors.
+
+<li>
+Avoid root setuid as much as you can.
+Basically, root can do anything, but root rights are very rarely needed,
+except maybe to create socket ports with a number under 1024.
+You must know the appropriate magic for writing daemons to achieve that.
+It could be argued that you have no business writing setuid programs if you
+don't know how to do that.
+
+<li>
+Use setgid instead of setuid.
+Apart from those specific files needed by setgid programs, most files are not
+group-writable.
+Hence, a security problem in a setgid program won't compromise your system as
+much: with only group rights, the worst an intruder will be able to do is hack
+a games score table or some such.
+See the <tt>xkobo</tt> port for an instance of such a change.
+
+<li>
+Don't trust group-writable files.
+Even though they are audited, setgid programs are not perceived as important
+potential security holes.
+Hence stuff they can tamper with shouldn't be considered sensitive information.
+
+<li>
+Don't trust your environment!
+This involves simple things such as your <tt>PATH</tt> (never use
+<tt>system</tt> with an unqualified name, avoid <tt>execvp</tt>), but also
+more subtle items such as your locale, timezone, termcap, and so on.
+Be aware of transitivity: even though you're taking full precautions,
+programs you call directly won't necessarily.
+<b>Never</b> use <tt>system</tt> in privileged programs, build your command
+line, a controlled environment, and call <tt>execve</tt> directly.
+The <tt>perlsec</tt> man page is a good tutorial on such problems.
+
+<li>
+Never use setuid shell-scripts.
+These are inherently insecure.
+Wrap them into some C code that ensures a proper environment.
+On the other hand, OpenBSD features secure perl scripts.
+
+<li>
+Beware the dynamic loader.
+If you are running setuid, it will only use trusted libraries that were
+scanned with ldconfig.
+Setgid is not enough.
+
+<li>
+Dynamic libraries are tricky.
+C++ code sets a similar problem.
+Basically, libraries may take some action based upon your environment before
+your main program even gets to check its setuid status.
+OpenBSD <tt>issetugid</tt> addresses this problem, from the library writer
+point of view.
+Don't try to port libraries unless you understand this issue thoroughly.
+
+<li>
+On OpenBSD, <a href="http://man.openbsd.org/rand">rand(3)</a>, 
+<a href="http://man.openbsd.org/random.3">random(3)</a>, and the 
+<a href="http://man.openbsd.org/drand48">drand48(3)</a> family return
+non-deterministic random numbers by default.
+Any specified seed value is ignored by the associated seed function, and
+<tt>arc4random</tt> is used instead.
+If the determinstic (i.e: repeatable) behavior must be preserved, use the
+OpenBSD extensions:
+<tt>srand_deterministic</tt>, <tt>srandom_deterministic</tt>,
+<tt>srand48_deterministic</tt>, <tt>seed48_deterministic</tt>
+and <tt>lcong48_deterministic</tt>.
+</ul>
+
+<h2 id="PortsGeneric">Generic Porting Hints</h2>
+
+<ul><li>
+<tt>__OpenBSD__</tt> should be used sparingly, if at all.
+Constructs that look like
+
+<blockquote><pre>
+#if defined(__NetBSD__) || defined(__FreeBSD__)
+</pre></blockquote>
+
+are often inappropriate.
+Don't add blindly <tt>__OpenBSD__</tt> to it.
+Instead, try to figure out what's going on, and what actual feature is needed.
+Manual pages are often useful, as they include historic comments, stating when
+a particular feature was incorporated into BSD.
+Checking the numeric value of <tt>BSD</tt> against known releases is often the
+right way.
+See the
+<a href="http://www.netbsd.org/Documentation/pkgsrc/">NetBSD pkgsrc guide</a>
+for more information.
+
+<li>
+Defining <tt>BSD</tt> is a bad idea.
+Try to include <tt>sys/param.h</tt>.
+This not only defines <tt>BSD</tt>, it also gives it a proper value.
+The right code fragment should look like:
+
+<blockquote><pre>
+#if (defined(__unix__) || defined(unix)) &amp;&amp; !defined(USG)
+#include &lt;sys/param.h&gt;
+#endif
+</pre></blockquote>
+
+<li>
+Test for features, not for specific OSes.
+In the long run, it is much better to test whether <tt>tcgetattr</tt> works
+than whether you're running under BSD 4.3 or later, or SystemVR4.
+These kind of tests just confuse the issue.
+The way to go about it is, for instance, to test for one particular system,
+set up a slew of <tt>HAVE_TCGETATTR</tt> defines, then proceed to the next
+system.
+This technique separates features tests from specific OSes.
+In a hurry, another porter can just add the whole set of <tt>-DHAVE_XXX</tt>
+defines to the Makefile.
+One may also write or add to a configure script to check for that feature and
+add it automatically.
+As an example not to follow, check nethack 3.2.2 source: it assumes loads of
+things based on the system type.
+Most of these assumptions are obsolete and no longer reflect reality: POSIX
+functions are more useful than older BSD versus SystemV differences, to the
+point that some traditional bsd functions are now only supported through
+compatibility libraries.
+
+<li>
+Avoid include files that include other includes that...
+First, because this is inefficient.
+Your project will end up including a file that includes everything.
+Also, because it makes some problems difficult to fix.
+It becomes harder to <i>not</i> include one particular file at a given point.
+
+<li>
+Avoid bizarre macro tricks.
+Undefining a macro that was defined by a header file is a bad idea.
+Defining macros to get some specific behavior from an include file is also
+a bad idea: compilation modes should be global.
+If you want POSIX behavior, say so, and <tt>#define POSIX_C_SOURCE</tt>
+throughout the whole project, not when you feel like it.
+
+<li>
+Don't ever write system function prototypes.
+All modern systems, OpenBSD included, have a standard location for these
+prototypes.
+Likely places include <tt>unistd.h</tt>, <tt>fcntl.h</tt> or <tt>termios.h</tt>.
+The man page frequently states where the prototype can be found.
+You might need another slew of <tt>HAVE_XXX</tt> macros to procure the right
+file.
+Don't worry about including the same file twice; include files have guards
+that prevent all kinds of nastiness.
+If some broken system needs you to write the prototype, don't impose on all
+other systems.
+Roll-your-own prototypes will break because they may use types that are
+equivalent on your system, but are not portable to other systems (<tt>unsigned
+long</tt> instead of <tt>size_t</tt>), or get some <tt>const</tt> status wrong.
+Also, some compilers, such as OpenBSD's own gcc, are able to do a better job
+with some very frequent functions such as <tt>strlen</tt> if you include the
+right header file.
+
+<li>
+Carefully check the build log for any compiler warnings.
+
+<ul><li>
+<tt>implicit declaration of function foo()</tt> indicates that a function
+prototype is missing.
+This means that the compiler will assume the return type to be an integer.
+Where the function actually returns a pointer, on 64-bit platforms it will
+be truncated, usually causing a segmentation fault.
+</ul>
+
+<li>
+Don't use the name of a standard system function for anything else.
+If you want to write your own function, give it its own name, and call that
+function everywhere.
+If you wish to revert to the default system function, you just need to comment
+your code out, and define your own name to the system function.
+Don't do it the other way around.
+Code should look like this:
+
+<blockquote><pre>
+/* prototype part */
+#ifdef USE_OWN_GCVT
+char *foo_gcvt(double number, size_t ndigit, char *buf);
+#else
+/* include correct file */
+#include &lt;stdlib.h&gt;
+/* use system function */
+#define foo_gcvt  gcvt
+#endif
+
+/* definition part */
+#ifdef USE_OWN_GCVT
+char *foo_gcvt(double number, size_t ndigit, char *buf)
+   {
+   /* proper definition */
+   }
+
+/* typical use */
+s = foo_gcvt(n, 15, b);
+</pre></blockquote>
+
+  </ul>
+
+<h2 id="PortsOther">Other Helpful Hints</h2>
+
+<ul><li>
+Recent versions of <tt>bsd.port.mk</tt> set the installers path.
+Specifically, they set <tt>/usr/bin</tt> and <tt>/bin</tt> to be searched
+<i>before</i> <tt>/usr/local/bin</tt> and <tt>/usr/X11R6/bin</tt>.
+
+<li>
+It is OK to rely on a feature that appeared in a recent version of
+<tt>bsd.port.mk</tt>, as people are supposed to update their whole ports tree,
+including <tt>bsd.port.mk</tt>.
+NEED_VERSION is now obsolete.
+
+<li>
+Prefer using <tt>update-plist</tt> to generate and update packing-lists
+instead of doing things manually.
+You can comment unwanted lines out.
+<tt>update-plist</tt> can detect most file types and copy most extra
+annotations correctly.
+
+<li>
+In OpenBSD, <tt>curses.h/libcurses/libtermlib</tt> is the "new curses."
+Change:
+<br>
+<tt>ncurses.h ==&gt; curses.h</tt>
+<br>
+``old (BSD) curses'' is available by defining <tt>_USE_OLD_CURSES_</tt> before
+including <tt>curses.h</tt> (usually in a Makefile) and linking with
+<tt>-locurses</tt>.
+
+<li>
+In OpenBSD, terminal discipline has been upgraded from the older BSD
+<tt>sgtty</tt> to the newer POSIX <tt>tcgetattr</tt> family.
+Avoid the older style in new code.
+Some code may define <tt>tcgetattr</tt> to be a synonym for the older
+<tt>sgtty</tt>, but this is at best a stopgap measure on OpenBSD.
+The <tt>xterm</tt> source code is a very good example of what not to do.
+Try to get your system functionality right: you want a type that remembers
+the state of your terminal (possible typedef), you want a function that
+extracts the current state, and a function that sets the new state.
+Functions that modify this state are more difficult, as they tend to vary
+depending upon the system.
+Also, don't forget that you will have to handle cases where you are not
+connected to a terminal, and that you need to handle signals: not only
+termination, but also background (<tt>SIGTSTP</tt>).
+You should always leave the terminal in a sane state.
+Do your tests under an older shell, such as sh, which does not reset the
+terminal in any way at program's termination.
+
+<li>
+The newer termcap/terminfo and curses, as included with OpenBSD, include
+standard sequences for controlling color terminals.
+You should use these if possible, reverting to standard ANSI color sequences
+on other systems.
+However, some terminal descriptions have not been updated yet, and you may
+need to be able to specify these sequences manually.
+This is the way vim handles it.
+This is not strictly necessary.
+Except for privileged programs, it is generally possible to override a termcap
+definition through the <tt>TERMCAP</tt> variable and get it to work properly.
+
+<li>
+Signal semantics are tricky, and vary from one system to another.
+Use <tt>sigaction</tt> to ensure a specific semantics, along with other system
+calls referenced in the correspondin  man page.
+</ul>
+
+<h2 id="PortsAvail">Additional Information</h2>
+
+<ul><li>
+The man page <a href="http://man.openbsd.org/bsd.port.mk">bsd.port.mk(5)</a>.
+This documents the ports infrastructure makefile that is included at the end
+of each individual port makefile.
+There are still a few comments at the start of the file itself, but most of
+the useful information is now documented.
+
+<li>
+The man pages
+<a href="http://man.openbsd.org/packages-specs">packages-specs(7)</a> and
+<a href="http://man.openbsd.org/library-specs">library-specs(7)</a>.
+These explain the exact syntax of package and library dependencies,
+respectively.
+
+<li>
+The man page
+<a href="http://man.openbsd.org/port-modules">port-modules(5)</a>.
+This documents the different port modules which are used throughout
+the ports infrastructure, e.g. cpan, java, python, and so on.
+</ul>
+
+<p>
+</body>
+</html>

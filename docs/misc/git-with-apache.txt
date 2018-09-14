@@ -1,0 +1,106 @@
+How To Configure GIT Over HTTP
+
+Git is a free & open source, distributed version control system designed to handle everything from small to very large projects with speed and efficiency. This how-to provides consice instructions how to configure an Apache HTTP server to provide access to a Git repository over HTTP.
+Prerequisites
+
+    Apache Web Server installed on server.
+    Existing bare Git repositories on server.
+    Git installed on server.
+    Git installed on client.
+
+The examples use the following assumtions:
+
+    The git server repositories are all located under /var/www/git.
+    Git scripts are installed in /usr/lib/git-core.
+
+Base Configuration
+
+The most basic configuration allows anonymous read access to the Git repository using the git-http-backend script provided with Git versions 1.6.6 and greater.
+
+The only thing to do is modify the Apache configuration to use the git-http-backend script. Change the VirtualHost section to look like the following:
+
+<VirtualHost 10.20.30.40:80>
+DocumentRoot /var/www/git
+ServerName git.example.com
+
+<Directory "/var/www/git">
+Allow from All
+Options +ExecCGI
+AllowOverride All
+</Directory>
+
+SetEnv GIT_HTTP_EXPORT_ALL
+SetEnv GIT_PROJECT_ROOT /var/www/git
+ScriptAlias /git /usr/lib/git-core/git-http-backend
+</VirtualHost>
+
+At this point an anonymous user should be able to clone the project repository by issuing the following command:
+
+git clone http://www.example.com/git/projects/example
+
+Note: Users are not yet able to push changes back to the repository.
+
+Note: Adding the SuExec directive in the base configuration will cause the git-http-backend script to cease functioning correctly. See Adding the SuExec Directive section below.
+Anonymous Write Access
+
+Warning: This section describes how to allow anonymous write access to the repositories. This information is useful for debugging purposes but should not be considered for production purposes. For production see the Authenticated Access section below.
+
+The base configuration above does not allow for users to push changes back to the repository. This is because the default settings of the git-http-backend script disable this feature by default if users are not authenticated. To enable write access to a repository the http.receivepack setting must be set to true. This can be done on the server by changing to the repository directory and using git to change the setting.
+
+cd /var/www/git/projects/example
+git config http.receivepack true
+
+Now any user can push changes back to the repository using git pull .
+
+Note: The following error usually indicates the http.receivepack setting is not set correctly.
+
+error: Cannot access URL http://www.example.com/git/projects/example/, return code 22
+
+Note: Once testing is complete this should be disabled by changing the http.receivepack value back to false or authenticated access should be configured.
+Authenticated Access
+
+Under normal circumstances users should be authenticated before accessing the repositories. The simplest thing to do is force authentication for all access, both reading from and writing to the repository. To enable authentication for both reads and writes add the following section to the Apache configuration:
+
+<VirtualHost 10.20.30.40:80>
+...
+<Location /git>
+  AuthType Basic
+  AuthName "Private Git Access"
+  AuthUserFile "/etc/git-auth-file"
+  Require valid-user
+</Location>
+...
+</VirtualHost>
+
+Users can be added to the /etc/git-auth-file using the htpasswd tool available with Apache. There are other ways authentication can be configured through Apache that will not be covered here. There are also examples of how to allow anonymous read access with authenticated write access in the git-http-backend documentation.
+Adding the SuExec Directive
+
+It is generally good practice to execute CGI scripts as a different user than the web server user (usually apache). This is done by adding the SuExec directive to the Apache configuration. SuExec has a rigorous security model in Apache and it is necessary to work within the scope of that model. Simply adding this directive in the base configuration will not work under normal circumstances because SuExec only passes through those variables whose names are listed in the safe environment list. In short the GIT_HTTP_EXPORT_ALL and the GIT_PROJECT_ROOT are not passed on to the git-http-backend script.
+
+To work with the SuExec security model a wrapper script needs to be create that configures the environment when SuExec executes the script. The script simply sets the correct environment variable and calls git-http-backend like before.
+
+#!/bin/bash
+PATH_INFO=$SCRIPT_URL
+GIT_PROJECT_ROOT=/var/www/git
+REMOTE_USER=$REDIRECT_REMOTE_USER
+export GIT_HTTP_EXPORT_ALL=true
+/usr/lib/git-core/git-http-backend
+
+Once the wrapper script is in place the Apache configuration needs to be modified to use the wrapper script.
+
+<VirtualHost 10.20.30.40:80>
+DocumentRoot /var/www/git
+ServerName git.example.com
+
+<Directory "/var/www/git">
+Allow from All
+Options +ExecCGI
+AllowOverride All
+</Directory>
+
+ScriptAlias /git /var/www/bin/git-http-backend
+</VirtualHost>
+
+After adding the SuExec directive Apache will now execute the git-http-backend script with the git user and group.
+
+Note: The repositories must be modifiable by the user running the git-http-backend script.

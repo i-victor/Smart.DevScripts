@@ -1,0 +1,10 @@
+
+# find all js with bom
+find . -type f -name '*.js' -print0 | xargs -0r awk '/^\xEF\xBB\xBF/ {print FILENAME} {nextfile}'
+
+# remove bom
+find . -type f -name '*.js' -exec sed -i -e '1s/^\xEF\xBB\xBF//' {} \;
+
+# convert line endings from \r\n to \n
+find . -type f -name '*.js' -exec perl -pi -e 's/\r\n/\n/;' {}  \;
+

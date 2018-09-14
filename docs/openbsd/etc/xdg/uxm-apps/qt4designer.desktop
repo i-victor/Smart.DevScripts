@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=QT4 Designer
+GenericName=Interface Designer
+Comment=Create or open user interface designs for QT4 applications
+Exec=designer4
+Icon=/etc/xdg/uxm-icons/qt4.png
+Type=Application
+Categories=Development;GUIDesigner;

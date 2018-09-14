@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=CD/DVD Writer
+Comment=Burn CDs or DVDs
+Exec=tkdvd
+Icon=/etc/xdg/uxm-icons/dvdstyler.png
+Terminal=false
+Categories=System;
+Type=Application

@@ -1,0 +1,43 @@
+
+###################################################################################
+## TERMINALSERVER EXTRA :: NetBSD 6.1.5
+## (c) 2008-2015 unix-world.org
+## release 2015-10-31.final
+## based on pkgsrc-2015Q1 with additions and modifications
+###################################################################################
+
+#### REQUIRES: TERMINALRVER.BASE [SOURCES IN: EXTRA] #####
+
+#################################################################
+# EXTRA [13]
+###########################
+# 09.extra
+###########################
+### Extra: PKG
+#[sysutils/sysupgrade]						# Automate upgrades of NetBSD
+#[pkgtools/pkgin]							# Apt / yum like tool for managing pkgsrc binary packages
+### Extra: Games
+#[games/pingus]								# Game Pingus
+#[graphics/glew]							# OpenGL Extension Wrangler Library
+#[net/libcares]								# Asynchronous resolver library, c-ares
+#[games/bzflag]								# OpenGL tank game
+### Extra: Java
+#[lang/openjdk7]							# OpenJDK 7
+#[devel/netbeans-ide]						# NetBeans Java IDE
+#[devel/jenkins]							# Open source continuous integration server (LTS release)
+#[devel/apache-ant]							# Apache Project's Java-Based make(1) replacement
+#[devel/apache-maven]						# Apache Project's software project management and comprehension tool
+#[www/apache-tomcat7]						# Implementation of Java Servlet and JavaServer Pages technologies
+#[www/icedtea-web :: unixw]					# Java browser plugin and Web Start launcher [FIX: link to xulrunner192 instead of xulrunner31]
+###
+###########################
+# EXTRA :: END
+#################################################################
+
+
+#################################################################
+#################################################################
+# END
+#################################################################
+#################################################################
+
