@@ -1,0 +1,52 @@
+[@@@@SUB-TEMPLATE:partials/base.inc.mtpl.htm@@@@]
+[%%%%IF:CART-ITEMS:@+0;%%%%]
+<table class="table table-striped table-hover">
+	<thead>
+		<tr>
+			<th class="col-md-7">Product</th>
+			<th class="col-md-3 text-center">Quantity</th>
+			<th class="col-md-2 text-right">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+		[%%%%LOOP:CART-ITEMS%%%%]
+		<tr>
+			<td>
+				<span style="display:inline-block; font-weight:bold; font-size:18px;">[####CART-ITEMS.NAME|html####]</span>
+				<div>
+					[%%%%LOOP:CART-ITEMS.ATTRIBUTES%%%%]
+					<b>[####CART-ITEMS.ATTRIBUTES._-KEY-_|html####]: </b>[####CART-ITEMS.ATTRIBUTES._-VAL-_|html####]<br>
+					[%%%%/LOOP:CART-ITEMS.ATTRIBUTES%%%%]
+				</div>
+			</td>
+			<td class="text-center">
+				<div class="form-group">
+					<input type="number" value="[####CART-ITEMS.QUANTITY|html####]" class="form-control quantity pull-left" style="width:100px">
+					<div class="pull-right">
+						<button class="btn btn-default btn-update" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-refresh"></i> Update</button>
+						<button class="btn btn-danger btn-remove" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-trash"></i></button>
+					</div>
+				</div>
+			</td>
+			<td class="text-right">[####CART-ITEMS.PRICE|html####]&nbsp;[####CART-ITEMS.CURRENCY|html####]</td>
+		</tr>
+		[%%%%/LOOP:CART-ITEMS%%%%]
+	</tbody>
+</table>
+<div class="text-right">
+	<h3>Total:<br>[####CART-TOTAL|html####]&nbsp;[####CART-CURRENCY|html####].</h3>
+</div>
+<p>
+	<div class="pull-left">
+		<button class="btn btn-danger btn-empty-cart">Empty Cart</button>
+	</div>
+	<div class="pull-right text-right">
+		<a href="?page=cart.test" class="btn btn-default">Continue Shopping</a>
+		<a href="?page=cart.test&op=checkout" class="btn btn-danger">Checkout</a>
+	</div>
+</p>
+[%%%%ELSE:CART-ITEMS%%%%]
+<div class="alert alert-warning">
+	<i class="fa fa-info-circle"></i> There are no items in the cart.
+</div>
+[%%%%/IF:CART-ITEMS%%%%]
