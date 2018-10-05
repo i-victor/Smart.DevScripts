@@ -1,4 +1,6 @@
 [@@@@SUB-TEMPLATE:partials/base.inc.mtpl.htm@@@@]
+<form class="ux-form" name="Form_Cart" id="Form_Cart" method="post" action="#" onsubmit="return false;">
+<input id="cart" type="hidden" name="frm[cart]" value="@cart">
 [%%%%IF:CART-ITEMS:@+0;%%%%]
 <table class="table table-striped table-hover">
 	<thead>
@@ -21,11 +23,13 @@
 			</td>
 			<td class="text-center">
 				<div class="form-group">
-					<input type="number" value="[####CART-ITEMS.QUANTITY|html####]" class="form-control quantity pull-left" style="width:100px">
-					<div class="pull-right">
-						<button class="btn btn-default btn-update" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-refresh"></i> Update</button>
-						<button class="btn btn-danger btn-remove" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-trash"></i></button>
-					</div>
+					<input id="item-id" type="hidden" name="frm[[####CART-ITEMS.HASH|html####]][id]" value="[####CART-ITEMS.ID|html####]">
+					<input id="item-hash" type="hidden" name="frm[[####CART-ITEMS.HASH|html####]][hash]" value="[####CART-ITEMS.HASH|html####]">
+					<input id="item-qty" type="text" name="frm[[####CART-ITEMS.HASH|html####]][qty]" value="[####CART-ITEMS.QUANTITY|html####]" class="form-control quantity" style="width:50px">
+					<span id="item-buttons">
+						<button class="ux-button ux-button-secondary ux-button-small btn-update" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-refresh"></i> Update</button>
+						<button class="ux-button ux-button-special ux-button-small btn-remove" data-id="[####CART-ITEMS.ID|html####]" data-hash="[####CART-ITEMS.HASH|html####]"><i class="fa fa-trash"></i></button>
+					</span>
 				</div>
 			</td>
 			<td class="text-right">[####CART-ITEMS.PRICE|html####]&nbsp;[####CART-ITEMS.CURRENCY|html####]</td>
@@ -34,19 +38,21 @@
 	</tbody>
 </table>
 <div class="text-right">
-	<h3>Total:<br>[####CART-TOTAL|html####]&nbsp;[####CART-CURRENCY|html####].</h3>
+	<h3>Total:<br>[####CART-TOTAL|html####]&nbsp;[####CART-CURRENCY|html####]</h3>
 </div>
+<hr>
 <p>
 	<div class="pull-left">
-		<button class="btn btn-danger btn-empty-cart">Empty Cart</button>
+		<button class="ux-button ux-button-special ux-button-large btn-cart-empty">Empty Cart</button>
+		<button class="ux-button ux-button-highlight ux-button-large btn-empty-cart" id="btn-cart-update">Recalculate Cart</button>
 	</div>
 	<div class="pull-right text-right">
-		<a href="?page=cart.test" class="btn btn-default">Continue Shopping</a>
-		<a href="?page=cart.test&op=checkout" class="btn btn-danger">Checkout</a>
+		<a href="?page=cart.test&op=checkout" class="ux-button ux-button-regular ux-button-large btn-danger">Checkout</a>
 	</div>
 </p>
 [%%%%ELSE:CART-ITEMS%%%%]
-<div class="alert alert-warning">
-	<i class="fa fa-info-circle"></i> There are no items in the cart.
+<div id="operation_notice">
+	<h3>There are no items in the cart.</h3>
 </div>
+</form>
 [%%%%/IF:CART-ITEMS%%%%]

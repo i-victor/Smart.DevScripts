@@ -38,7 +38,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 		//--
 		$cart = new \SmartModExtLib\Cart\ecommCart([
 			'cartMaxItem' 		=> 10, // Maximum item can added to cart, 0 = Unlimited
-			'itemMaxQuantity' 	=> 5, // Maximum quantity of a item can be added to cart, 0 = Unlimited
+			'itemMaxQuantity' 	=> 50, // Maximum quantity of a item can be added to cart, 0 = Unlimited
 			'useCookie' 		=> false // Do not use cookie, cart items will gone after browser closed
 		]);
 		//--
@@ -66,7 +66,8 @@ class SmartAppIndexController extends SmartAbstractAppController {
 					  "xs":"XS"
 				  }
 			  },
-			  "price":"349.00"
+			  "price":"349.00",
+			  "qtytype":"dec"
 		   },
 		   {
 			  "id":101,
@@ -143,21 +144,29 @@ class SmartAppIndexController extends SmartAbstractAppController {
 		]
 		');
 		//--
-		if((string)$op == 'cart') {
+		if((string)$op == 'cart-json') {
+			//--
+			$this->PageViewSetCfg('rawpage', true);
 			//--
 			//print_r($_POST); die();
 			$cart_op = $this->RequestVarGet('cart_action', '', 'string');
-			$cart_item_id = $this->RequestVarGet('id', '', 'string');
-			$cart_item_qty = $this->RequestVarGet('qty', '', 'string');
-			$cart_item_hash = $this->RequestVarGet('hash', '', 'string');
-			$cart_item_att_color = $this->RequestVarGet('color', '', 'string');
-			$cart_item_att_size = $this->RequestVarGet('size', '', 'string');
+			$frm = $this->RequestVarGet('frm', [], 'array');
+			//--
+			$redirect = '';
+			$message = '???';
 			//-- Empty the cart
 			if((string)$cart_op == 'empty') {
+				$message = 'Cart cleared';
 				$cart->clear();
+				$redirect = '?page=cart.test&op=cart';
 			} //end if
 			//-- Add item
 			if((string)$cart_op == 'add') {
+				$cart_item_id = (string) $frm['id'];
+				$cart_item_hash = (string) $frm['hash'];
+				$cart_item_qty = (string) $frm['qty'];
+				$cart_item_atts = (array) $frm['att'];
+				$message = 'Product added';
 				foreach($products as $key => $product) {
 					if((string)$cart_item_id == (string)$product['id']) {
 						break;
@@ -165,10 +174,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 				} //end foreach
 				$cart->add(
 					$product['id'],
-					[
-						'color' => $cart_item_att_color,
-						'size' => $cart_item_att_size
-					],
+					(array) $cart_item_atts,
 					$cart_item_qty,
 					[
 						'currency' => (string) $cart_currency,
@@ -179,25 +185,44 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			} //end if
 			//-- Update item
 			if((string)$cart_op == 'update') {
-				foreach($products as $key => $product) {
-					if((string)$cart_item_id == (string)$product['id']) {
-						break;
-					} //end if
-				} //end foreach
-				$cart->update(
-					$product['id'],
-					/*
-					[
-						'color' => $cart_item_att_color,
-						'size' => $cart_item_att_size
-					],
-					*/
-					(string) $cart_item_hash,
-					$cart_item_qty
-				);
+				$redirect = '?page=cart.test&op=cart';
+				if((string)$frm['cart'] == '@cart') {
+					$message = 'Cart updated';
+					foreach($frm as $key => $val) {
+						if(is_array($val)) {
+							$cart_item_id = (string) $val['id'];
+							$cart_item_qty = (string) $val['qty'];
+							$cart_item_hash = (string) $key;
+							$cart_item_atts = (array) $val['att'];
+							$cart->update(
+								(string) $cart_item_id,
+								(string) $cart_item_hash, //(array) $cart_item_atts,
+								$cart_item_qty,
+								false
+							);
+						} //end if
+					} //end foreach
+					$cart->write();
+				} else {
+					$cart_item_id = (string) $frm['id'];
+					$cart_item_hash = (string) $frm['hash'];
+					$cart_item_qty = (string) $frm['qty'];
+				//	$cart_item_atts = (array) $frm['att'];
+					$message = 'Product quantity updated';
+					$cart->update(
+						(string) $cart_item_id,
+						(string) $cart_item_hash, //(array) $cart_item_atts,
+						$cart_item_qty
+					);
+				} //end if else
 			} //end if
 			//-- Remove item
 			if((string)$cart_op == 'remove') {
+				$cart_item_id = (string) $frm['id'];
+				$cart_item_hash = (string) $frm['hash'];
+			//	$cart_item_qty = (string) $frm['qty'];
+				$message = 'Product removed';
+				$redirect = '?page=cart.test&op=cart';
 				foreach($products as $key => $product) {
 					if((string)$cart_item_id == (string)$product['id']) {
 						break;
@@ -205,15 +230,20 @@ class SmartAppIndexController extends SmartAbstractAppController {
 				} //end foreach
 				$cart->remove(
 					$product['id'],
-					/*
-					[
-						'color' => $cart_item_att_color,
-						'size' => $cart_item_att_size
-					],
-					*/
-					(string) $cart_item_hash
+					(string) $cart_item_hash //(array) $cart_item_atts,
 				);
 			} //end if
+			//--
+			$answer = 'OK';
+			$title = 'Cart';
+			//--
+			$this->PageViewSetVar(
+				'main',
+				(string) SmartComponents::js_ajax_replyto_html_form($answer, $title, $message, $redirect)
+			);
+			return;
+			//--
+		} elseif((string)$op == 'cart') {
 			//--
 			$all_items = [];
 			$cart_items = [];
@@ -230,21 +260,17 @@ class SmartAppIndexController extends SmartAbstractAppController {
 						$tmp_arr = [];
 						$tmp_arr['id'] = $item['id'];
 						$tmp_arr['hash'] = $item['hash'];
-						$tmp_arr['quantity'] = $item['quantity'];
+						if((string)$product['qtytype'] == 'dec') {
+							$tmp_arr['quantity'] = 0 + \Smart::format_number_dec($item['quantity'], 2, '.', '');
+						} else {
+							$tmp_arr['quantity'] = \Smart::format_number_int($item['quantity'], '+');
+						} //end if else
 						$tmp_arr['name'] = $product['name'];
 						$tmp_arr['price'] = $item['sell']['price'];
 						$tmp_arr['tax'] = $item['sell']['tax'];
 						$tmp_arr['currency'] = $item['sell']['currency'];
 						$tmp_arr['attributes'] = (array) $item['attributes'];
-					//	foreach($item['attributes'] as $key => $val) {
-						//	$cartContents .= ((isset($item['attributes'][$key])) ? ('<b>'.ucwords($key).': </b>'.ucwords($val).'<br>') : '');
-					//	} //end foreach
 						$cart_items[] = (array) $tmp_arr;
-						//$item['quantity']
-						//$id
-						//$item['hash']
-						//$item['sell']['price']
-						//$item['sell']['currency']
 					} //end foreach
 				} //end foreach
 			} //end if
@@ -255,6 +281,10 @@ class SmartAppIndexController extends SmartAbstractAppController {
 				'CART-TOTAL' 		=> (string) Smart::format_number_dec($cart->getAttributeTotal(), 2, '.', ''),
 				'CART-ITEMS' 		=> (array) $cart_items
 			];
+			//--
+		} elseif((string)$op == 'checkout') {
+			//--
+			return 404; // not implemented
 			//--
 		} else {
 			//--
@@ -270,6 +300,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 						'img-w' 	=> $val['image']['width'],
 						'img-h' 	=> $val['image']['height'],
 						'atts' 		=> $val['attributes'],
+						'hash' 		=> $cart->calculateHash($val['id'], $val['attributes'])
 					];
 				} //end foreach
 			} //end if

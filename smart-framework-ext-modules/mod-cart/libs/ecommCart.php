@@ -162,9 +162,9 @@ final class ecommCart {
 	} //END FUNCTION
 
 
-	private function calculateHash($attributes) {
+	public function calculateHash($id, $attributes) {
 	//	return sha1(json_encode($attributes));
-		return sha1(\Smart::json_encode($attributes, false, true, false));
+		return 'ecomm_uuid_'.sha1($id.':'.\Smart::json_encode($attributes, false, true, false));
 	} //END FUNCTION
 
 
@@ -180,7 +180,7 @@ final class ecommCart {
 		$id = (string) $id;
 		$attributes = (is_array($attributes)) ? $attributes : [];
 		if(isset($this->items[$id])) {
-			$hash = $this->calculateHash($attributes);
+			$hash = $this->calculateHash($id, $attributes);
 			if(is_array($this->items[$id])) {
 				foreach($this->items[$id] as $key => $item) {
 					if($item['hash'] == $hash) {
@@ -205,14 +205,14 @@ final class ecommCart {
 	public function add($id, $attributes, $quantity=1, $sell=[]) {
 		$id = (string) $id;
 		$attributes = (is_array($attributes)) ? array_filter($attributes) : []; // must filter out non-existent keys
-		$quantity = (preg_match('/^\d+$/', $quantity)) ? $quantity : 1;
+		$quantity = 0 + \Smart::format_number_dec($quantity, 2, '.', '');
 		if($quantity <= 0) {
 			$quantity = 1;
 		} //end if
 		$sell = (array) $sell;
 		$sell['price'] = (float) $sell['price'];
 		$sell['tax'] = (float) $sell['tax'];
-		$hash = $this->calculateHash($attributes);
+		$hash = $this->calculateHash($id, $attributes);
 		if(count($this->items) >= $this->cartMaxItem && $this->cartMaxItem != 0) {
 			return false;
 		} //end if
@@ -238,6 +238,15 @@ final class ecommCart {
 	} //END FUNCTION
 
 
+	public function mupdate($arr) {
+		if(is_array($arr)) {
+			foreach($arr as $key => $val) {
+
+			} //end foreach
+		} //end if
+	} //END FUNCTION
+
+
 	/**
 	 * Update item quantity.
 	 *
@@ -247,16 +256,18 @@ final class ecommCart {
 	 *
 	 * @return bool
 	 */
-	public function update($id, $attributes, $quantity=1) {
+	public function update($id, $attributes, $quantity=1, $write=true) {
 		$id = (string) $id;
-		$quantity = (preg_match('/^\d+$/', $quantity)) ? $quantity : 1;
-		if($quantity == 0) {
+		$quantity = 0 + \Smart::format_number_dec($quantity, 2, '.', '');
+		if($quantity < 0) {
+			$quantity = 1;
+		} elseif($quantity == 0) {
 			$this->remove($id, $attributes);
 			return true;
 		} //end if
 		if(is_array($this->items[$id])) {
 			if(is_array($attributes)) {
-				$hash = $this->calculateHash(array_keys($attributes));
+				$hash = $this->calculateHash($id, $attributes);
 			} else {
 				$hash = (string) $attributes;
 				$attributes = [];
@@ -268,7 +279,9 @@ final class ecommCart {
 				if((string)$item['hash'] == (string)$hash) {
 					$this->items[$id][$index]['quantity'] = $quantity;
 					$this->items[$id][$index]['quantity'] = ($this->itemMaxQuantity < $this->items[$id][$index]['quantity'] && $this->itemMaxQuantity != 0) ? $this->itemMaxQuantity : $this->items[$id][$index]['quantity'];
-					$this->write();
+					if($write) {
+						$this->write();
+					} //end if
 					return true;
 				} //end if
 			} //end foreach
@@ -296,7 +309,7 @@ final class ecommCart {
 				$this->write();
 				return true;
 			} //end if
-			$hash = $this->calculateHash(array_keys($attributes));
+			$hash = $this->calculateHash($id, $attributes);
 		} else {
 			$hash = (string) $attributes;
 				$attributes = [];
@@ -332,7 +345,7 @@ final class ecommCart {
 	/**
 	 * Read items from cart session.
 	 */
-	private function read() {
+	public function read() {
 		if($this->useCookie) {
 			$this->items = \Smart::json_decode(\SmartUtils::data_unarchive(\SmartFrameworkRegistry::getCookieVar((string)$this->cartId)));
 		} else { // session
@@ -341,14 +354,14 @@ final class ecommCart {
 		if(!is_array($this->items)) {
 			$this->items = [];
 		} //end if
-		return true;
+		return (array) $this->items;
 	} //END FUNCTION
 
 
 	/**
 	 * Write changes into cart session.
 	 */
-	private function write() {
+	public function write() {
 		if($this->useCookie) {
 			\SmartUtils::set_cookie($this->cartId, (string)\SmartUtils::data_archive((string)\Smart::json_encode((array)$this->items)), time() + 604800);
 		} else {
