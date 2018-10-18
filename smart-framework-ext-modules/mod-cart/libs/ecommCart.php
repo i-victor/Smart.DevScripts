@@ -19,7 +19,7 @@ final class ecommCart {
 	 *
 	 * @var string
 	 */
-	private $cartId;
+	private $cartId = 'eComm_Cart';
 
 	/**
 	 * Maximum item allowed in the cart.
@@ -56,6 +56,9 @@ final class ecommCart {
 	 * @param array $options
 	 */
 	public function __construct($options=[]) {
+		if(isset($options['cartId']) && ((string)$options['cartId'] != '') && (preg_match('/^[a-zA-Z0-9_]+$/', (string)$options['cartId']))) {
+			$this->cartId = (string) $options['cartId'];
+		} //end if
 		if(isset($options['cartMaxItem']) && preg_match('/^\d+$/', $options['cartMaxItem'])) {
 			$this->cartMaxItem = $options['cartMaxItem'];
 		} //end if
@@ -65,8 +68,9 @@ final class ecommCart {
 		if(isset($options['useCookie']) && $options['useCookie']) {
 			$this->useCookie = true;
 		} //end if
-		$this->cartId = 'eComm_Cart';
+		//--
 		$this->read();
+		//--
 	} //END FUNCTION
 
 

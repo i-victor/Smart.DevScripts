@@ -11,10 +11,14 @@
 			<h3>[####PRODUCTS-ARR.NAME|html####]</h3>
 			<div>
 				<div class="pull-left">
+					[%%%%IF:PRODUCTS-ARR.IMG-SRC:!=;%%%%]
 					<img src="[####PRODUCTS-ARR.IMG-SRC|html####]" border="0" width="[####PRODUCTS-ARR.IMG-W|int####]" height="[####PRODUCTS-ARR.IMG-H|int####]" title="[####PRODUCTS-ARR.NAME|html####]">
+					[%%%%ELSE:PRODUCTS-ARR.IMG-SRC%%%%]
+					&nbsp;
+					[%%%%/IF:PRODUCTS-ARR.IMG-SRC%%%%]
 				</div>
 				<div class="pull-right">
-					<h4>[####PRODUCTS-ARR.PRICE|html####]</h4>
+					<h4>[####PRODUCTS-ARR.PRICE|html####] [####PRODUCTS-ARR.CURRENCY|html####]</h4>
 					<form class="ux-form" name="Form_[####PRODUCTS-ARR.HASH|html####]" id="Form_[####PRODUCTS-ARR.HASH|html####]" method="post" action="#" onsubmit="return false;">
 						<input id="item-id" type="hidden" name="frm[id]" value="[####PRODUCTS-ARR.ID|html####]">
 						<input id="item-hash" type="hidden" name="frm[hash]" value="[####PRODUCTS-ARR.HASH|html####]">

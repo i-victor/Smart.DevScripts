@@ -37,6 +37,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 
 		//--
 		$cart = new \SmartModExtLib\Cart\ecommCart([
+			'cartId' 			=> 'eCommCart1',
 			'cartMaxItem' 		=> 10, // Maximum item can added to cart, 0 = Unlimited
 			'itemMaxQuantity' 	=> 50, // Maximum quantity of a item can be added to cart, 0 = Unlimited
 			'useCookie' 		=> false // Do not use cookie, cart items will gone after browser closed
@@ -158,7 +159,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			if((string)$cart_op == 'empty') {
 				$message = 'Cart cleared';
 				$cart->clear();
-				$redirect = '?page=cart.test&op=cart';
+				$redirect = '?page='.Smart::escape_url($this->ControllerGetParam('controller')).'&op=cart';
 			} //end if
 			//-- Add item
 			if((string)$cart_op == 'add') {
@@ -185,7 +186,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			} //end if
 			//-- Update item
 			if((string)$cart_op == 'update') {
-				$redirect = '?page=cart.test&op=cart';
+				$redirect = '?page='.Smart::escape_url($this->ControllerGetParam('controller')).'&op=cart';
 				if((string)$frm['cart'] == '@cart') {
 					$message = 'Cart updated';
 					foreach($frm as $key => $val) {
@@ -222,7 +223,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 				$cart_item_hash = (string) $frm['hash'];
 			//	$cart_item_qty = (string) $frm['qty'];
 				$message = 'Product removed';
-				$redirect = '?page=cart.test&op=cart';
+				$redirect = '?page='.Smart::escape_url($this->ControllerGetParam('controller')).'&op=cart';
 				foreach($products as $key => $product) {
 					if((string)$cart_item_id == (string)$product['id']) {
 						break;
@@ -270,6 +271,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 						$tmp_arr['tax'] = $item['sell']['tax'];
 						$tmp_arr['currency'] = $item['sell']['currency'];
 						$tmp_arr['attributes'] = (array) $item['attributes'];
+//print_r($item); die();
 						$cart_items[] = (array) $tmp_arr;
 					} //end foreach
 				} //end foreach
@@ -277,6 +279,7 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			//--
 			$tpl = 'cart.mtpl.htm';
 			$arr = [
+				'PAGE-URL' 		=> (string) $this->ControllerGetParam('controller'),
 				'CART-CURRENCY' 	=> (string) $cart_currency,
 				'CART-TOTAL' 		=> (string) Smart::format_number_dec($cart->getAttributeTotal(), 2, '.', ''),
 				'CART-ITEMS' 		=> (array) $cart_items
@@ -292,10 +295,12 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			if(is_array($products)) {
 				foreach($products as $key => $val) {
 					//print_r($val); die();
+//print_r($val['attributes']); die();
 					$arr[] = [
 						'id' 		=> $val['id'],
 						'name' 		=> $val['name'],
 						'price' 	=> $val['price'],
+						'currency' 	=> $cart_currency,
 						'img-src' 	=> $val['image']['source'],
 						'img-w' 	=> $val['image']['width'],
 						'img-h' 	=> $val['image']['height'],
@@ -307,7 +312,8 @@ class SmartAppIndexController extends SmartAbstractAppController {
 			//--
 			$tpl = 'shop.mtpl.htm';
 			$arr = [
-				'PRODUCTS-ARR' => (array) $arr
+				'PAGE-URL' 		=> (string) $this->ControllerGetParam('controller'),
+				'PRODUCTS-ARR' 	=> (array) $arr
 			];
 			//--
 		} //end if else
