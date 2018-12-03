@@ -1,8 +1,8 @@
 
 // GO Lang
-
 // parallel task engine
-// (c) 2018 unix-world.org
+// (c) 2017-2018 unix-world.org
+// version: 2018.12.02
 
 package main
 

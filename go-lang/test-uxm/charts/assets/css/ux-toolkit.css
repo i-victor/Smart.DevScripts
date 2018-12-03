@@ -1,8 +1,8 @@
-/***** Smart UX CSS Toolkit :: v.3.5.7 r.2017.09.05 / smart.framework.v.3.5 *****/
+/***** Smart UX CSS Toolkit :: v.3.7.7 r.2018.10.19 / smart.framework.v.3.7 *****/
 
 /*
 License: BSD
-	extended by unixman, (stable.171005), (c) 2015-2017 unix-world.org
+	extended by unixman, (stable.180613), (c) 2015-2018 unix-world.org
 	based on Pure.css v.0.6 by Yahoo :: http://purecss.io/
 */
 
@@ -248,7 +248,7 @@ License: BSD
 
 a.ux-link, a.ux-link:link, a.ux-link:visited {
 	font-family: inherit !important;
-	font-size: 100% !important;
+	font-size: 1rem !important;
 	font-weight: bold !important;
 	text-decoration: underline #DDDDDD !important;
 	color: #20639E !important;
@@ -270,7 +270,7 @@ a.ux-link:hover {
 	vertical-align: middle !important;
 	text-align: center !important;
 	font-family: inherit !important;
-	font-size: 100% !important;
+	font-size: 0.9rem !important;
 	font-weight: bold !important;
 	text-decoration: none !important;
 	border-radius: 3px !important;
@@ -278,14 +278,18 @@ a.ux-link:hover {
 	background-color: #FCFCFC !important;
 	color: #317AB9 !important;
 	cursor: pointer !important;
-	user-select: none !important;
-	zoom: 1 !important;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	margin-bottom: 5px;
+	margin-right: 5px;
 	box-sizing: border-box !important;
 	-moz-box-sizing: border-box !important;
 	-webkit-box-sizing: border-box !important;
+	appearance: none !important;
+	-moz-appearance: none !important;
+	-webkit-appearance: none !important;
+	user-select: none !important;
+	zoom: 1 !important;
 }
 .ux-button:hover,
 .ux-button:focus {
@@ -310,13 +314,13 @@ a.ux-link:hover {
 
 .ux-button-dark {
 	border: 1px solid #333333 !important;
-	background-color: #555555 !important;
+	background-color: #444444 !important;
 	color: #FEFEFE !important;
 }
 .ux-button-dark:hover,
 .ux-button-dark:focus {
 	border: 1px solid #222222 !important;
-	background-color: #444444 !important;
+	background-color: #333333 !important;
 	color: #FFFFFF !important;
 }
 
@@ -333,14 +337,14 @@ a.ux-link:hover {
 }
 
 .ux-button-secondary {
-	border: 1px solid #178DB0 !important;
-	background-color: #31B0D5 !important;
+	border: 1px solid #667788 !important;
+	background-color: #778899 !important;
 	color: #FFFFFF !important;
 }
 .ux-button-secondary:hover,
 .ux-button-secondary:focus {
-	border: 1px solid #067CA0 !important;
-	background-color: #20A0C4 !important;
+	border: 1px solid #5B646C !important;
+	background-color: #6C757D !important;
 	color: #FFFFFF !important;
 }
 
@@ -380,6 +384,18 @@ a.ux-link:hover {
 	color: #FFFFFF !important;
 }
 
+.ux-button-info {
+	border: 1px solid #178DB0 !important;
+	background-color: #31B0D5 !important;
+	color: #FFFFFF !important;
+}
+.ux-button-info:hover,
+.ux-button-info:focus {
+	border: 1px solid #067CA0 !important;
+	background-color: #20A0C4 !important;
+	color: #FFFFFF !important;
+}
+
 /* Firefox: Get rid of the inner focus border */
 .ux-button::-moz-focus-inner {
 	padding: 0 !important;
@@ -388,19 +404,19 @@ a.ux-link:hover {
 
 .ux-button-xsmall {
 	padding: 3px 7px 3px 7px !important;
-	font-size: 0.75em !important;
+	font-size: 0.65rem !important;
 }
 .ux-button-small {
 	padding: 5px 10px 5px 10px !important;
-	font-size: 0.875em !important;
+	font-size: 0.85rem !important;
 }
 .ux-button-large {
 	padding: 9px 17px 9px 17px !important;
-	font-size: 1.188em !important;
+	font-size: 1.2rem !important;
 }
 .ux-button-xlarge {
 	padding: 13px 23px 13px 23px !important;
-	font-size: 1.5em !important;
+	font-size: 1.5rem !important;
 }
 
 .ux-button-responsive {
@@ -410,7 +426,7 @@ a.ux-link:hover {
 
 	.ux-button-responsive {
 		width: 98% !important;
-		margin: 0.7em 0 0;
+		margin: 0.7rem 0 0;
 	}
 
 }
@@ -427,8 +443,9 @@ a.ux-link:hover {
 
 .ux-table caption {
 	color: #000;
-	font-size: 85%/1;
-	padding: 1em 0;
+	font-size: 0.85rem;
+	line-height: 1;
+	padding: 1rem 0;
 	text-align: center;
 }
 
@@ -439,7 +456,7 @@ a.ux-link:hover {
 	font-size: inherit;
 	margin: 0;
 	overflow: visible; /*to make ths where the title is really long work*/
-	padding: 0.5em 1em; /* cell padding */
+	padding: 0.5rem 1rem; /* cell padding */
 }
 
 /* Consider removing this next declaration block, as it causes problems when
@@ -590,13 +607,15 @@ so we can ignore the csslint warning.
 	background-color: #FFFFFF;
 	color: #222222;
 	font-weight: normal;
-	font-size: 13px;
+	font-size: 1rem;
 	padding: 3px;
-/*	padding: 0.5em 0.6em; */
+/*	padding: 0.5rem 0.6rem; */
 	display: inline-block;
 	border: 1px solid #ccc;
+	margin-bottom: 5px;
+	margin-right: 5px;
 /*	box-shadow: inset 0 1px 3px #ddd; */
-	border-radius: 4px;
+	border-radius: 3px;
 	vertical-align: middle;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -606,7 +625,7 @@ so we can ignore the csslint warning.
 .ux-form select option,
 .ux-select option {
 	font-weight: normal !important;
-	font-size: 13px !important;
+	font-size: 1rem;
 	padding: 1px !important;
 }
 
@@ -615,11 +634,11 @@ Need to separate out the :not() selector from the rest of the CSS 2.1 selectors
 since IE8 won't execute CSS that contains a CSS3 selector.
 */
 .ux-form input:not([type]) {
-	padding: 0.5em 0.6em;
+	padding: 0.5rem 0.6rem;
 	display: inline-block;
 	border: 1px solid #ccc;
 	box-shadow: inset 0 1px 3px #ddd;
-	border-radius: 4px;
+	border-radius: 3px;
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -629,7 +648,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 /* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */
 /* May be able to remove this tweak as color inputs become more standardized across browsers. */
 .ux-form input[type="color"] {
-	padding: 0.2em 0.5em;
+	padding: 0.2rem 0.5rem;
 }
 
 
@@ -672,7 +691,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 }
 .ux-form .ux-checkbox,
 .ux-form .ux-radio {
-	margin: 0.5em 0;
+	margin: 0.5rem 0;
 	display: block;
 }
 
@@ -732,7 +751,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 }
 .ux-form select {
 	/* Normalizes the height; padding is not sufficient. */
-	height: 2em;
+	height: 2rem;
 	border: 1px solid #ccc;
 	background-color: white;
 }
@@ -740,18 +759,18 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	height: auto;
 }
 .ux-form label {
-	margin: 0.5em 0 0.2em;
+	margin: 0.5rem 0 0.2rem;
 }
 .ux-form fieldset {
 	margin: 0;
-	padding: 0.35em 0 0.75em;
+	padding: 0.35rem 0 0.75rem;
 	border: 0;
 }
 .ux-form legend {
 	display: block;
 	width: 100%;
-	padding: 0.3em 0;
-	margin-bottom: 0.3em;
+	padding: 0.3rem 0;
+	margin-bottom: 0.3rem;
 	color: #333;
 	border-bottom: 1px solid #e5e5e5;
 }
@@ -775,7 +794,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 .ux-form-stacked label,
 .ux-form-stacked textarea {
 	display: block;
-	margin: 0.25em 0;
+	margin: 0.25rem 0;
 }
 
 /*
@@ -784,7 +803,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 */
 .ux-form-stacked input:not([type]) {
 	display: block;
-	margin: 0.25em 0;
+	margin: 0.25rem 0;
 }
 .ux-form-aligned input,
 .ux-form-aligned textarea,
@@ -803,24 +822,24 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 
 /* Aligned Forms */
 .ux-form-aligned .ux-control-group {
-	margin-bottom: 0.5em;
+	margin-bottom: 0.5rem;
 }
 .ux-form-aligned .ux-control-group label {
 	text-align: right;
 	display: inline-block;
 	vertical-align: middle;
-	width: 10em;
-	margin: 0 1em 0 0;
+	width: 10rem;
+	margin: 0 1rem 0 0;
 }
 .ux-form-aligned .ux-controls {
-	margin: 1.5em 0 0 11em;
+	margin: 1.5rem 0 0 11rem;
 }
 
 /* Rounded Inputs */
 .ux-form input.ux-input-rounded,
 .ux-form .ux-input-rounded {
-	border-radius: 12px;
-	padding: 0.5em 1em;
+	border-radius: 9px;
+	padding: 0.5rem 1rem;
 }
 
 /* Grouped Inputs */
@@ -844,23 +863,23 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 .ux-form .ux-group input:first-child,
 .ux-form .ux-group textarea:first-child {
 	top: 1px;
-	border-radius: 4px 4px 0 0;
+	border-radius: 3px 3px 0 0;
 	margin: 0;
 }
 .ux-form .ux-group input:first-child:last-child,
 .ux-form .ux-group textarea:first-child:last-child {
 	top: 1px;
-	border-radius: 4px;
+	border-radius: 3px;
 	margin: 0;
 }
 .ux-form .ux-group input:last-child,
 .ux-form .ux-group textarea:last-child {
 	top: -2px;
-	border-radius: 0 0 4px 4px;
+	border-radius: 0 0 3px 3px;
 	margin: 0;
 }
 .ux-form .ux-group button {
-	margin: 0.35em 0;
+	margin: 0.35rem 0;
 }
 
 .ux-form .ux-input-1-1 {
@@ -879,22 +898,30 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	width: 150px;
 }
 
+.ux-form .ux-input-def {
+	padding: 1px 3px 1px 3px !important;
+	height: 2rem !important;
+	font-family: inherit !important;
+	font-size: 1rem !important;
+	margin-bottom: 5px;
+}
+
 /* Inline help for forms */
 /* NOTE: ux-help-inline is deprecated. Use .ux-form-message-inline instead. */
 .ux-form .ux-help-inline,
 .ux-form-message-inline {
 	display: inline-block;
-	padding-left: 0.3em;
+	padding-left: 0.3rem;
 	color: #428BCA;
 	vertical-align: middle;
-	font-size: 0.875em;
+	font-size: 0.875rem;
 }
 
 /* Block help for forms */
 .ux-form-message {
 	display: block;
 	color: #666;
-	font-size: 0.875em;
+	font-size: 0.875rem;
 }
 
 .ux-form ::-webkit-input-placeholder {
@@ -974,26 +1001,26 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	width:100%;
 }
 .ux-menubar-bar-block .ux-menubar-dropdown-hover .ux-menubar-dropdown-content, .ux-menubar-bar-block .ux-menubar-dropdown-click .ux-menubar-dropdown-content {
-	min-width:100%;
+	min-width: 100%;
 }
 .ux-menubar-bar-block .ux-menubar-dropdown-hover .ux-menubar-button, .ux-menubar-bar-block .ux-menubar-dropdown-click .ux-menubar-button {
-	width:100%;
-	text-align:left;
-	padding:9px 16px;
+	width: 100%;
+	text-align: left;
+	padding: 9px 16px;
 }
 
 .ux-menubar-bar {
-	width:100%;
-	overflow:hidden;
+	width: 100%;
+	overflow: hidden;
 }
 
 .ux-menubar-bar * {
-	font-size:15px !important;
+	font-size: 1rem !important;
 }
 
 .ux-menubar-center .ux-menubar-bar {
-	display:inline-block;
-	width:auto;
+	display: inline-block;
+	width: auto;
 }
 .ux-menubar-bar .ux-menubar-bar-item {
 	padding:9px 16px;
@@ -1149,6 +1176,7 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	padding: 0;
 	margin: 0;
 	height: 100%;
+	list-style: none;
 }
 
 .ux-menu-link,
@@ -1189,15 +1217,15 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 /* misc default styling */
 
 .ux-menu-separator {
-	background-color: #ccc;
+	background-color: #cccccc;
 	height: 1px;
-	margin: .3em 0;
+	margin: 0.3rem 0;
 }
 
 .ux-menu-horizontal .ux-menu-separator {
 	width: 1px;
-	height: 1.3em;
-	margin: 0 .3em ;
+	height: 1.3rem;
+	margin: 0 0.3rem;
 }
 
 .ux-menu-heading {
@@ -1208,17 +1236,17 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 }
 
 .ux-menu-link {
-	color: #777;
+	color: #777777;
 }
 
 .ux-menu-children {
-	background-color: #fff;
+	background-color: #ffffff;
 }
 
 .ux-menu-link,
 .ux-menu-disabled,
 .ux-menu-heading {
-	padding: .5em 1em;
+	padding: .5rem 1rem;
 }
 
 .ux-menu-disabled {
@@ -1240,9 +1268,74 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	color: #000;
 }
 
-/*** Breadcrumbs (by Unixman) ***/
+/*** BreadCrumbs (by Unixman) ***/
 
-.ux-breadcrumb {
+/* Style the list */
+ul.ux-breadcrumb {
+	padding: 10px 16px;
+	list-style: none;
+	background-color: #eee;
+}
+
+/* Display list items side by side */
+ul.ux-breadcrumb li {
+	display: inline;
+	font-size: 1rem;
+	color: #6C757D;
+	font-weight: bold;
+}
+
+/* Add a slash symbol (/) before/behind each list item */
+ul.ux-breadcrumb li+li:before {
+	padding: 8px;
+	color: #6C757D;
+	font-weight: bold;
+	content: "/\00a0";
+}
+
+/* Add a color to all links inside the list */
+ul.ux-breadcrumb li a {
+	color: #0275d8;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+/* Add a color on mouse-over */
+ul.ux-breadcrumb li a:hover {
+	color: #01447e;
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+/*** Bars (by Unixman) ***/
+
+.ux-section {
+	color: #3C4663 !important;
+	background: #FFFFFF !important;
+	border: 1px solid #6C757D;
+	display: block !important;
+	padding: 7px !important;
+	padding-left: 15px !important;
+	padding-right: 15px !important;
+	margin-bottom: 25px !important;
+	border-radius: 2px;
+}
+
+.ux-subsection {
+	color: #FFFFFF !important;
+	background: #3C4663 !important;
+	border: 1px solid #6D748C;
+	display: block !important;
+	padding: 5px !important;
+	padding-left: 10px !important;
+	padding-right: 10px !important;
+	margin-bottom: 25px !important;
+	border-radius: 2px;
+}
+
+/*** Steps Bar (by Unixman) ***/
+
+.ux-stepsbar {
 	/*centering*/
 	display: inline-block;
 	box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.35);
@@ -1252,13 +1345,13 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	counter-reset: flag;
 }
 
-.ux-breadcrumb a {
+.ux-stepsbar a {
 	text-decoration: none;
 	outline: none;
 	display: block;
 	float: left;
-	font-size: 12px;
-	line-height: 36px;
+	font-size: 0.9rem;
+	line-height: 2.7rem;
 	color: #FFFFFF !important;
 	/*need more margin on the left of links to accomodate the numbers*/
 	padding: 0 10px 0 60px;
@@ -1266,33 +1359,33 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	position: relative;
 }
 /*since the first link does not have a triangle before it we can reduce the left padding to make it look consistent with other links*/
-.ux-breadcrumb a:first-child {
+.ux-stepsbar a:first-child {
 	padding-left: 46px;
 	border-radius: 5px 0 0 5px; /*to match with the parent's radius*/
 }
-.ux-breadcrumb a:first-child:before {
+.ux-stepsbar a:first-child:before {
 	left: 14px;
 }
-.ux-breadcrumb a:last-child {
+.ux-stepsbar a:last-child {
 	border-radius: 0 5px 5px 0; /*this was to prevent glitches on hover*/
 	padding-right: 20px;
 }
 
 /*hover/active styles*/
-.ux-breadcrumb a.active, .ux-breadcrumb a:hover{
+.ux-stepsbar a.active, .ux-stepsbar a:hover{
 	background: #333333;
 }
-.ux-breadcrumb a.active:after, .ux-breadcrumb a:hover:after {
+.ux-stepsbar a.active:after, .ux-stepsbar a:hover:after {
 	background: #333333;
 }
 
-/*adding the arrows for the breadcrumbs using rotated pseudo elements*/
-.ux-breadcrumb a:after {
+/*adding the arrows for the steps bar using rotated pseudo elements*/
+.ux-stepsbar a:after {
 	content: '';
 	position: absolute;
 	top: 0;
 	right: -18px; /*half of square's length*/
-	/*same dimension as the line-height of .ux-breadcrumb a */
+	/*same dimension as the line-height of .ux-stepsbar a */
 	width: 36px;
 	height: 36px;
 	/*as you see the rotated square takes a larger height. which makes it tough to position it properly. So we are going to scale it down so that the diagonals become equal to the line-height of the link. We scale it to 70.7% because if square's:
@@ -1311,11 +1404,11 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	border-radius: 0 5px 0 50px;
 }
 /*we dont need an arrow after the last link*/
-.ux-breadcrumb a:last-child:after {
+.ux-stepsbar a:last-child:after {
 	content: none;
 }
 /*we will use the :before element to show numbers*/
-.ux-breadcrumb a:before {
+.ux-stepsbar a:before {
 	text-align: center;
 	content: counter(flag);
 	counter-increment: flag;
@@ -1332,20 +1425,20 @@ since IE8 won't execute CSS that contains a CSS3 selector.
 	font-weight: bold;
 }
 
-.ux-flat-breadcrumb a {
+.ux-stepsbar-light a {
 	color: #333333 !important;
 }
-.ux-flat-breadcrumb a, .ux-flat-breadcrumb a:after {
+.ux-stepsbar-light a, .ux-stepsbar-light a:after {
 	background: #FFFFFF;
 	color: #000000;
 	transition: all 0.5s;
 }
-.ux-flat-breadcrumb a:before {
+.ux-stepsbar-light a:before {
 	background: #FFFFFF;
 	box-shadow: 0 0 0 1px #CCCCCC;
 }
-.ux-flat-breadcrumb a:hover, .ux-flat-breadcrumb a.active,
-.ux-flat-breadcrumb a:hover:after, .ux-flat-breadcrumb a.active:after{
+.ux-stepsbar-light a:hover, .ux-stepsbar-light a.active,
+.ux-stepsbar-light a:hover:after, .ux-stepsbar-light a.active:after{
 	background: #BBBBBB;
 }
 

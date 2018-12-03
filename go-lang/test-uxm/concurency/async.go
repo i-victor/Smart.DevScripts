@@ -1,4 +1,9 @@
 
+// GO Lang
+// async / concurrency
+// (c) 2017-2018 unix-world.org
+// version: 2018.12.02
+
 package main
 
 import (
@@ -13,9 +18,9 @@ func main() {
 		async.Do(doSometing,"hello word")
 }
 
-
 func doSometing(msg string) string{
 	fmt.Println("i am done by " + msg)
 	return "i am done by " + msg
 }
 
+// #END

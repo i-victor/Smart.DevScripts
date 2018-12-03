@@ -1,32 +1,31 @@
-/***** Smart UX CSS Toolkit @ Responsive :: v.3.5.7 r.2017.09.05 / smart.framework.v.3.5 *****/
+/***** Smart UX CSS Toolkit @ Responsive :: v.3.7.7 r.2018.10.19 / smart.framework.v.3.7 *****/
 
 /*
 License: BSD
-	extended by unixman (stable.171005), (c) 2015-2017 unix-world.org
+	extended by unixman (stable.180613), (c) 2015-2018 unix-world.org
 	based on Pure.css v.0.6 by Yahoo :: http://purecss.io/
 */
 
 @media all and (max-width:767px) {
 
-	/* All buttons Responsive */
+	/* All buttons Responsive and Forms */
 
-	.ux-button {
-		width: 98% !important;
-		min-width: 98% !important;
-		margin: 0.7em 0 0;
+	.ux-button, .ux-button-responsive, .ux-form {
+		width: calc(98% - 10px) !important;
+		min-width: calc(98% - 10px) !important;
+		margin: 5px 0 5px 0 !important;
+		font-size: 0.9rem !important;
 	}
 
-	.ux-button-responsive {
-		width: 98% !important;
-		min-width: 98% !important;
-		margin: 0.7em 0 0;
+	.ux-form {
+		width: 100% !important;
 	}
 
 	/* Reflow Tables */
 
 	.ux-reflow-table {
-		min-width: 98% !important;
-		width: 98% !important;
+		min-width: calc(98% - 10px) !important;
+		width: calc(98% - 10px) !important;
 	}
 
 	.ux-reflow-table td,
@@ -50,7 +49,7 @@ License: BSD
 	/* All Form Elements Responsive */
 
 	.ux-form button[type="submit"] {
-		margin: 0.7em 0 0;
+		margin: 5px 0 0;
 	}
 
 	.ux-form input:not([type]),
@@ -72,10 +71,10 @@ License: BSD
 	.ux-form textarea,
 	.ux-form select,
 	.ux-field {
-		margin-bottom: 0.3em;
+		margin-bottom: 0.3rem;
 		display: block;
-		width: 98% !important;
-		min-width: 98% !important;
+		width: calc(98% - 10px) !important;
+		min-width: calc(98% - 10px) !important;
 	}
 
 	.ux-group input:not([type]),
@@ -98,27 +97,27 @@ License: BSD
 	.ux-form select,
 	.ux-field {
 		margin-bottom: 0;
-		width: 98% !important;
-		min-width: 98% !important;
+		width: calc(98% - 10px) !important;
+		min-width: calc(98% - 10px) !important;
 	}
 
 	.ux-form-aligned .ux-control-group label {
-		margin-bottom: 0.3em;
+		margin-bottom: 0.3rem;
 		text-align: left;
 		display: block;
-		width: 100%;
+		width: calc(98% - 10px);
 	}
 
 	.ux-form-aligned .ux-controls {
-		margin: 1.5em 0 0 0;
+		margin: 15px 0 0 0;
 	}
 
 	.ux-form .ux-help-inline,
 	.ux-form-message-inline,
 	.ux-form-message {
 		display: block;
-		font-size: 0.75em;
-		padding: 0.2em 0 0.8em;
+		font-size: 0.75rem;
+		padding: 0.2rem 0 0.8rem;
 	}
 
 	.ux-menu-horizontal {

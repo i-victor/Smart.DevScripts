@@ -30,9 +30,9 @@ import (
 	"github.com/zserge/webview"
 )
 
-var uxmScriptVersion = "r.180228"
+var uxmScriptVersion = "r.181202"
 
-var targetAddr  = flag.String("target", "", "vnc-host:vnc-port")
+var targetAddr = flag.String("target", "", "vnc-host:vnc-port")
 
 var bindTcpAddr = ""
 var vncTcpAddr = ""

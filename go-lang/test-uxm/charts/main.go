@@ -1,4 +1,8 @@
 
+// GO Lang
+// (c) 2017-2018 unix-world.org
+// version: 2018.12.02
+
 package main
 
 // go-bindata -o assets.go -prefix assets assets/...

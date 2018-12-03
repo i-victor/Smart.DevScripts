@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"crypto/tls"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -25,10 +24,12 @@ type DavClient struct {
 	Url		string
 	Username	string
 	Password	string
+	Cookie		string
 	Methods		map[string]bool
 	DavSupport	map[string]bool
 	IsSabre		bool
 	IsApache	bool
+	PutDisabled	bool
 	MaxConns	int
 	MaxIdleConns	int
 	base		string
@@ -136,7 +137,7 @@ func stripQuotes(s string) string {
 
 func stripLastSlash(s string) string {
 	l := len(s)
-	for l > 1 {
+	for l > 0 {
 		if s[l-1] != '/' {
 			return s[:l]
 		}
@@ -276,6 +277,9 @@ func (d *DavClient) buildRequest(method string, path string, b ...interface{}) (
 	if d.Username != "" || d.Password != "" {
 		req.SetBasicAuth(d.Username, d.Password)
 	}
+	if d.Cookie != "" {
+		req.Header.Set("Cookie", d.Cookie)
+	}
 	return
 }
 
@@ -333,7 +337,6 @@ func (d *DavClient) Mount() (err error) {
 		}
 		// Override some values from DefaultTransport.
 		tr := *(http.DefaultTransport.(*http.Transport))
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		tr.MaxIdleConnsPerHost = d.MaxIdleConns
 		tr.DisableCompression = true
 
@@ -363,7 +366,14 @@ func (d *DavClient) Mount() (err error) {
 	// Parse headers.
 	d.Methods = mapLine(getHeader(resp.Header, "Allow"))
 	d.DavSupport = mapLine(getHeader(resp.Header, "Dav"))
-	d.IsApache = strings.Index(resp.Header.Get("Server"), "Apache") >= 0
+
+	// Is this apache with mod_dav?
+	isApache := strings.Index(resp.Header.Get("Server"), "Apache") >= 0
+	if isApache && d.DavSupport["<http://apache.org/dav/propset/fs/1>"] {
+		d.IsApache = true
+	}
+
+	// Does this server supoort sabredav-partialupdate ?
 	if d.DavSupport["sabredav-partialupdate"] {
 		d.IsSabre = true
 	}
@@ -842,7 +852,7 @@ func (d *DavClient) PutRange(path string, data []byte, offset int64, create bool
 }
 
 func (d *DavClient) CanPutRange() bool {
-	return d.IsSabre || d.IsApache
+	return (d.IsSabre || d.IsApache) && !d.PutDisabled
 }
 
 func (d *DavClient) Put(path string, data []byte, create bool, excl bool) (created bool, err error) {

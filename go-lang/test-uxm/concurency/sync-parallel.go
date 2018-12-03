@@ -1,3 +1,9 @@
+
+// GO Lang
+// sync parallel / concurrency
+// (c) 2017-2018 unix-world.org
+// version: 2018.12.02
+
 package main
 
 import (
@@ -31,17 +37,20 @@ func main() {
 		go func() {
 			res, err := http.Get("https://127.0.0.1/sites/")
 			if err != nil {
-				fmt.Println(err)
-			}
-			res.Body.Close()
-			var status = ""
-			if(res.StatusCode == 200) {
-				status = color.GreenString(strconv.Itoa(res.StatusCode))
+				fmt.Println(color.RedString("ERROR accessing URL"))
+			//	fmt.Println(err)
+				fmt.Println(err.Error())
 			} else {
-				status = color.RedString(strconv.Itoa(res.StatusCode))
+				res.Body.Close()
+				var status = ""
+				if(res.StatusCode == 200) {
+					status = color.GreenString(strconv.Itoa(res.StatusCode))
+				} else {
+					status = color.RedString(strconv.Itoa(res.StatusCode))
+				}
+				fmt.Println("HTTP Response [" + strconv.Itoa(c) + "/"  + strconv.Itoa(i) +  "] Status: " + status)
+			//	time.Sleep(time.Duration(rand.Int31n(5)) * time.Second)
 			}
-			fmt.Println("HTTP Response [" + strconv.Itoa(c) + "/"  + strconv.Itoa(i) +  "] Status: " + status)
-		//	time.Sleep(time.Duration(rand.Int31n(5)) * time.Second)
 			wg.Done()
 		}()
 		time.Sleep(time.Duration(rand.Int31n(2) * 25) * time.Millisecond)
@@ -55,3 +64,5 @@ func main() {
 	fmt.Println("Time elapsed: %s", elapsed)
 
 }
+
+// #END
