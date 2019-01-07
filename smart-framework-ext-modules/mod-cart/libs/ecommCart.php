@@ -49,6 +49,13 @@ final class ecommCart {
 	 */
 	private $items = [];
 
+	/**
+	 * Cart Error Message
+	 *
+	 * @var string
+	 */
+	private $errmsg = '';
+
 
 	/**
 	 * Initialize cart.
@@ -56,6 +63,7 @@ final class ecommCart {
 	 * @param array $options
 	 */
 	public function __construct($options=[]) {
+		//--
 		if(isset($options['cartId']) && ((string)$options['cartId'] != '') && (preg_match('/^[a-zA-Z0-9_]+$/', (string)$options['cartId']))) {
 			$this->cartId = (string) $options['cartId'];
 		} //end if
@@ -75,12 +83,26 @@ final class ecommCart {
 
 
 	/**
+	 * Get cart Error message.
+	 *
+	 * @return array
+	 */
+	public function getError() {
+		//--
+		return (string) $this->errmsg;
+		//--
+	} //END FUNCTION
+
+
+	/**
 	 * Get items in  cart.
 	 *
 	 * @return array
 	 */
 	public function getItems() {
-		return $this->items;
+		//--
+		return (array) $this->items;
+		//--
 	} //END FUNCTION
 
 
@@ -90,7 +112,9 @@ final class ecommCart {
 	 * @return bool
 	 */
 	public function isEmpty() {
-		return empty(array_filter($this->items));
+		//--
+		return (bool) empty(array_filter($this->items));
+		//--
 	} //END FUNCTION
 
 
@@ -100,10 +124,13 @@ final class ecommCart {
 	 * @return int
 	 */
 	public function getTotalItem() {
+		//--
 		$total = 0;
+		//--
 		if(!is_array($this->items)) {
 			$this->items = array();
 		} //end if
+		//--
 		foreach($this->items as $key => $items) {
 			if(is_array($items)) {
 				foreach($items as $kk => $item) {
@@ -111,28 +138,9 @@ final class ecommCart {
 				} //end foreach
 			} //end if
 		} //end foreach
-		return $total;
-	} //END FUNCTION
-
-
-	/**
-	 * Get the total of item quantity in cart.
-	 *
-	 * @return int
-	 */
-	public function getTotalQuantity() {
-		$quantity = 0;
-		if(!is_array($this->items)) {
-			$this->items = array();
-		} //end if
-		foreach($this->items as $key => $items) {
-			if(is_array($items)) {
-				foreach($items as $kk => $item) {
-					$quantity += $item['quantity'];
-				} //end foreach
-			} //end if
-		} //end foreach
-		return $quantity;
+		//--
+		return (float) $total;
+		//--
 	} //END FUNCTION
 
 
@@ -141,11 +149,14 @@ final class ecommCart {
 	 *
 	 * @return int
 	 */
-	public function getAttributeTotal() {
+	public function getCartTotal() {
+		//--
 		$total = 0;
+		//--
 		if(!is_array($this->items)) {
 			$this->items = array();
 		} //end if
+		//--
 		foreach($this->items as $key => $items) {
 			if(is_array($items)) {
 				foreach($items as $kk => $item) {
@@ -153,22 +164,16 @@ final class ecommCart {
 				} //end foreach
 			} //end if
 		} //end foreach
+		//--
 		return $total;
-	} //END FUNCTION
-
-
-	/**
-	 * Remove all items from cart.
-	 */
-	public function clear() {
-		$this->items = [];
-		$this->write();
+		//--
 	} //END FUNCTION
 
 
 	public function calculateHash($id, $attributes) {
-	//	return sha1(json_encode($attributes));
-		return 'ecomm_uuid_'.sha1($id.':'.\Smart::json_encode($attributes, false, true, false));
+		//--
+		return (string) 'ecomm_uuid_'.sha1($id.':'.\Smart::json_encode($attributes, false, true, false));
+		//--
 	} //END FUNCTION
 
 
@@ -181,8 +186,11 @@ final class ecommCart {
 	 * @return bool
 	 */
 	public function isItemExists($id, $attributes=[]) {
+		//--
 		$id = (string) $id;
+		//--
 		$attributes = (is_array($attributes)) ? $attributes : [];
+		//--
 		if(isset($this->items[$id])) {
 			$hash = $this->calculateHash($id, $attributes);
 			if(is_array($this->items[$id])) {
@@ -193,7 +201,9 @@ final class ecommCart {
 				} //end foreach
 			} //end if
 		} //end if
+		//--
 		return false;
+		//--
 	} //END FUNCTION
 
 
@@ -206,9 +216,16 @@ final class ecommCart {
 	 *
 	 * @return bool
 	 */
-	public function add($id, $attributes, $quantity=1, $sell=[]) {
+	public function add($sell, $id, $attributes, $quantity=1) {
+		//--
+		// TODO:
+		//	* validate attributes
+		//	* adjust price by attribute
+		//	* apply calculation of qty by attributes formula
+		//--
 		$id = (string) $id;
-		$attributes = (is_array($attributes)) ? array_filter($attributes) : []; // must filter out non-existent keys
+		$attributes = (is_array($attributes)) ? $attributes : []; // must filter out non-existent keys
+		//print_r($sell);
 		$quantity = 0 + \Smart::format_number_dec($quantity, 2, '.', '');
 		if($quantity <= 0) {
 			$quantity = 1;
@@ -217,9 +234,11 @@ final class ecommCart {
 		$sell['price'] = (float) $sell['price'];
 		$sell['tax'] = (float) $sell['tax'];
 		$hash = $this->calculateHash($id, $attributes);
-		if(count($this->items) >= $this->cartMaxItem && $this->cartMaxItem != 0) {
+		//--
+		if(($this->cartMaxItem > 0) AND (\Smart::array_size($this->items) >= $this->cartMaxItem)) {
 			return false;
 		} //end if
+		//--
 		if(is_array($this->items[$id])) {
 			foreach($this->items[$id] as $index => $item) {
 				if((string)$item['hash'] == (string)$hash) {
@@ -230,6 +249,7 @@ final class ecommCart {
 				} //end if
 			} //end foreach
 		} //end if
+		//--
 		$this->items[$id][] = [
 			'hash'       => (string) $hash,
 			'id'         => (string) $id,
@@ -237,17 +257,62 @@ final class ecommCart {
 			'quantity'   => ($quantity > $this->itemMaxQuantity && $this->itemMaxQuantity != 0) ? $this->itemMaxQuantity : $quantity,
 			'sell'       => (array) $sell
 		];
-		$this->write();
-		return true;
+		//--
+		return (bool) $this->write();
+		//--
 	} //END FUNCTION
 
 
-	public function mupdate($arr) {
-		if(is_array($arr)) {
+	/**
+	 * Update multiple items quantities in cart.
+	 *
+	 * @param array $arr[ hash => [id, qty, att], ... ]
+	 *
+	 * @return bool
+	 */
+	public function multiupdate($arr) {
+		//--
+		if(\Smart::array_size($arr) > 0) {
+			//--
+			$updt = 0;
+			//--
 			foreach($arr as $key => $val) {
-
+				//--
+				if(($key) AND (\Smart::array_size($val) > 0)) {
+					//--
+					$test = false;
+					//--
+					$item_hash = (string) $key;
+					$item_id   = (string) $val['id'];
+					$item_qty  = (string) $val['qty'];
+					//--
+					$test = (bool) $this->update(
+						(string) $item_id,
+						(string) $item_hash,
+						(float)  $item_qty,
+						false
+					);
+					//--
+					if(!$test) {
+						return false;
+					} //end if
+					//--
+					$updt++;
+					//--
+				} //end if
+				//--
 			} //end foreach
+			//--
+			if($updt) {
+				return (bool) $this->write();
+			} else {
+				return false;
+			} //end if else
+			//--
 		} //end if
+		//--
+		return false;
+		//--
 	} //END FUNCTION
 
 
@@ -261,6 +326,9 @@ final class ecommCart {
 	 * @return bool
 	 */
 	public function update($id, $attributes, $quantity=1, $write=true) {
+		//--
+		// $write should be used just by multiupdate
+		//--
 		$id = (string) $id;
 		$quantity = 0 + \Smart::format_number_dec($quantity, 2, '.', '');
 		if($quantity < 0) {
@@ -269,8 +337,9 @@ final class ecommCart {
 			$this->remove($id, $attributes);
 			return true;
 		} //end if
-		if(is_array($this->items[$id])) {
-			if(is_array($attributes)) {
+		//--
+		if(\Smart::array_size($this->items[$id]) > 0) {
+			if(is_array($attributes)) { // must test is array not array size > 0
 				$hash = $this->calculateHash($id, $attributes);
 			} else {
 				$hash = (string) $attributes;
@@ -284,13 +353,16 @@ final class ecommCart {
 					$this->items[$id][$index]['quantity'] = $quantity;
 					$this->items[$id][$index]['quantity'] = ($this->itemMaxQuantity < $this->items[$id][$index]['quantity'] && $this->itemMaxQuantity != 0) ? $this->itemMaxQuantity : $this->items[$id][$index]['quantity'];
 					if($write) {
-						$this->write();
-					} //end if
-					return true;
+						return (bool) $this->write();
+					} else {
+						return true;
+					} //end if else
 				} //end if
 			} //end foreach
 		} //end if
+		//--
 		return false;
+		//--
 	} //END FUNCTION
 
 
@@ -303,11 +375,14 @@ final class ecommCart {
 	 * @return bool
 	 */
 	public function remove($id, $attributes) {
+		//--
 		$id = (string) $id;
+		//--
 		if(!is_array($this->items[$id])) {
 			return false;
 		} //end if
-		if(is_array($attributes)) {
+		//--
+		if(is_array($attributes)) { // must test is array not array size > 0
 			if(empty($attributes)) {
 				unset($this->items[$id]);
 				$this->write();
@@ -316,33 +391,50 @@ final class ecommCart {
 			$hash = $this->calculateHash($id, $attributes);
 		} else {
 			$hash = (string) $attributes;
-				$attributes = [];
+			$attributes = [];
 		} //end if else
+		//--
 		if((string)$hash == '') {
 			return false;
 		} //end if
+		//--
 		foreach($this->items[$id] as $index => $item) {
 			if((string)$item['hash'] == (string)$hash) {
 				unset($this->items[$id][$index]);
-				$this->write();
-				return true;
+				return (bool) $this->write();
 			} //end if
 		} //end foreach
+		//--
 		return false;
+		//--
 	} //END FUNCTION
 
 
 	/**
-	 * Destroy cart session.
+	 * Destroy cart.
 	 */
 	public function destroy() {
+		//--
 		$this->items = [];
+		//--
 		if($this->useCookie) {
-			\SmartUtils::set_cookie((string)$this->cartId, '', -1);
+			return (bool) \SmartUtils::set_cookie((string)$this->cartId, '', -1);
 		} else {
-			\SmartSession::set((string)$this->cartId, null);
+			return (bool) \SmartSession::set((string)$this->cartId, null);
 		} //end if else
-		return true;
+		//--
+	} //END FUNCTION
+
+
+	/**
+	 * Remove all items from cart.
+	 */
+	public function clear() {
+		//--
+		$this->items = [];
+		//--
+		return (bool) $this->write();
+		//--
 	} //END FUNCTION
 
 
@@ -350,28 +442,33 @@ final class ecommCart {
 	 * Read items from cart session.
 	 */
 	public function read() {
+		//--
 		if($this->useCookie) {
 			$this->items = \Smart::json_decode(\SmartUtils::data_unarchive(\SmartFrameworkRegistry::getCookieVar((string)$this->cartId)));
 		} else { // session
 			$this->items = \SmartSession::get((string)$this->cartId);
 		} //end if else
+		//--
 		if(!is_array($this->items)) {
 			$this->items = [];
 		} //end if
+		//--
 		return (array) $this->items;
+		//--
 	} //END FUNCTION
 
 
 	/**
 	 * Write changes into cart session.
 	 */
-	public function write() {
+	private function write() {
+		//--
 		if($this->useCookie) {
-			\SmartUtils::set_cookie($this->cartId, (string)\SmartUtils::data_archive((string)\Smart::json_encode((array)$this->items)), time() + 604800);
+			return (bool) \SmartUtils::set_cookie($this->cartId, (string)\SmartUtils::data_archive((string)\Smart::json_encode((array)$this->items)), time() + 604800);
 		} else {
-			\SmartSession::set((string)$this->cartId, (array)$this->items);
+			return (bool) \SmartSession::set((string)$this->cartId, (array)$this->items);
 		} //end if else
-		return true;
+		//--
 	} //END FUNCTION
 
 

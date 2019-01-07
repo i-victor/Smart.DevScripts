@@ -3,7 +3,7 @@
 	<h1>Products</h1>
 [%%%%LOOP:PRODUCTS-ARR%%%%]
 	[%%%%IF:PRODUCTS-ARR._-ITERATOR-_:%2;%%%%]
-	<div class="ux-grid-row" title="[####PRODUCTS-ARR._-ITERATOR-_|html####]">
+	<div class="ux-grid-row" title="#[####PRODUCTS-ARR._-ITERATOR-_|html####]">
 	[%%%%/IF:PRODUCTS-ARR._-ITERATOR-_%%%%]
 		<div class="ux-grid-col s1 m1 l1">
 		</div>
@@ -18,18 +18,29 @@
 					[%%%%/IF:PRODUCTS-ARR.IMG-SRC%%%%]
 				</div>
 				<div class="pull-right">
-					<h4>[####PRODUCTS-ARR.PRICE|html####] [####PRODUCTS-ARR.CURRENCY|html####]</h4>
-					<form class="ux-form" name="Form_[####PRODUCTS-ARR.HASH|html####]" id="Form_[####PRODUCTS-ARR.HASH|html####]" method="post" action="#" onsubmit="return false;">
+					<h4>[####PRODUCTS-ARR.PRICE|html####]&nbsp;[####PRODUCTS-ARR.CURRENCY|html####]</h4>
+					<form class="ux-form" name="Form_[####PRODUCTS-ARR.HASH|html####]" id="Form_[####PRODUCTS-ARR.HASH|html####]" method="post" action="#" onsubmit="return false;" autocomplete="off">
 						<input id="item-id" type="hidden" name="frm[id]" value="[####PRODUCTS-ARR.ID|html####]">
 						<input id="item-hash" type="hidden" name="frm[hash]" value="[####PRODUCTS-ARR.HASH|html####]">
 						[%%%%LOOP:PRODUCTS-ARR.ATTS%%%%]
 							<div class="form-group">
 								<label>[####PRODUCTS-ARR.ATTS._-KEY-_|html####]:</label>
+								[%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_.TYPE:==list;%%%%]
+								[%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_.VALIDATION:@+;%%%%]
 								<select id="item-attributes" name="frm[att][[####PRODUCTS-ARR.ATTS._-KEY-_|htmid####]]" class="form-control">
 									[%%%%LOOP:PRODUCTS-ARR.ATTS._-VAL-_%%%%]
-									<option value="[####PRODUCTS-ARR.ATTS._-VAL-_._-KEY-_|html####]">[####PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_|html####]</option>
+									[%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_._-KEY-_:==validation;%%%%]
+									[%%%%LOOP:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_%%%%]
+									<option value="[####PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-KEY-_|html####]" title="">[####PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-KEY-_|html####][%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-VAL-_.ADJUST-PRICE:!=0;(1)%%%%] [[%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-VAL-_.ADJUST-PRICE:>0;(2)%%%%]+[%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-VAL-_.ADJUST-PRICE(2)%%%%][####PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-VAL-_.ADJUST-PRICE|html####]&nbsp;[####PRODUCTS-ARR.CURRENCY|html####]][%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_._-VAL-_.ADJUST-PRICE(1)%%%%]</option>
+									[%%%%/LOOP:PRODUCTS-ARR.ATTS._-VAL-_._-VAL-_%%%%]
+									[%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_._-KEY-_%%%%]
 									[%%%%/LOOP:PRODUCTS-ARR.ATTS._-VAL-_%%%%]
 								</select>
+								[%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_.VALIDATION%%%%]
+								[%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_.TYPE%%%%]
+								[%%%%IF:PRODUCTS-ARR.ATTS._-VAL-_.TYPE:==free;%%%%]
+								<input type="text" name="frm[att][[####PRODUCTS-ARR.ATTS._-KEY-_|htmid####]]" value="" style="width:80px;">
+								[%%%%/IF:PRODUCTS-ARR.ATTS._-VAL-_.TYPE%%%%]
 							</div>
 						[%%%%/LOOP:PRODUCTS-ARR.ATTS%%%%]
 						<div class="form-group">
