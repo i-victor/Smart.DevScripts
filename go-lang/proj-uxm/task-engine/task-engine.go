@@ -1,8 +1,9 @@
 
 // GO Lang
+
 // parallel task engine
-// (c) 2017-2018 unix-world.org
-// version: 2018.12.02
+// (c) 2017-2019 unix-world.org
+// version: 2019.04.15
 
 package main
 
@@ -28,7 +29,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var uxmScriptVersion = "r.180305"
+var uxmScriptVersion = "r.20190415"
 
 var iniFile = "task-engine.ini"
 var UrlBatchList = "https://localhost/test-batch.txt"
@@ -92,6 +93,7 @@ func tasks(maxParallelThreads int, LoopId int) {
 	fmt.Println(color.MagentaString("Task Processing URL: " + UrlTaskCall))
 
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, maxParallelThreads)
 
 	for i := range arr {
 		var TaskId = strings.Trim(arr[i], " \t\n\r\x00\x0B")
@@ -114,6 +116,11 @@ func tasks(maxParallelThreads int, LoopId int) {
 		}
 		wg.Add(1)
 		go func(LoopId int, i int, TaskId string) {
+			defer wg.Done()
+			semaphore <- struct{}{} // Lock
+			defer func() {
+				<-semaphore // Unlock
+			}()
 			var status = ""
 			res, err := http.Get(UrlTaskCall + url.QueryEscape(TaskId))
 			if err != nil {
@@ -135,8 +142,9 @@ func tasks(maxParallelThreads int, LoopId int) {
 					status = color.RedString(strconv.Itoa(res.StatusCode))
 				}
 			}
-			fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:")  + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
-			wg.Done()
+			fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:") + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
+			// sleep after each group
+			time.Sleep(time.Duration(250) * time.Millisecond)
 		}(LoopId, i, TaskId)
 		// just add a random pause in milliseconds for give a small breath ... (important for spread of threads in time !!!)
 		time.Sleep(time.Duration(rand.Int31n(3) * 25) * time.Millisecond)
