@@ -1,1 +1,3 @@
-ipmitool -L user -H 169.254.100.132 -U ipmi -P imonitor sdr
+ipmitool -L user -H 169.254.100.131 -U ipmi -P imonitor sdr
+ipmitool -L ADMINISTRATOR -H 169.254.100.131 -U root chassis power cycle
+ipmitool -L ADMINISTRATOR -H 169.254.100.131 -U root chassis power on

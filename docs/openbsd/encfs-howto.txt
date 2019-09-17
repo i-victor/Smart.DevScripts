@@ -1,0 +1,16 @@
+
+### EncFS :: OpenBSD
+
+# initialize (by default choosing 'p' mode)
+encfs ~/.encfs-crypt ~/encfs-crypt
+
+# test run (verbous, foreground, single-thread)
+doas encfs -v -f -s -o allow_other -o gid=1000,uid=1000 ~/.encfs-crypt ~/encfs-crypt
+
+# mount (background, single-thread)
+doas encfs -s -o allow_other -o gid=1000,uid=1000 ~/.encfs-crypt ~/encfs-crypt
+
+# unmount (normally: doas encfs -u ~/encfs-crypt ... but on OpenBSD)
+doas umount ~/encfs-crypt
+
+## END

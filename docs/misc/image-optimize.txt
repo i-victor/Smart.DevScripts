@@ -1,0 +1,30 @@
+// Must install ImageMagick first
+http://www.imagemagick.org/script/index.php
+
+//This compresses a jpg with no visible loss of quality. Add in your own file names for target.jpg and result.jpg
+convert -strip -interlace Plane -sampling-factor 4:2:0 -quality 85% target.jpg result.jpg
+
+// This does the same as above but to an entire folder (will overwrite original files):
+mogrify -strip -interlace Plane -sampling-factor 4:2:0 -quality 85% *.jpg
+
+//This does the same thing but to all subfolders as well (Be careful with this one it will overwrite all original files)
+//This one just tests the command and prints output
+find . -name "*.jpg" -exec echo 
+mogrify -strip -interlace Plane -sampling-factor 4:2:0 -quality 85% {} \;
+
+// This one actually compresses all the images in folder and subfolders
+(the real thing)
+find . -name "*.jpg" -exec mogrify -strip -interlace Plane -sampling-factor 4:2:0 -quality 85% {} \;
+
+// This command compresses a png with no visible loss of quality
+mogrify -filter Triangle -define filter:support=2 -unsharp 0.25x0.08+8.3+0.045 -dither None -posterize 136 -quality 82 -define png:compression-filter=5 -define png:compression-level=9 -define png:compression-strategy=1 -define png:exclude-chunk=all -interlace none -colorspace sRGB *.png
+
+These commands were copied or adapted from the following sources:
+
+http://www.imagemagick.org/discourse-server/viewtopic.php?t=24134
+
+http://stackoverflow.com/questions/27267073/imagemagick-lossless-max-compression-for-png
+
+https://sangpo.wordpress.com/2009/01/24/recursive-batch-image-resizing-in-linux/
+
+http://stackoverflow.com/questions/7261855/recommendation-for-compressing-jpg-files-with-imagemagick

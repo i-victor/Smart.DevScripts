@@ -1,5 +1,6 @@
 
-### v.180215 FINAL :: OK :: RELEASE
+### OpenBSD 6.3 Ports :: UXM
+### v.20190221 FINAL (gcc8 and iridium should be built manually !!!)
 
 ## find duplicates
 # sort FILE | uniq -c | grep -v '^ *1 '
@@ -46,16 +47,16 @@ devel/gpatch
 databases/gdbm
 lang/tcl/8.5
 databases/db/v3
-databases/db/v4 							# add in Makefile: FLAVOR=no_java
+databases/db/v4 														# add in Makefile: FLAVOR=no_java
 databases/sqlite3
 databases/sqlite
 x11/tk/8.5
-devel/tcllib 								# Downgrade to 1.7
+devel/tcllib 															# Downgrade to 1.7
 net/tcludp
 x11/bwidget
 devel/itcl
 lang/python/2.7
-lang/python/3.6
+lang/python/3.6 														# Upgrade to 3.6.5 ; Fix in Makefile: WRKOBJDIR=/_PORTS/pobj
 devel/scons
 devel/py-setuptools
 devel/py-babel
@@ -73,7 +74,8 @@ textproc/py-MarkupSafe
 textproc/py-sphinx
 devel/py-pip
 devel/libmpc
-lang/gcc/4.9								# do a make + CTRL-C also in lang/gcc/6 just make to download src of gcc6
+lang/gcc/4.9															# OK
+#lang/gcc/8															# build manually
 devel/re2c
 devel/ninja
 devel/json-c
@@ -82,7 +84,9 @@ devel/jsoncpp
 www/nghttp2
 net/curl
 security/rhash
+devel/libuv
 devel/cmake
+devel/llvm 																# upgr to v6
 devel/gtest
 devel/libyajl
 devel/libf2c
@@ -92,6 +96,12 @@ shells/bash
 sysutils/parallel
 sysutils/clusterit
 lang/go
+security/libssh2
+devel/libgit2/libgit2
+devel/gdb
+lang/rust
+devel/cargo-generate-vendor
+devel/cbindgen
 lang/expect
 devel/dejagnu
 lang/lua/5.1
@@ -143,16 +153,15 @@ textproc/docbook-dsssl
 textproc/docbook-xsl
 textproc/iso8879
 www/lynx
-security/libssh2
 x11/dbus
 devel/glib2
 textproc/oniguruma
+graphics/png
 devel/libslang
 textproc/gdiff
 misc/mc
 editors/hexcurse
 archivers/lzo2
-graphics/png								# upgrade to 1.6.34 (or 1.6.32): versions prior to 1.6.32 have a security issue
 graphics/giflib
 graphics/jpeg
 graphics/cairo
@@ -173,13 +182,13 @@ security/p11-kit
 security/gnutls
 net/glib2-networking
 devel/libsigc++-2
-devel/glib2mm								# *Optional*: Can disable dependency to ports LLVM ; use OpenBSD's built-in LLVM
+devel/glib2mm 															# *Optional*: Can disable dependency to ports LLVM ; use OpenBSD's built-in LLVM
 textproc/libxml++
 devel/p5-ExtUtils-Depends
 devel/p5-ExtUtils-PkgConfig
 graphics/p5-Cairo
 graphics/py-cairo
-graphics/py3-cairo							# copy the package py-cairo to py3-cairo and modify Makefile by add FLAVOR=python3
+graphics/py3-cairo 														# copy the package py-cairo to py3-cairo and modify Makefile by add FLAVOR=python3
 graphics/cairomm
 security/opencdk
 converters/p5-JSON
@@ -222,6 +231,9 @@ security/heimdal
 security/libgsasl
 security/tcltls
 net/xmlrpc-c
+math/blas
+math/lapack
+math/py-numpy
 devel/boost
 textproc/icu4c
 devel/libyaml
@@ -241,19 +253,23 @@ devel/readline
 net/lftp
 devel/p5-Locale-gettext
 unixman/p5-Crypt-UnixCrypt
+unixman/p5-Digest-SHA
 unixman/p5-File-DirSync
 x11/p5-Tk
-graphics/libwebp
 graphics/tiff
+graphics/libwebp
 graphics/gd
 devel/desktop-file-utils
 editors/nano
 sysutils/ncdu
 sysutils/htop
 net/libpsl
-net/wget								# upgrade to 1.19.2
+net/wget
 databases/kyotocabinet
+textproc/asciidoc
+lang/jimtcl
 mail/neomutt
+#mail/mutt
 sysutils/whowatch
 net/ipcalc
 net/ipv6calc
@@ -276,9 +292,11 @@ net/mirror
 net/fmirror
 devel/popt
 net/rsync
+security/libb2
 net/librsync
 net/ncftp
 security/scrypt
+security/libscrypt
 security/keychain
 sysutils/lockfile
 net/GeoIP
@@ -296,14 +314,14 @@ devel/p5-Readonly
 sysutils/p5-File-Which
 security/clusterssh
 devel/libusb-compat
-sysutils/apcupsd							# add in Makefile: FLAVOR=no_x11
+sysutils/apcupsd 														# add in Makefile: FLAVOR=no_x11
 converters/xmltoman
 devel/libdaemon
-net/avahi									# disable in Makefile package -gui
-textproc/asciidoc
+net/avahi 																# MULTI_PACKAGES -= -gui (remove -gui from available packages)
 sysutils/nut
 graphics/barcode
 net/vnstat
+math/pcalc
 sysutils/cdrtools
 sysutils/dvd+rw-tools
 sysutils/udfclient
@@ -339,9 +357,8 @@ security/ikeman
 sysutils/exfat-fuse
 sysutils/socket
 devel/libmagic
-devel/py3-setuptools						# copy the package py-setuptools to py3-setuptools and modify Makefile by add FLAVOR=python3
-devel/py3-libmagic							# copy the package py-libmagic to py3-libmagic and modify Makefile by add FLAVOR=python3
-sysutils/binwalk
+devel/py3-libmagic 														# copy the package py-libmagic to py3-libmagic and modify Makefile by add FLAVOR=python3
+sysutils/binwalk 														# disable dependency on capstone
 sysutils/dmidecode
 sysutils/ipmitool
 sysutils/pciutils
@@ -349,7 +366,9 @@ sysutils/smartmontools
 devel/acpica
 devel/libftdi
 sysutils/flashrom
-sysutils/firmware							# check with http://firmware.openbsd.org/firmware/6.2/
+devel/xtensa-elf
+sysutils/firmware 														# check with http://firmware.openbsd.org/firmware/6.3/
+devel/colordiff
 
 ##### part 2
 
@@ -366,9 +385,6 @@ misc/shared-mime-info
 graphics/jasper
 graphics/gdk-pixbuf2
 devel/py-gobject
-math/blas
-math/lapack
-math/py-numpy
 
 print/cups
 print/cups-pdf
@@ -414,7 +430,7 @@ x11/gnome/icon-theme
 www/libcroco
 x11/gnome/librsvg
 x11/dbus-glib
-x11/gtk+2									# Depends to install on gtk+3 which build a shared package: gtk-update-icon-cache
+x11/gtk+2 																# Depends to install on gtk+3 which build a shared package: gtk-update-icon-cache
 x11/gnome/at-spi2-core
 x11/gnome/at-spi2-atk
 textproc/docbook2x
@@ -426,7 +442,7 @@ sysutils/consolekit
 devel/libsoup
 net/librest
 x11/gnome/adwaita-icon-theme
-x11/gtk+3									# upgrade package from latest ports to 3.22.24
+x11/gtk+3 																# FIX: Disable Package -cloudprint
 x11/gtk2-aurora-engine
 x11/gtk2-murrine-engine
 x11/gtk2-oxygen-engine
@@ -456,17 +472,23 @@ devel/liboil
 security/libassuan
 security/libksba
 security/gnupg2
-security/gnupg								# update to v.1.4.22 (security: CVE-2017-7526)
+security/gnupg
+security/pgpdump
 x11/gnome/libsecret
-security/pinentry							# FLAVOR="no_gnome3 bootstrap"
-security/gpgme
+security/pinentry 														# FLAVOR="no_gnome3 bootstrap"
+security/gpgme 															# FLAVOR="no_qt" Disable Package gpgme-qt to avoid linking with QT5
 security/cyrus-sasl2
 security/libmcrypt
 security/mhash
 net/py-GeoIP
 net/p5-Geo-IP
 security/py-ecdsa
+security/py-bcrypt
+security/py-PyNaCl
 security/py-paramiko
+www/py-urllib3
+devel/py-certifi
+textproc/py-chardet
 www/py-requests
 devel/py-ptyprocess
 devel/py-pexpect
@@ -480,6 +502,7 @@ devel/py-cparser
 net/py-idna
 devel/py-enum34
 net/py-ipaddress
+security/py-asn1crypto
 security/py-cryptography
 devel/py-fasteners
 devel/py-monotonic
@@ -504,13 +527,14 @@ graphics/libart
 graphics/djvulibre
 math/fftw3
 math/fftw
+graphics/libraw
 graphics/ImageMagick
 graphics/libexif
 print/freetype
 print/fontforge
 print/htmldoc
 print/ps2eps
-print/texinfo								# Fix: disable run dependency on textlive-base
+print/texinfo 															# Fix: disable run dependency on textlive-base
 devel/p5-libintl
 textproc/texi2html
 multimedia/libvpx
@@ -529,12 +553,12 @@ audio/opus
 audio/gsm
 audio/libmikmod
 devel/physfs
+devel/sdl
 devel/smpeg
 devel/fribidi
 multimedia/libass
 devel/argp-standalone
 multimedia/libv4l
-devel/sdl
 devel/sdl-gfx
 devel/sdl-image
 devel/sdl-net
@@ -543,7 +567,7 @@ devel/sdl-mixer
 devel/sdl-ttf
 devel/sdl-pango
 devel/sdlmm
-graphics/ffmpeg								# if using AAC req. to compile with: devel/llvm v.5 or later (see aac bug)
+graphics/ffmpeg
 multimedia/ffmpeg2theora
 graphics/ffmpegthumbnailer
 graphics/optipng
@@ -560,7 +584,7 @@ textproc/odt2txt
 graphics/netpbm
 graphics/leptonica
 graphics/tesseract/tesseract
-graphics/tesseract/tessdata 				# modify Makefile: MULTI_PACKAGES=-main
+graphics/tesseract/tessdata 											# modify Makefile: MULTI_PACKAGES=-main
 
 devel/iso-codes
 multimedia/gstreamer-0.10/core
@@ -577,14 +601,15 @@ databases/tdb
 devel/libtalloc
 security/openpam
 sysutils/gamin
+devel/jansson
 net/samba
-x11/gnome/gvfs								# FLAVOR="no_goa no_google bootstrap"
+x11/gnome/gvfs 															# FLAVOR="no_goa no_google bootstrap"
 
 databases/p5-DBD-CSV
 textproc/p5-Text-CSV_XS
 databases/p5-DBD-SQLite
 databases/py-sqlite
-databases/postgresql 						# disable dependency of postgresql-upgrade with postgresql-previous
+databases/postgresql 													# disable dependency of postgresql-upgrade with postgresql-previous
 databases/postgresql-plv8
 databases/postgresql-pllua
 databases/pgbadger
@@ -614,7 +639,7 @@ security/p5-Digest-SHA1
 databases/p5-DBD-mysqlPP
 databases/py-mysql
 databases/mysql-utilities
-databases/redis								# Downgrade from Redis v4 to Redis 3.2.11 (add pkg in ports)
+databases/redis 														# Upgrade to latest
 databases/libhiredis
 net/p5-IO-Socket-Timeout
 devel/p5-PerlIO-via-Timeout
@@ -632,21 +657,22 @@ databases/luasqlite3
 databases/luadbi
 databases/iodbc
 databases/freetds
-databases/postgresql-odbc
+databases/postgresql-odbc 												# upgrade to latest: 10.x
 databases/py-odbc
 devel/cppunit
+security/softhsm2
 archivers/libmspack
 devel/gconf2
-x11/wxWidgets								# req. to build before erlang-wx (*optional* sub-package of erlang)
+x11/wxWidgets 															# req. to build before erlang-wx (*optional* sub-package of erlang)
 lang/erlang/16
-lang/spidermonkey
+lang/spidermonkey 														# req. by apache-couchdb only
 databases/apache-couchdb
 
-devel/spidermonkey38
+devel/spidermonkey52														# req. by GJS only
+#devel/spidermonkey60														# newer GJS fail to build
 devel/py-gobject3
-devel/py3-gobject3							# copy the package py-gobject3 to py3-gobject3 and modify Makefile by add FLAVOR=python3
+devel/py3-gobject3 														# copy the package py-gobject3 to py3-gobject3 and modify Makefile by add FLAVOR=python3
 geo/geoclue2
-lang/ruby/2.3
 devel/libnotify
 multimedia/gstreamer1/core
 multimedia/gstreamer1/plugins-base
@@ -660,14 +686,20 @@ textproc/hunspell
 textproc/mozilla-dicts/en-GB
 textproc/enchant
 textproc/hyphen
-www/webkitgtk4
+lang/ruby/2.4
+archivers/brotli
+archivers/woff2 														# added from new packages ; modify PLIST to add binaries: woff2_compress ; woff2_decompress ; woff2_info
+unixman/ttf2woff
+www/webkitgtk4 															# upgrade + fix: enchant2 -> enchant (may be needed to add dependency on multimedia/gstreamer1/plugins-bad to fix error: Missing library for gstgl-1.0>=0.0)
 x11/gnome/devhelp
 x11/gnome/yelp
 x11/gnome/devel-docs
 devel/glade
 converters/otf2bdf
-textproc/ispell								# modify Makefile: MULTI_PACKAGES=-main
+textproc/ispell 														# modify Makefile: MULTI_PACKAGES=-main
+x11/gnome/zenity
 www/webkit
+devel/py-easyprocess
 x11/py-virtualdisplay
 
 devel/p5-Class-Inspector
@@ -688,7 +720,7 @@ x11/py-wxPython
 graphics/freeglut
 devel/check
 audio/pulseaudio
-misc/gpsd									# disable PHP package
+misc/gpsd 																# disable PHP package
 geo/geoclue
 
 x11/qt3
@@ -702,8 +734,8 @@ devel/tmake
 devel/xmake
 devel/automoc
 security/botan
-security/qca1								# QCA v1, this package was removed but is preserved from the old ports (obsd60)
-security/qca								# QCA v2, in the current ports this package includes as sub-packages: qca-gnupg, qca-ossl
+security/qca1 															# QCA v1, this package was removed but is preserved from the old ports (obsd60)
+security/qca 															# QCA v2, in the current ports this package includes as sub-packages: qca-gnupg, qca-ossl
 comms/qtserialport
 devel/qjson
 
@@ -721,6 +753,7 @@ mail/p5-Mail-SPF
 net/p5-Net-CIDR-Lite
 net/p5-Socket6
 net/p5-Net-Patricia
+net/p5-Net-LibIDN
 mail/p5-Mail-SpamAssassin
 devel/p5-Test-Trap
 devel/p5-Data-Dump
@@ -768,7 +801,7 @@ devel/p5-Class-ErrorHandler
 converters/p5-Convert-PEM
 devel/p5-Data-Buffer
 security/p5-Crypt-DSA
-math/pari									# FIX: DISABLE LINK to texlive
+math/pari 																# FIX: DISABLE LINK to texlive
 math/p5-Math-Pari
 converters/p5-Convert-ASCII-Armour
 security/p5-Crypt-Random
@@ -791,9 +824,11 @@ net/p5-Net-SNMP
 devel/p5-Log-Log4perl
 www/p5-HTML-Template
 www/p5-HTML-FillInForm
+devel/py-ply
 
 net/isc-bind
 net/queryperf
+security/libsodium
 net/powerdns
 net/udns
 net/ldns
@@ -804,7 +839,6 @@ net/dnstracer
 net/dnsmasq
 net/dnsfilter
 net/adns
-security/libsodium
 net/dnscrypt-proxy
 net/totd
 security/zkt
@@ -814,19 +848,20 @@ converters/ripmime
 mail/opensmtpd-extras
 mail/exim
 mail/sendmail
-mail/dovecot								# updated to latest version from ports
+mail/dovecot 															# updated to latest version from ports
+mail/dovecot-pigeonhole 												# updated to latest version from ports
 mail/dovecot-antispam
-mail/dovecot-pigeonhole
-devel/jansson
+devel/ragel 															# req. by rspamd
+mail/rspamd
 mail/cyrus-imapd
 mail/avenger
 devel/pcre2
-security/clamav								# run a make (not install) in security/clamav-unofficial-sigs
+security/clamav 														# upgrade to latest ; run a make (not install) in security/clamav-unofficial-sigs
 mail/clamsmtp
 mail/dkimproxy
 mail/bogofilter
 mail/spampd
-mail/dspam									# add in Makefile: FLAVOR=clamav domainscale
+mail/dspam 																# FLAVOR=clamav domainscale
 mail/procmail
 mail/isync
 mail/imapsync
@@ -837,19 +872,21 @@ mail/alpine
 devel/uuid
 devel/apr
 devel/apr-util
-www/apache-httpd							# security checked OK: it contains the server core patch to fix CVE-2017-9798
+www/apache-httpd 														# upgr to latest
 www/tidyp
-lang/php/5.6								# add in Makefile: FLAVOR=no_suhosin
+lang/php/5.6 															# add in Makefile: FLAVOR=no_suhosin
 lang/php/7.0
+lang/php/7.1
+lang/php/7.2
 unixman/php-xdebug
-unixman/php-scrypt
-unixman/php-imagick
+unixman/php-mongodb 													# Possible Fix: add in environment M4=/usr/local/bin/gm4 if it fails to build with default m4 ; EXTRA CONFIGURE OPTIONS: --with-mongodb-sasl=no --with-mongodb-ssl=libressl
 unixman/php-solr
-unixman/php-mongodb							# Fix: add in environment M4=/usr/local/bin/gm4 because it fails with default m4
-unixman/php-mongo							# Deprecated: it compiles just for PHP 5.6 ; keep for old compatibility only
+unixman/php-imagick
+unixman/php-scrypt
+unixman/php-sodium 													# Possible Fix: add in environment M4=/usr/local/bin/gm4 if it fails to build with default m4 ; EXTRA CONFIGURE OPTIONS: --with-sodium=/usr/local LDFLAGS="${LDFLAGS} -L/usr/local/lib" ; ADD DEPENDENCY to security/libsodium
 net/serf
 devel/swig
-devel/subversion							# add in Makefile: FLAVOR=no_gnome-keyring
+devel/subversion 														# add in Makefile: FLAVOR=no_gnome-keyring
 devel/cvsps
 devel/git
 www/ap2-mod_perl
@@ -859,11 +896,12 @@ lang/node
 www/ruby-rack
 www/ruby-passenger
 www/nginx
-net/pure-ftpd								# add in Makefile: FLAVOR=mysql postgresql virtual_chroot
-textproc/sphinx								# add in Makefile: FLAVOR=pgsql
+net/pure-ftpd 															# add in Makefile: FLAVOR=mysql postgresql virtual_chroot
+textproc/sphinx 														# add in Makefile: FLAVOR=pgsql
 unixman/mongo-tools
-databases/mongodb							# the build breaks with PCRE 8.41 ; to unbreak: use the built-in pcre by disable the switch --use-system-pcre in Makefile (or add the patches that fix the std::string from fixed port)
+databases/mongodb 														# the build may breaks with PCRE 8.41+ or Boost 1.62+ ; to unbreak: use the built-in pcre by disable the switches --use-system-pcre --use-system-boost in Makefile (or add the patches that fix the std::string / fts/unicode/string from fixed port)
 databases/py-mongo
+unixman/rclone
 
 sysutils/setquota
 net/rrdtool
@@ -883,7 +921,7 @@ math/cgal
 geo/pgrouting
 devel/cunit
 geo/pgpointcloud
-geo/osm2pgrouting							# do a make + CTRL-C after download source also in geo/osm2pgsql which fails to build with geos 3.6
+geo/osm2pgrouting 														# do a make fetch also in geo/osm2pgsql which fails to build with geos 3.6
 www/fcgi
 www/spawn-fcgi
 geo/mapcache
@@ -901,8 +939,11 @@ net/pen
 security/dante
 net/netfwd
 www/lighttpd
+misc/zzuf
+net/socat
+www/libmicrohttpd
 www/sthttpd
-net/sharity-light							# package restored from old ports
+net/sharity-light 														# package restored from old ports
 sysutils/usmb
 www/squid
 www/sqtop
@@ -929,9 +970,8 @@ textproc/py-xml
 archivers/snappy
 devel/protobuf
 devel/protobuf-c
-archivers/brotli
-archivers/woff2								# added from new packages ; modify PLIST to add binaries: woff2_compress ; woff2_decompress ; woff2_info
-unixman/ttf2woff
+www/libsass
+www/sassc
 
 textproc/libical
 mail/gmime
@@ -944,14 +984,14 @@ telephony/spandsp
 textproc/iksemel
 devel/cpptest
 www/uriparser
-telephony/asterisk							# FLAVOR="imap no_odbc"
+telephony/asterisk 														# FLAVOR="imap no_odbc"
 telephony/asterisk-sounds/core-sounds/en
 telephony/asterisk-sounds/moh-opsound
 net/ortp
 telephony/bcg729
 telephony/asterisk-g729
 net/ejabberd
-net/jabberd									# FLAVOR="mysql postgresql db ldap"
+net/jabberd 															# FLAVOR="mysql postgresql db ldap"
 unixman/mu-conference
 net/tkabber
 comms/conserver
@@ -992,7 +1032,7 @@ x11/sakura
 audio/libao
 x11/rdesktop
 net/ssvnc
-net/noVNC
+net/libvncserver
 x11/x11vnc
 
 x11/tango-icon-theme
@@ -1002,32 +1042,33 @@ fonts/roboto-fonts
 fonts/ubuntu-fonts
 fonts/liberation-fonts
 fonts/intlfonts
-fonts/ja-mplus-ttf
+#fonts/ja-mplus-ttf
 fonts/ja-sazanami-ttf
 fonts/terminus-font
+fonts/ibm-plex
 
 x11/menu-cache
 x11/libfm
 x11/pcmanfm
 x11/gnome/autoar
-x11/gnome/file-roller						# fixes in Makefile and PLIST: remove dependency and references to nautilus
+x11/gnome/file-roller 													# fixes in Makefile and PLIST: remove dependency and references to nautilus
 
 security/nss
 www/firefox-esr
-mail/mozilla-thunderbird					# FIX: add dependency in Makefile: LIB_DEPENDS += devel/py-virtualenv devel/py-pip (or install before building: py-virtualenv py-pip) ; WILL NOT WORK WITH SYMLINKED /usr/ports/pobj so must set WRKOBJDIR=/_PORTS/pobj in Makefile
+mail/mozilla-thunderbird 												# FIX: WILL NOT BUILD WITH SYMLINKED /usr/ports/pobj so must set WRKOBJDIR=/_PORTS/pobj in Makefile ; other possible fix - add dependency in Makefile: LIB_DEPENDS += devel/py-virtualenv devel/py-pip (or install before building: py-virtualenv py-pip)
 mail/enigmail
-www/seamonkey								# FIX: WILL NOT WORK WITH SYMLINKED /usr/ports/pobj so must set WRKOBJDIR=/_PORTS/pobj in Makefile
+www/seamonkey 															# FIX: WILL NOT BUILD WITH SYMLINKED /usr/ports/pobj so must set WRKOBJDIR=/_PORTS/pobj in Makefile
 net/filezilla
-www/netsurf									# Used for testing OLD Browsers with support only HTML4/CSS3 and basic JS
+www/netsurf 															# Used for testing OLD Browsers with support only HTML4/CSS3 and basic JS
 x11/dmenu
 multimedia/gstreamer1/plugins-libav
-www/surf									# embedable browser that can be used with GO language programatically for various tasks
+www/surf 																# embedable browser that can be used with GO language programatically for various tasks
 www/links+
 x11/gnome/libgnome-keyring
-www/chromium
 #www/iridium
+textproc/wkhtmltopdf
 
-databases/pgadmin3
+databases/pgadmin3 													# upgr. to 1.22.2 + add basic patch to support PostgreSQL v10: https://bitbucket.org/openscg/pgadmin3-lts/commits/all @ https://bitbucket.org/openscg/pgadmin3-lts/commits/ea8a31af779b101248fc13242cb7a34e
 databases/mysqlcc
 databases/percona-toolkit
 editors/leafpad
@@ -1044,11 +1085,12 @@ x11/gnome/ghex
 x11/gnome/calculator
 devel/chmlib
 x11/xchm
-devel/colordiff
 
 devel/dtc
 devel/libiscsi
-emulators/qemu								# upgr. to v.2.10.1 ; replace in Makefile the dependency of SDL2 with dependency on SDL
+devel/capstone/main
+x11/xkbcommon
+emulators/qemu 															# replace in Makefile the dependency of SDL2 with dependency on SDL
 unixman/qtemu
 
 x11/gnome/libgnomecanvas
@@ -1065,10 +1107,10 @@ x11/gnome/libgnomeui
 x11/gnome/planner
 
 devel/boehm-gc
-graphics/libraw
 graphics/potrace
 textproc/gtkspell
 graphics/inkscape
+graphics/scour
 
 graphics/aalib
 graphics/libwmf
@@ -1085,7 +1127,7 @@ devel/goffice
 textproc/raptor
 textproc/rasqal
 textproc/redland
-editors/abiword								# downgrade package to v2
+editors/abiword 														# downgrade package to v2 and disable dependency on pthread-stubs on OpenBSD6.3+ (pthread-stubs is no longer required on OpenBSD and has been removed ; libpthread parts involved moved to libc) ; v3 is still too buggy
 math/gnumeric
 textproc/gpresent
 
@@ -1095,14 +1137,16 @@ x11/gnome/desktop
 misc/hwdata
 x11/gnome/backgrounds
 x11/gnome/themes-standard
+textproc/source-highlight
+textproc/gtk-doc
 fonts/cantarell-fonts
 x11/gnome/eog
 graphics/clutter/cogl
 graphics/clutter/core
 graphics/clutter/clutter-gtk
 geo/libchamplain
-x11/gnome/eog-plugins						# modify Makefile: comment out dependency on x11/gnome/online-accounts and devel/libgdata and remove unused dependecies ; remove in PLIST all references to *postasa*
-graphics/evince								# FLAVOR="light"
+x11/gnome/eog-plugins 													# modify Makefile: comment out dependency on x11/gnome/online-accounts and devel/libgdata and remove unused dependecies ; remove in PLIST all references to *postasa*
+graphics/evince 														# FLAVOR="light"
 
 graphics/dia
 devel/gflags
@@ -1111,33 +1155,32 @@ audio/openal
 textproc/txt2man
 textproc/tinyxml
 graphics/opencolorio
-graphics/openimageio
+graphics/openimageio 													# NOTICE: if possible get rid of QT5 and try build with QT4 !!!
 graphics/blender
 
 graphics/libgxps
 x11/gnome/libxklavier
-x11/gnome/zenity
 devel/libwnck3
 sysutils/upower
 devel/libgtop2
-x11/mate									# Disable caja + caja-extensions from mate main Makefile ; remove references to caja in atril and engampa from Makefile and pkg/PLIST ; add in atril/Makefile: CONFIGURE_ARGS+= --disable-caja ; add in engrampa/Makefile: CONFIGURE_ARGS+= --disable-caja-actions ; Disable link to gnome-keyring in: session-manager/Makefile and in: power-manager/Makefile
+x11/mate 																# Disable caja + caja-extensions from mate main Makefile ; remove references to caja in atril and engampa from Makefile and pkg/PLIST ; add in atril/Makefile: CONFIGURE_ARGS+= --disable-caja ; add in engrampa/Makefile: CONFIGURE_ARGS+= --disable-caja-actions ; Disable link to gnome-keyring in: session-manager/Makefile and in: power-manager/Makefile
 
 devel/silc-toolkit
 net/meanwhile
 net/libgadu
-net/pidgin									# FLAVOR=""
+net/pidgin 																# FLAVOR=""
 x11/pidgin-libnotify
 security/libotr
 security/pidgin-otr
 
 cad/qcad
-productivity/vym							# Downgrade to v 2.2.2 (from OpenBSD 5.7 ports) to compile with QT4 avoid dependency on QT5
+productivity/vym 															# upgr. to latest + add patch to avoid warning message on translations
 textproc/podofo
 print/scribus
 
 devel/py-doit
-devel/py3-six								# copy the package py-six to py3-six and modify Makefile by add FLAVOR=python3
-devel/py3-cloudpickle						# copy the package py-cloudpickle to py3-cloudpickle and modify Makefile by add FLAVOR=python3
+devel/py3-six 															# copy the package py-six to py3-six and modify Makefile by add FLAVOR=python3
+devel/py3-cloudpickle 													# copy the package py-cloudpickle to py3-cloudpickle and modify Makefile by add FLAVOR=python3
 devel/libgee
 textproc/libxmlbird
 graphics/birdfont
@@ -1148,11 +1191,11 @@ security/fwbuilder
 net/putty
 net/libcares
 net/libsmi
-net/wireshark								# modify Makefile: remove dependency on QT5 (will make just command line version + GTK3 version)
+net/wireshark 															# FLAVOR="no_qt" (modify Makefile: remove dependency on QT5 so it will make just command line version + GTK3 version)
 net/mbrowse
 net/miniupnp/libnatpmp
 net/miniupnp/miniupnpc
-net/transmission							# FLAVOR="no_qt"
+net/transmission 														# FLAVOR="no_qt"
 devel/gconf-editor
 x11/gnome/dconf-editor
 x11/freerdp
@@ -1196,17 +1239,26 @@ graphics/gtkam
 
 math/graphviz
 devel/libgit2
-lang/rust
-www/mozilla-firefox							# required just for testing, it have the headless switch ; modified PLIST: disable /usr/local/bin/* + desktop files to avoid use it as default (the default browser should remain firefox-esr)
+#www/mozilla-firefox 													# required just for testing, it have the headless switch ; modified PLIST: disable /usr/local/bin/* + desktop files to avoid use it as default (the default browser should remain firefox-esr)
 devel/ectags
 devel/mm-common
 textproc/gspell
-x11/gnome/builder							# modify Makefile and pkg/PLIST: disable dependecies to clang
-textproc/py3-lxml							# copy the package py-lxml to py3-lxml and modify Makefile by add FLAVOR=python3
-devel/py3-jedi 								# copy the package py-jedi to py3-jedi and modify Makefile by add FLAVOR=python3
+x11/gnome/builder
+textproc/py3-lxml 														# copy the package py-lxml to py3-lxml and modify Makefile by add FLAVOR=python3
+devel/py3-jedi 															# copy the package py-jedi to py3-jedi and modify Makefile by add FLAVOR=python3
 sysutils/ggrep
 devel/libunique
 editors/qscintilla
+
+archivers/p5-Archive-Zip
+misc/findutils
+devel/valgrind
+lang/guile2
+x11/gnome/gjs
+graphics/sane-backends
+graphics/simple-scan
+print/t1utils
+sysutils/uefitool
 
 x11/xfce4/libxfce4util
 x11/xfce4/xfconf
@@ -1218,8 +1270,6 @@ x11/xfce4/xfce4-session
 x11/xfce4/exo
 x11/xfce4/garcon
 x11/xfce4/xfce4-panel
-textproc/source-highlight
-textproc/gtk-doc
 x11/xfce4/thunar
 x11/xfce4/thunar-vcs
 x11/xfce4/xfdesktop
@@ -1243,118 +1293,70 @@ x11/xfce4/gtk-xfce-engine
 x11/xfce4/xfce4-icon-theme
 x11/xfce4/xfce4-dev-tools
 
-devel/llvm
-devel/valgrind
-lang/guile2
-
-##### part 4 (only main packages listed below)
-
-devel/apache-ant							# DOWNLOAD ALSO THE SOURCES !! + downgrade to 1.9.7 (from old ports) to use the same version as jdk build
-java/javaPathHelper
-devel/jdk/1.8
+graphics/glm
+textproc/clucene
+editors/libreoffice 													# FLAVOR="no_lang no_java" ; need some fixes to remove dependency for KDE ; if no_java FLAVOR is built the Makefile need to adapt paths for libjvmaccesslo.so and libjvmfwklo.so as: ${PREFIX}/lib/libreoffice/program/ instead of ${PREFIX}/lib/libreoffice/ure/lib/
 
 x11/gtk-vnc
-devel/spice-protocol
 sysutils/usbutils
+devel/spice-protocol
 x11/spice-gtk
-x11/gnome/vinagre							# FIX in Makefile: remove the dependecies to avahi-gtk3 which can't be installed by a missing dependency (py-wstools)
-
-archivers/p5-Archive-Zip
-misc/findutils
-textproc/clucene
-editors/libreoffice							# FLAVOR="no_lang no_java" ; need some fixes to remove dependency for KDE ; if NoJava flavor is built the Makefile need to adapt paths for libjvmaccesslo.so and libjvmfwklo.so as: ${PREFIX}/lib/libreoffice/program/ instead of ${PREFIX}/lib/libreoffice/ure/lib/
-graphics/sane-backends
-graphics/simple-scan
-print/t1utils
-cad/gtkwave
+x11/gnome/vinagre 														# FIX in Makefile: remove the dependecies to avahi-gtk3 which can't be installed by a missing dependency (py-wstools)
 www/epiphany
-x11/gnome/gjs
+cad/gtkwave
 
-audio/vorbis-tools
-audio/libcdio
-graphics/vcdimager
-devel/p5-Event-ExecFlow
-devel/p5-AnyEvent
-devel/libev
-devel/p5-common-sense
-devel/p5-Canary-Stability
-devel/p5-EV
-devel/p5-Event
-net/p5-Event-RPC
-x11/p5-Gtk2-Ex-FormFactory
-audio/liba52
-graphics/libmpeg2
-multimedia/libquicktime
-audio/opencore-amr
-audio/opusfile
-audio/twolame
-audio/sox
-multimedia/transcode						# remove dependency of mplayer
-multimedia/subtitleripper
-
-sysutils/sleuthkit							# upgrade to latest
+sysutils/sleuthkit
 sysutils/mac-robber
+security/polarssl
 
-games/sl
 audio/libmodplug
-devel/smpeg2
+audio/vorbis-tools
 devel/sdl2
 devel/sdl2-net
+devel/sdl2-ttf
 devel/sdl2-image
 devel/sdl2-gfx
-devel/sdl2-ttf
+devel/smpeg2
 devel/sdl2-mixer
 devel/pangox-compat
 x11/gtkglext
 x11/gtkglextmm
-net/libircclient
 
+games/sl
+games/gti
+net/libircclient
+games/pokerth
 games/pioneers
-games/starfighter
 games/gnubg
 games/gnuchess
 games/xboard
 games/gnurobbo
-games/pokerth
+
+##### part 4 (extra)
+
+games/gottcode
+games/starfighter
+games/wesnoth
 net/enet
 net/gloox
 games/0ad
 
+devel/codeblocks 														# Some plugins make it crash ; disable the following plugins on the first run: 'Code Completion', 'Code Snippets', 'Drag Scroll', 'File Manager', 'MouseSap', 'Spell Checker'
+lang/ghc
+devel/cabal-install
 
-##### part 5 (only if needed)
+devel/apache-ant 														# DOWNLOAD ALSO THE SOURCES !! + downgrade to 1.9.7 (from old ports) to use the same version as jdk build
+java/javaPathHelper
+devel/jdk/1.8
 
-#editors/libreoffice@-java 					# build manually: SUBPACKAGE="-java" make package BULK=Yes
-#databases/db/v4@-java						# build manually: FLAVOR="" SUBPACKAGE="-java" make package BULK=Yes
-#devel/maven								# DOWNLOAD ALSO THE SOURCES !!
-#www/tomcat/v8								# DOWNLOAD ALSO THE SOURCES !!
-#devel/netbeans								# DOWNLOAD ALSO THE SOURCES !!
+##### part 5 (extra, bin only)
 
+devel/netbeans
+textproc/solr
+textproc/elasticsearch
+devel/jenkins/stable
+devel/maven
+www/tomcat/v8
 
-##### part 6 (SKIP)
+#END
 
-
-#games/ace									# most of them are broken (segmentation fault)
-#x11/gnome/aisleriot						# not working with non-UTF8 locale
-#games/rocksndiamonds						# it is from BINARY DISTRIB, NO SOURCES DISTRIB
-#games/sdlpop								# Prince of Persia SDL, source but based on disasembly
-
-#graphics/glm
-#graphics/freeimage
-#devel/ois
-#x11/ogre
-#x11/irrlicht
-#x11/cegui
-#audio/freealut
-#games/sumwars								# game is complicated !
-
-#converters/unoconv							# skip, conflicts with odt2txt
-#multimedia/avidemux						# FAILED !! change in Makefile: COMPILER=ports-gcc (or gcc instead of base-gcc) to force compile also on amd64
-
-#devel/codeblocks							# change in Makefile: : COMPILER=ports-gcc (when built with default clang or ports-clang it crashes)
-#devel/jenkins/stable						# JUST DOWNLOAD THE SOURCES !!
-
-#lang/ghc
-#devel/cabal-install
-#meta/haskell-platform
-
-### END

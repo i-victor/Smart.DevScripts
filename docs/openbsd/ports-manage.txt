@@ -1,5 +1,17 @@
 
-##### OpenBSD Ports HowTo
+##### OpenBSD Ports HOWTO
+
+###################
+
+### Create new port:
+make makesum
+make checksum
+make fake
+make update-plist
+make clean
+make package BULK=yes
+
+###################
 
 ### Installing ports sources: ports.tar.gz will be unarchived into /usr to have /usr/ports
 su -
@@ -47,12 +59,18 @@ FLAVOR="light" make package BULK=Yes
 cd /usr/ports/packages/amd64/all
 pkg_add -D unsigned mc-x.y.z.tgz
 
-#! Install or update newer ports
+###################
+
+#! Install newer ports
 pkg_add -D unsigned *.tgz
+
 #! Mark all installed packages as automated
 pkg_add -D unsigned -aa *.tgz
-#! After, force replace all packages, without replacing etc/%pkg-configs% (may be needed as after upgrading a package others were built on it - different version)
+
+#! Update Ports (incl. dep. updates, without modifying etc files ...) After, force replace all packages, without replacing etc/%pkg-configs% (may be needed as after upgrading a package others were built on it - different version)
 pkg_add -D unsigned -rU *.tgz
+
+###################
 
 # Force installing many ports at once
 pkg_add -aa -D unsigned -I *.tgz

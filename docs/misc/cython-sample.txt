@@ -1,0 +1,7 @@
+
+# compile executable from python with cython
+
+cython --embed script.py
+gcc script.c -o script-exe -O2 `pkg-config --libs --cflags python2`
+gcc scrapper.c -o scrapper -O2 `pkg-config --libs --cflags python2 --static`
+

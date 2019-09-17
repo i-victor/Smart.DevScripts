@@ -1,8 +1,8 @@
 #!/bin/ksh
 
-### OpenBSD 6.2 Ports Automate Build
-## (c) 2016-2017 unix-world.org
-## r.180215
+### OpenBSD 6.3 Ports Automate Build
+## (c) 2016-2018 unix-world.org
+## r.180410
 ###
 ## Instructions:
 #1. Must be run as non-privileged user (ex: admin)
@@ -13,13 +13,13 @@
 ###
 
 # Actions: list | test | build
-UXM_PORTS_ACTION=test
+UXM_PORTS_ACTION=build
 UXM_LOG_DIR="/_PORTS/uxm-build-logs"
 UXM_UNPRIV_USER=admin
 
 ### DO NOT MODIFY BELOW CODE !
 
-echo "##### Preparing to [${UXM_PORTS_ACTION}] the OpenBSD 6.2 Ports #####"
+echo "##### Preparing to [${UXM_PORTS_ACTION}] the OpenBSD 6.3 Ports (Uxm) #####"
 sleep 5
 
 # incremental number
