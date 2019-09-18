@@ -2,7 +2,7 @@
 // javascript parser for play.google.com
 // (c) 2017-2019 Radu.I
 
-var uxmJScriptVersion = 'v.20190916.1637#play.google.com'
+var uxmJScriptVersion = 'v.20190918.1313#play.google.com'
 
 function uxmAjaxCall(url, method, data) {
 	//--
@@ -21,21 +21,24 @@ function uxmRunSpider(scriptUrl) {
 	//--
 	var myRawLinks = '';
 	var mylinks = [];
-	var myNumBttns = 0;
+	var mybttns = [];
 	jQuery('a.JC71ub').each(function(index){
 		mylinks.push(jQuery(this).attr('href'));
 	});
 	myRawLinks = mylinks.join('\\n');
 	//alert('Links: ' + myRawLinks);
 	jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').each(function(index){
-		myNumBttns++;
+		if(jQuery(this).is(':visible')) {
+			mybttns.push(index);
+		}
 	});
+	myRawBttns = mybttns.join('\\n');
 	//--
 	var myData = {
 		servicename: 'Webkit',
 		servicetype: 'play.google.com',
-		buttons: Number(myNumBttns),
 		crrlink: String(window.location.href),
+		buttons: String(myRawBttns),
 		urldataset: String(myRawLinks)
 	};
 	var myDivOK = '<div style="z-index:2147483647; position:fixed; top:10px; left:5px; width:96vw; min-height:200px; background:#E6F3FF; border:1px solid #729FCF; padding:10px; font-size:20px; font-weight:bold; opacity:0.85;">Service POST: REPLY OK</div>';
@@ -90,15 +93,25 @@ function uxmRunScript() {
 		//alert('Hash (2): ' + hash);
 		if(!isNaN(hash) && isFinite(hash) && (hash >= 0)) {
 			//alert('Hash (3): ' + hash);
-			//alert('BtnText: ' + jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).text());
-			var u = jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).attr('href');
-			if(u) {
-				rndTime = Math.floor(Math.random() * 7001) + 500;
-				setTimeout(function(){ window.location = String(u); }, rndTime);
-			//	jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash)[0].click();
-			} else {
-				alert('FAILED to follow See More button #' + hash);
-			} //end if else
+			rndTime = Math.floor(Math.random() * 2001) + 500;
+			window.scrollTo(0, document.body.scrollHeight);
+			setTimeout(function(){
+				rndTime = Math.floor(Math.random() * 2001) + 500;
+				window.scrollTo(0, document.body.scrollHeight);
+				setTimeout(function(){
+					//alert('BtnText: ' + jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).text());
+					var u = jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).attr('href');
+					if(u) {
+						rndTime = Math.floor(Math.random() * 7001) + 500;
+						u += '&hl=en&gl=us';
+						//alert(u);
+						setTimeout(function(){ window.location = String(u); }, rndTime);
+					//	jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash)[0].click();
+					} else {
+						alert('FAILED to follow See More button #' + hash);
+					} //end if else
+				}, rndTime);
+			}, rndTime);
 			return;
 		} else {
 			hash = -1;

@@ -49,7 +49,7 @@ if((string)$_POST['servicename'] == '') {
 $urls = [
 //	'https://www.unix-world.org/',
 //	'https://www.wikipedia.org/',
-	'https://play.google.com/store/apps/category/DATING?hl=en#1', //.rand(0,3),
+	'https://play.google.com/store/apps/category/GAME_PUZZLE/?hl=en&gl=us#8', //.rand(0,3),
 //	''
 ];
 
