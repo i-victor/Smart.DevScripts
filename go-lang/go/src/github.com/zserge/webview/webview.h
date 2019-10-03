@@ -250,14 +250,21 @@ static void external_message_received_cb(WebKitUserContentManager *m,
   if (w->external_invoke_cb == NULL) {
     return;
   }
+//--# deprecation fix for webkitgtk4 >= 2.22 (unixman)
+#if WEBKIT_MAJOR_VERSION >= 2 && WEBKIT_MINOR_VERSION >= 22
+  JSCValue *value = webkit_javascript_result_get_js_value(r);
+  char *s = jsc_value_to_string(value);
+#else
   JSGlobalContextRef context = webkit_javascript_result_get_global_context(r);
   JSValueRef value = webkit_javascript_result_get_value(r);
   JSStringRef js = JSValueToStringCopy(context, value, NULL);
   size_t n = JSStringGetMaximumUTF8CStringSize(js);
   char *s = g_new(char, n);
   JSStringGetUTF8CString(js, s, n);
-  w->external_invoke_cb(w, s);
   JSStringRelease(js);
+#endif
+//--# end fix
+  w->external_invoke_cb(w, s);
   g_free(s);
 }
 
@@ -318,36 +325,15 @@ WEBVIEW_API int webview_init(struct webview *w) {
                    G_CALLBACK(external_message_received_cb), w);
 
   w->priv.webview = webkit_web_view_new_with_user_content_manager(m);
-  //-- unixman
-  webkit_web_context_set_tls_errors_policy(webkit_web_view_get_context(WEBKIT_WEB_VIEW(w->priv.webview)), WEBKIT_TLS_ERRORS_POLICY_IGNORE);
-  //-- #unixman
   webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv.webview),
                            webview_check_url(w->url));
   g_signal_connect(G_OBJECT(w->priv.webview), "load-changed",
                    G_CALLBACK(webview_load_changed_cb), w);
   gtk_container_add(GTK_CONTAINER(w->priv.scroller), w->priv.webview);
 
-  //-- unixman
-  WebKitSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
-  webkit_settings_set_default_charset(settings, "UTF-8");
-  webkit_settings_set_user_agent(settings, webkit_settings_get_user_agent(settings));
-  webkit_settings_set_enable_plugins(settings, false);
-  webkit_settings_set_enable_java(settings, false);
-  webkit_settings_set_javascript_can_access_clipboard(settings, false);
-  webkit_settings_set_javascript_can_open_windows_automatically(settings, false);
-  webkit_settings_set_allow_modal_dialogs(settings, true);
-  //webkit_settings_set_enable_private_browsing(settings, false); // deprecated
-  webkit_settings_set_enable_page_cache(settings, false);
-  webkit_settings_set_enable_smooth_scrolling(settings, false);
-  webkit_settings_set_enable_webgl(settings, false);
-  webkit_settings_set_enable_accelerated_2d_canvas(settings, false);
-  webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER); // WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND
-  //-- #unixman
-
   if (w->debug) {
-    //-- unixman
-    //WebKitSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
-    //-- #unixman
+    WebKitSettings *settings =
+        webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
     webkit_settings_set_enable_write_console_messages_to_stdout(settings, true);
     webkit_settings_set_enable_developer_extras(settings, true);
   } else {
@@ -1674,7 +1660,12 @@ WEBVIEW_API void webview_dialog(struct webview *w,
 }
 
 WEBVIEW_API void webview_terminate(struct webview *w) { PostQuitMessage(0); }
-WEBVIEW_API void webview_exit(struct webview *w) { OleUninitialize(); }
+
+WEBVIEW_API void webview_exit(struct webview *w) {
+  DestroyWindow(w->priv.hwnd);
+  OleUninitialize();
+}
+
 WEBVIEW_API void webview_print_log(const char *s) { OutputDebugString(s); }
 
 #endif /* WEBVIEW_WINAPI */

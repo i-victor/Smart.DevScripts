@@ -6,9 +6,13 @@
 
 package main
 
+/*
+#cgo openbsd LDFLAGS: -Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib
+*/
+
 import (
-	"github.com/zserge/webview"
-//	"github.com/unix-world/webview"
+//	"github.com/zserge/webview"
+	"github.com/unix-world/webview"
 )
 
 func main() {

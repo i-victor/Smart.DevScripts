@@ -1,5 +1,5 @@
 //
-// Package webview implements Go bindings to https://github.com/zserge/webview C library.
+// Package webview implements Go bindings to https://github.com/unix-world/webview C library.
 //
 // Bindings closely repeat the C APIs and include both, a simplified
 // single-function API to just open a full-screen webview window, and a more
@@ -17,13 +17,11 @@ package webview
 #cgo windows CFLAGS: -DWEBVIEW_WINAPI=1
 #cgo windows LDFLAGS: -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32
 
-#cgo darwin CFLAGS: -DWEBVIEW_COCOA=1 
-#cgo darwin LDFLAGS: -framework WebKit
+#cgo darwin CFLAGS: -DWEBVIEW_COCOA=1 -x objective-c
+#cgo darwin LDFLAGS: -framework Cocoa -framework WebKit
 
 #include <stdlib.h>
 #include <stdint.h>
-#define WEBVIEW_STATIC
-#define WEBVIEW_IMPLEMENTATION
 #include "webview.h"
 
 extern void _webviewExternalInvokeCallback(void *, void *);
