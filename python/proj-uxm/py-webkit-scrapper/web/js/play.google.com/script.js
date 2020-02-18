@@ -2,7 +2,8 @@
 // javascript parser for play.google.com
 // (c) 2017-2019 Radu.I
 
-var uxmJScriptVersion = 'v.20190918.1313#play.google.com'
+var uxmJScriptVersion = 'v.20190919.1059#play.google.com';
+var uxmJSUrlHash = null;
 
 function uxmAjaxCall(url, method, data) {
 	//--
@@ -76,49 +77,47 @@ function uxmRunSpider(scriptUrl) {
 		//alert('POST: REPLY FAIL');
 		jQuery('body').append(myDivFAIL);
 	});
+	//--
+} //END FUNCTION
+
+
+function uxmRunFollowButton(hash) {
+	//--
+	if(hash) {
+		hash = parseInt(hash);
+		if(!isNaN(hash) && isFinite(hash) && (hash >= 0)) {
+			var u = jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).attr('href');
+			if(u) {
+				rndTime = Math.floor(Math.random() * 7001) + 500;
+				u += '&hl=en&gl=us';
+				setTimeout(function(){ window.location = String(u); }, rndTime); // jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash)[0].click();
+			} else {
+				alert('FAILED to follow See More button #' + hash);
+			} //end if else
+		} //end if else
+	} //end if
+	//--
 } //END FUNCTION
 
 
 function uxmRunScript() {
 	//--
-	//alert('Run (1)');
-	var hash = null;
 	try {
-		hash = window.location.hash;
-	} catch(err){}
-	//alert('Hash (1): ' + hash);
-	var rndTime;
-	if(hash) {
-		hash = parseInt(hash.substr(1));
-		//alert('Hash (2): ' + hash);
-		if(!isNaN(hash) && isFinite(hash) && (hash >= 0)) {
-			//alert('Hash (3): ' + hash);
-			rndTime = Math.floor(Math.random() * 2001) + 500;
-			window.scrollTo(0, document.body.scrollHeight);
-			setTimeout(function(){
-				rndTime = Math.floor(Math.random() * 2001) + 500;
-				window.scrollTo(0, document.body.scrollHeight);
-				setTimeout(function(){
-					//alert('BtnText: ' + jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).text());
-					var u = jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash).attr('href');
-					if(u) {
-						rndTime = Math.floor(Math.random() * 7001) + 500;
-						u += '&hl=en&gl=us';
-						//alert(u);
-						setTimeout(function(){ window.location = String(u); }, rndTime);
-					//	jQuery('a.LkLjZd.ScJHi.U8Ww7d.xjAeve.nMZKrb.id-track-click').eq(hash)[0].click();
-					} else {
-						alert('FAILED to follow See More button #' + hash);
-					} //end if else
-				}, rndTime);
-			}, rndTime);
-			return;
-		} else {
-			hash = -1;
-		} //end if else
-	} //end if
+		uxmJSUrlHash = String(window.location.hash);
+	} catch(err){
+		uxmJSUrlHash = '';
+	} //end try catch
+	if(uxmJSUrlHash) {
+		uxmJSUrlHash = parseInt(uxmJSUrlHash.substr(1));
+		if(isNaN(uxmJSUrlHash) || !isFinite(uxmJSUrlHash) || (uxmJSUrlHash < 0)) {
+			uxmJSUrlHash = false;
+		} //end if
+	} else {
+		uxmJSUrlHash = false;
+	} //end if else
 	//--
-	//alert('Run (2)');
+	var rndTime;
+	//--
 	var uxmIsInitUrl = false;
 	if(jQuery('h1#PyWebkitGTK-INIT-Page').text()) {
 		uxmIsInitUrl = true;
@@ -156,7 +155,11 @@ function uxmRunScript() {
 								setTimeout(function(){
 									window.scrollTo(0, document.body.scrollHeight);
 									setTimeout(function(){
-										uxmRunSpider(uxmScriptUrl);
+										if(uxmJSUrlHash) {
+											uxmRunFollowButton(uxmJSUrlHash);
+										} else {
+											uxmRunSpider(uxmScriptUrl);
+										} //end if else
 									}, 1750);
 								}, rndTime);
 							}, rndTime);
@@ -169,7 +172,6 @@ function uxmRunScript() {
 	//--
 } //END FUNCTION
 
-//alert('Loaded ...');
 uxmRunScript();
 
 // #END

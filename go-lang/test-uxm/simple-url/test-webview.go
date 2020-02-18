@@ -20,7 +20,7 @@ func main() {
 		Width:  960,
 		Height: 720,
 		Title:  "Test Loading External URL",
-		URL:    "https://demo.unix-world.org/smart-framework/",
+		URL:    "http://demo.unix-world.org/smart-framework/",
 	})
 	defer w.Exit()
 	w.Run()

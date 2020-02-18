@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 # Webkit Crawler
-# (c) 2017-2019 Radu.I
+# (c) 2017-2020 Radu.I
 
-uxmScriptVersion = 'v.20190918.1313'
+uxmScriptVersion = 'v.20200213.1203'
 
 import yaml, random
 with open("crawler.yaml", 'r') as ymlfile:
-    cfgdata = yaml.load(ymlfile)
+    cfgdata = yaml.safe_load(ymlfile)
 #   print(cfgdata)
 
 userAgent = cfgdata['userAgent']
