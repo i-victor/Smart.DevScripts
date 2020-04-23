@@ -27,10 +27,11 @@ import (
 	"os"
 	"golang.org/x/net/websocket"
 
-	"github.com/zserge/webview"
+	"github.com/unix-world/smartgo/webview"
+//	"github.com/zserge/webview"
 )
 
-var uxmScriptVersion = "r.181202"
+var uxmScriptVersion = "r.20200423.1313"
 
 var targetAddr = flag.String("target", "", "vnc-host:vnc-port")
 

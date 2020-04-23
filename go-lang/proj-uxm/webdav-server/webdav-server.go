@@ -19,7 +19,7 @@ import (
 )
 const
 (
-	THE_VERSION = "r.20200419.2355"
+	THE_VERSION = "r.20200421.2337"
 	STORAGE_DIR = "./dav-storage"
 	DAV_PATH = "/webdav"
 	CONN_HOST = "0.0.0.0"
@@ -104,8 +104,8 @@ func main() {
 			return
 		}
 		log.Printf("MiniWebDAV GO Server :: DEFAULT [%s %s %s] %s [%s] %s\n", r.Method, r.URL, r.Proto, strconv.Itoa(statusCode), r.Host, r.RemoteAddr)
-		w.WriteHeader(statusCode)
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(statusCode) // status code must be after content type
 		fmt.Fprintf(w, "<!DOCTYPE html>" + "\n" + "<html>" + "\n" + "<head>" + "\n" + `<meta charset="UTF-8">` + "\n" + "<title>" + html.EscapeString("MiniWebDAV GO Server " + THE_VERSION) + "</title></head>" + "\n" + "<body>" + "\n" + `<div style="text-align:center; margin:10px; cursor:help;"><img alt="Status: Up and Running ..." title="Status: Up and Running ..." width="96" height="96" src="data:image/svg+xml;base64,` + base64.StdEncoding.EncodeToString([]byte(SVG_SPIN)) + `"></div>` + "\n" + `<div style="background:#778899; color:#FFFFFF; font-size:2rem; font-weight:bold; text-align:center; border-radius:3px; padding:10px; margin:20px;">` + "\n" + "<pre>" + "\n" + html.EscapeString(serverSignature.String()) + "</pre>" + "\n" + "</div>" + "\n" + "</body>" + "\n" + "</html>" + "\n")
 	})
 
@@ -124,7 +124,7 @@ func main() {
 		// check if basic auth and if credentials match
 		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(ADMIN_USER)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(ADMIN_PASSWORD)) != 1 {
 			w.Header().Set("WWW-Authenticate", `Basic realm="MiniWebDAV GO Server Storage Area"`)
-			w.WriteHeader(401)
+			w.WriteHeader(401) // status code must be after set headers
 			w.Write([]byte("401 Unauthorized\n"))
 			log.Printf("MiniWebDAV GO Server :: AUTH.FAILED [%s %s %s] %s [%s] %s\n", r.Method, r.URL, r.Proto, "401", r.Host, r.RemoteAddr)
 			return

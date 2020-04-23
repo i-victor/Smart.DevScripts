@@ -26,13 +26,13 @@ func LocateChrome() string {
 	switch runtime.GOOS {
 	case "darwin":
 		paths = []string{
+			"/Applications/Chromium.app/Contents/MacOS/Chromium",
 			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 			"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-			"/usr/bin/google-chrome-stable",
-			"/usr/bin/google-chrome",
 			"/usr/bin/chromium",
 			"/usr/bin/chromium-browser",
+			"/usr/bin/google-chrome-stable",
+			"/usr/bin/google-chrome",
 		}
 	case "windows":
 		paths = []string{
@@ -45,11 +45,16 @@ func LocateChrome() string {
 		}
 	default:
 		paths = []string{
+			"/usr/local/bin/iridium",
+			"/usr/local/bin/chromium",
+			"/usr/bin/iridium-browser",
+			"/usr/bin/chromium-browser",
+			"/usr/bin/iridium",
+			"/usr/bin/chromium",
+			"/opt/iridium/bin/iridium",
+			"/opt/chromium/bin/chromium",
 			"/usr/bin/google-chrome-stable",
 			"/usr/bin/google-chrome",
-			"/usr/bin/chromium",
-			"/usr/bin/chromium-browser",
-			"/snap/bin/chromium",
 		}
 	}
 

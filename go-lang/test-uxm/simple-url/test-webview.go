@@ -12,7 +12,7 @@ package main
 
 import (
 //	"github.com/zserge/webview"
-	"github.com/unix-world/webview"
+	"github.com/unix-world/smartgo/webview"
 )
 
 func main() {
