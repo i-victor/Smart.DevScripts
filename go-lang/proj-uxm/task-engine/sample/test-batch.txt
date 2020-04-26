@@ -1,4 +1,5 @@
 #IDs-BATCH:START#
-A1119
-2234
+A1119b
+2234.567
+some_thing.Test-123@email.dom
 #IDs-BATCH:END#

@@ -37,7 +37,7 @@ import (
 
 
 const (
-	THE_VERSION = "r.20200421.2113"
+	THE_VERSION = "r.20200425.1635"
 	INI_FILE = "task-engine.ini"
 	SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M3 4.949a2.5 2.5 0 10-1 0v8.049c0 .547.453 1 1 1h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-5h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-2.05zm9 2.55a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm-3 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 7.499a1.5 1.5 0 110-3.001 1.5 1.5 0 010 3zm-6-3a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>`
 	SVG_SPIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="grey" id="loading-spin-svg"><path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/><path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z"><animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite" /></path></svg>`
@@ -108,7 +108,7 @@ function displayJson(elemID) {
 	str = JSON.stringify(str, null, 4);
 	elObj.innerHTML = syntaxHighlight(str);
 }
-displayJson('json-code');
+try{ displayJson('json-code'); } catch(err){ console.log('FAILED to Color Format Json: ', err); }
 </script>
 `
 )
@@ -135,7 +135,9 @@ type uxmStuctStats struct {
 	BatchURL string       `json:"batchURL"`
 	TaskURL string        `json:"taskURL"`
 	NumWorkers int        `json:"numWorkers"`
+	EmptyBatches int      `json:"emptyBatches"`
 	BatchCycles int       `json:"batchCycles"`
+	TasksOnWait int       `json:"tasksOnWait"`
 	TasksProcessed int    `json:"tasksProcessed"`
 	Stat200 uint64        `json:"stat200"`
 	Stat202 uint64        `json:"stat202"`
@@ -156,7 +158,8 @@ var flagSilent bool = false
 func tasks(maxParallelThreads int, LoopId int) {
 
 	//--
-	fmt.Println(color.HiMagentaString("----- Max Parallel Threads: " + strconv.Itoa(maxParallelThreads) + " # listening at http://" + bindTcpAddr + "/" + " -----"))
+	fmt.Println(color.HiMagentaString("----- Max Parallel Threads Execution: " + strconv.Itoa(maxParallelThreads) + " # ASYNC # -----"))
+	fmt.Println(color.HiYellowString("INFO: Built-in MiniServer is listening at http://" + bindTcpAddr + "/"))
 	//--
 
 	//-- reset statistics if flagResetStats is set to true ...
@@ -184,23 +187,28 @@ func tasks(maxParallelThreads int, LoopId int) {
 
 	//--
 	fmt.Println("===== Get Batch =====")
+	uxmStats.BatchCycles++
 	//--
 	if(UrlBatchList == "") {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR: Batch List URL is Empty"))
 		return
 	}
 	if(UrlTaskCall == "") {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR: Task Call URL is Empty"))
 		return
 	}
-	//--
-	uxmStats.BatchCycles++
 	//--
 
 	//--
 	fmt.Println(color.MagentaString("Getting the Batch List from URL: " + UrlBatchList))
 	res, err := http.Get(UrlBatchList)
 	if err != nil {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR accessing Batch List URL"))
 		fmt.Println(err.Error())
 		return
@@ -208,29 +216,41 @@ func tasks(maxParallelThreads int, LoopId int) {
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR reading Batch List Body"))
 		fmt.Println(err.Error())
 		return
 	}
 	if(res.StatusCode != 200) {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR reading Batch List :: Status Code = " + strconv.Itoa(res.StatusCode)))
 		return
 	}
 	list := strTrimWhitespaces(string(body))
 	if(list == "") {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR processing Batch List :: List is Empty"))
 		return
 	}
 	arr := strings.Split(list, "\n")
 	if(len(arr) <= 0) {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR processing Batch List :: No List Entries Found"))
 		return
 	}
 	if(arr[0] != "#IDs-BATCH:START#") {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR processing Batch List :: Invalid Starting Line"))
 		return
 	}
 	if(arr[len(arr)-1] != "#IDs-BATCH:END#") {
+		uxmStats.StatERR++
+		uxmStats.EmptyBatches++
 		fmt.Println(color.RedString("ERROR processing Batch List :: Invalid Ending Line"))
 		return
 	}
@@ -245,12 +265,19 @@ func tasks(maxParallelThreads int, LoopId int) {
 	semaphore := make(chan struct{}, maxParallelThreads)
 	//--
 
+	//-- strategy: will lauch twice the number of allowed max parallel tasks at once and later wait for pool by comparing max allowed with tasks on wait
+	var maxTasksToLaunchLimit int = maxParallelThreads * 2 // {{{SYNC-TASKENGINE-FORK-LIMIT-PROTECTION}}} avoid launch more than 2 x maxParallelThreads to avoid system crash
+	//--
+	if(flagSilent != true) {
+		fmt.Println(color.HiMagentaString("Parallel Threads Launch Limit: " + strconv.Itoa(maxTasksToLaunchLimit) + " # SYNC"))
+	}
+	//--
+
 	//--
 	var inListTasks int = 0
 	//--
 	for i := range arr {
 		var TaskId = strTrimWhitespaces(string(arr[i]))
-		var validID = regexp.MustCompile(`^[_A-Za-z0-9\-]*$`)
 		if(TaskId == "#IDs-BATCH:START#") {
 			if(flagSilent != true) {
 				fmt.Println(color.BlueString("***** Skip Pre-Processing: Batch#Start *****"))
@@ -269,13 +296,25 @@ func tasks(maxParallelThreads int, LoopId int) {
 			}
 			continue // skip
 		}
+		var validID = regexp.MustCompile(`^[_a-zA-Z0-9\-\.@]+$`) // allow all safe names except #
 		if(!validID.MatchString(TaskId)) {
 			uxmStats.StatALL++
 			uxmStats.StatERR++
 			fmt.Println(color.YellowString("***** Skip Pre-Processing: Invalid Task ID: " + TaskId + " *****"))
 			continue // skip
 		}
-		inListTasks++;
+		inListTasks++
+		//--
+		if(uxmStats.TasksOnWait >= maxTasksToLaunchLimit) { // {{{SYNC-TASKENGINE-FORK-LIMIT-PROTECTION}}} avoid launch more than 2 x maxParallelThreads to avoid system crash
+			for z := 0; z >= 0; z++ { // infinite loop
+				time.Sleep(time.Duration(100) * time.Millisecond)
+				if(uxmStats.TasksOnWait < maxTasksToLaunchLimit) {
+					break;
+				}
+			}
+		}
+		uxmStats.TasksOnWait++
+		//--
 		wg.Add(1)
 		go func(LoopId int, i int, TaskId string) {
 			defer wg.Done()
@@ -286,7 +325,8 @@ func tasks(maxParallelThreads int, LoopId int) {
 			var inListTaskErr bool = false
 			uxmStats.TasksProcessed++
 			var status = ""
-			res, err := http.Get(UrlTaskCall + url.QueryEscape(TaskId))
+			res, err := http.Get(UrlTaskCall + url.QueryEscape(TaskId)) // execution
+			uxmStats.TasksOnWait-- // after execution !
 			if err != nil {
 				uxmStats.StatALL++
 				uxmStats.StatERR++
@@ -337,11 +377,17 @@ func tasks(maxParallelThreads int, LoopId int) {
 			if((flagSilent != true) || (inListTaskErr == true)) {
 				fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:") + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
 			}
-			// sleep after each group
+			//-- sleep after each group
 			time.Sleep(time.Duration(250) * time.Millisecond)
+			//--
 		}(LoopId, i, TaskId)
-		// just add a random pause in milliseconds for give a small breath ... (important for spread of threads in time !!!)
+		//-- just add a random pause in milliseconds for give a small breath ... (important for spread of threads in time !!!)
 		time.Sleep(time.Duration(rand.Int31n(3) * 25) * time.Millisecond)
+		//--
+	}
+	//--
+	if(inListTasks <= 0) {
+		uxmStats.EmptyBatches++
 	}
 	//--
 	wg.Wait()
@@ -392,7 +438,9 @@ func resetStatistics() {
 	//--
 	uxmStats.StartTime = startTime
 	uxmStats.CurrentTime = startTime
+	uxmStats.EmptyBatches = 0
 	uxmStats.BatchCycles = 0
+	uxmStats.TasksOnWait = 0
 	uxmStats.TasksProcessed = 0
 	uxmStats.Stat200 = 0
 	uxmStats.Stat202 = 0
@@ -470,7 +518,7 @@ func main() {
 		return
 	}
 	parallelWorkers = getIniIntVal(file, "Tunnings", "parallel-workers")
-	if((parallelWorkers < 2) || (parallelWorkers > 16384)) {
+	if((parallelWorkers < 2) || (parallelWorkers > 1024)) {
 		parallelWorkers = runtime.NumCPU()
 	}
 	srvHostAddr = getIniStrVal(file, "MiniServer", "http-addr")
@@ -494,7 +542,9 @@ func main() {
 		BatchURL: UrlBatchList,
 		TaskURL: UrlTaskCall,
 		NumWorkers: parallelWorkers,
+		EmptyBatches: 0,
 		BatchCycles: 0,
+		TasksOnWait: 0,
 		TasksProcessed: 0,
 		Stat200: 0,
 		Stat202: 0,
@@ -553,7 +603,6 @@ func main() {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(statusCode) // status code must be after content type
 		//--
-
 		fmt.Fprintf(w, HTML_START + uxmHtmlBox("/status", "STATUS", "<pre>" + "\n" + html.EscapeString(serverSignature.String()) + "</pre>") + "\n" + uxmHtmlSvgSpinner() + HTML_END)
 		//--
 	})
@@ -569,13 +618,13 @@ func main() {
 		t := time.Now()
 		uxmStats.CurrentTime = t.Format(time.RFC1123Z)
 		var jsonData []byte
-		jsonData, err := json.Marshal(uxmStats)
+		jsonData, err := json.MarshalIndent(uxmStats, "", "\t")
 		var jsonStr = "{}"
 		if err == nil {
 			jsonStr = string(jsonData)
 		}
 		//--
-		fmt.Fprintf(w, HTML_START + uxmHtmlBox("/status.json", "JSON-STATUS", `<div style="font-weight:bold; font-size:1.5rem;">TaskEngine GO MiniServer / Status</div>`) + "\n" + uxmHtmlSvgSpinner() + "\n" + `<div align="center"><div style="text-align:left; width:720px; background:#FAFAFA; border: 1px solid #CCCCCC; border-radius: 5px; padding: 10px;"><pre id="json-code">` + html.EscapeString(jsonStr) + `</pre></div></div>` + "\n" + strTrimWhitespaces(HTML_JS) + HTML_END)
+		fmt.Fprintf(w, HTML_START + uxmHtmlBox("/status.json", "JSON-STATUS", `<div style="font-weight:bold; font-size:1.5rem;">TaskEngine GO MiniServer / Status</div>`) + "\n" + uxmHtmlSvgSpinner() + "\n" + `<div align="center"><div style="text-align:left; width:800px; overflow-x:auto; background:#FAFAFA; border: 1px solid #CCCCCC; border-radius: 5px; padding: 10px;"><pre id="json-code">` + html.EscapeString(jsonStr) + `</pre></div></div>` + "\n" + strTrimWhitespaces(HTML_JS) + HTML_END)
 		//--
 	})
 	http.HandleFunc("/status.json", func(w http.ResponseWriter, r *http.Request) {

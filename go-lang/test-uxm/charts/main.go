@@ -1,5 +1,6 @@
 
 // GO Lang
+// go build test-webview.go (on openbsd may need to: CGO_LDFLAGS_ALLOW='-Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib' go build main.go assets.go)
 // (c) 2017-2018 unix-world.org
 // version: 2018.12.02
 
@@ -21,7 +22,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/zserge/webview"
+	"github.com/unix-world/smartgo/webview"
 )
 
 func startServer() string {

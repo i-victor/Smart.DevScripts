@@ -1,8 +1,0 @@
-language: go
-go: 1.3
-install:
-  - go get -v github.com/xarg/imap
-script:
-  - go test -v github.com/xarg/imap
-env:
-  - "LC_CTYPE=en_US.UTF-8"
