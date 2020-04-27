@@ -10,10 +10,20 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+
+type Person struct {
+	Name string
+	Age  int
+	City string
+}
+
+
 
 func main() {
 
@@ -46,6 +56,11 @@ func main() {
 	fmt.Println("InsertedID: ", id)
 
 
+	// Raw string representation of the MongoDB doc _id
+//	idStr := "5d2399ef96fb765873a24bae"
+	// Create a BSON ObjectID by passing string to ObjectIDFromHex() method
+//	docID, err := primitive.ObjectIDFromHex(idStr)
+
 	// FIND MANY: Several query methods return a cursor, which can be used like this:
 	theQuery := bson.M{"name": bson.M{ "$in": bson.A{"pi", "qr"} } }
 	ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
@@ -66,6 +81,7 @@ func main() {
 
 	// FIND ONE:
 	var result struct {
+		ID    primitive.ObjectID `bson:"_id" json:"id,omitempty"`
 		Value float64
 	}
 	filter := bson.M{"name": "pi"}
@@ -76,6 +92,9 @@ func main() {
 	}
 	// Do something with result...
 	fmt.Printf("Found a single document: %+v\n", result)
+	fmt.Println("Document.Value: ", result.Value)
+	fmt.Println("Document.ID as Object: ", result.ID)
+	fmt.Println("Document.ID as String: ", result.ID.Hex())
 
 	// UPDATE:
 	filter2 := bson.D{{"name", "pi"}}
@@ -97,6 +116,30 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deleted %v documents in the trainers collection\n", deleteResult.DeletedCount)
+
+	// INSERT MANY
+	ruan := Person{"Ruan", 34, "Cape Town"}
+	james := Person{"James", 32, "Nairobi"}
+	frankie := Person{"Frankie", 31, "Nairobi"}
+	trainers := []interface{}{james, frankie, ruan}
+	insertManyResult, err := collection.InsertMany(context.TODO(), trainers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Inserted multiple documents: ", insertManyResult.InsertedIDs)
+
+	// UPDATE
+	filter3 := bson.D{{}}
+	update2 := bson.D{
+		{"$inc", bson.D{
+			{"age", 1},
+		}},
+	}
+	updateResult2, err := collection.UpdateOne(context.TODO(), filter3, update2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Matched %v documents and updated %v documents.\n", updateResult2.MatchedCount, updateResult2.ModifiedCount)
 
 
 }

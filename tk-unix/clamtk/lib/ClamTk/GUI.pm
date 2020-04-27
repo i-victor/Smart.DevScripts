@@ -54,7 +54,7 @@ sub start_gui {
         $window->set_icon( $transparent );
     }
 
-    my $white = Gtk2::Gdk::Color->new( 0xFFFF, 0xFFFF, 0xFFFF );
+    my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
     my $eb = Gtk2::EventBox->new;
     $eb->modify_bg( 'normal', $white );
     $window->add( $eb );
