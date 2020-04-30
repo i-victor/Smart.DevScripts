@@ -1587,6 +1587,19 @@ func ButtonNew() (*Button, error) {
 	return wrapButton(obj), nil
 }
 
+// Added by Unixman
+// ButtonNewWithLabel() is a wrapper around gtk_button_new_with_label().
+func ButtonNewWithIcon(icon string) (*Button, error) {
+	cstr := C.CString(icon)
+	defer C.free(unsafe.Pointer(cstr))
+	c := C.gtk_button_new_from_icon_name((*C.gchar)(cstr), C.GTK_ICON_SIZE_BUTTON)
+	if c == nil {
+		return nil, nilPtrErr
+	}
+	obj := glib.Take(unsafe.Pointer(c))
+	return wrapButton(obj), nil
+}
+
 // ButtonNewWithLabel() is a wrapper around gtk_button_new_with_label().
 func ButtonNewWithLabel(label string) (*Button, error) {
 	cstr := C.CString(label)

@@ -38,7 +38,7 @@ func main() {
 	}
 
 	window.SetTitle("GO GTK3 Glade Example")
-	window.SetDefaultSize(365, 490)
+	window.SetDefaultSize(390, 650)
 	_, err = window.Connect("destroy", func() {
 		gtk.MainQuit()
 	})
