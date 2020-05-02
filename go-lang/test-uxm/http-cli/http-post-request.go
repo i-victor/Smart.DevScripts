@@ -1,8 +1,8 @@
 
 // GoLang Sample
-// HTTP Client PUT : stream file | json | text
+// HTTP Client POST : file (multi-part form) | json (simple form) | text (simple form)
 // (c) 2020 unix-world.org
-// r.20200430.2030
+// r.20200430.2039
 
 package main
 
@@ -10,27 +10,28 @@ import (
 	"os"
 	"log"
 	"fmt"
-	"time"
 	"bytes"
 	"strings"
 	"strconv"
-	"io"
 	"path/filepath"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"crypto/tls"
+	"time"
 
 	"github.com/cheggaaa/pb"
 )
 
 
-const ( // all tests can be performed with: webdav-server.go which serves WebDAV protocol (on /webdav/) or plain HTTP(S) (on /)
-	THE_URL = "http://127.0.0.1:13080/" 		// Ex(text|json): `http://127.0.0.1:13080/` or `https://127.0.0.1:13443/` ; Ex(file): `http://127.0.0.1:13080/webdav/` or `https://127.0.0.1:13443/webdav/`
-	THE_AUTH_USERNAME = "admin"					// leave empty if no auth required or fill the auth username ; for webdav the default is `admin`
-	THE_AUTH_PASSWORD = "pass"					// leave empty if no auth required or fill the auth password ; for webdav the default is `pass`
+const ( // all tests can be performed with: webdav-server.go which also serves plain HTTP(S) (on /)
+	THE_URL = "http://127.0.0.1:13080/" 		// Ex(text|json|file): `http://127.0.0.1:13080/` or `https://127.0.0.1:13443/`
+	THE_AUTH_USERNAME = ""						// leave empty if no auth required or fill the auth username
+	THE_AUTH_PASSWORD = ""						// leave empty if no auth required or fill the auth password
 )
 
 
-func putRequest(username string, passwd string, url string, fName string, data io.Reader, datalen int64) int {
+func postRequest(username string, passwd string, url string, fName string, data io.Reader, datalen int64) int {
 	//--
 	if(fName == "") {
 		log.Println("ERROR: Empty File Name. Use `@` for using no File Name ...")
@@ -49,15 +50,40 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	bar.ShowSpeed = true
 	bar.Start()
 	//--
-	var realURL string = url
+	var buffer bytes.Buffer
+	w := multipart.NewWriter(&buffer)
+	w.CreateFormField("test")
 	if(fName != "#") {
-		realURL = strings.TrimRight(realURL, "/") + "/" + fName
+		w.WriteField("test", "http post with file")
+		fw, err := w.CreateFormFile("file", fName)
+		if(err != nil) {
+			log.Println("ERROR: Failed to Create Form Field: file")
+			return 977
+		} //end if
+		_, err = io.Copy(fw, data)
+		if(err != nil) {
+			log.Println("ERROR: Failed to Populate Form Field: file")
+			return 978
+		} //end if
+	} else {
+		w.WriteField("test", "http post")
+		_, err := w.CreateFormField("data")
+		if(err != nil) {
+			log.Println("ERROR: Failed to Create Form Field: data")
+			return 977
+		} //end if
+		dt := new(bytes.Buffer)
+		dt.ReadFrom(data)
+		w.WriteField("data", dt.String())
 	} //end if
+	//--
+	w.Close() // IMPORTANT: if you do not close the multipart writer you will not have a terminating boundry
 	//--
 	var resp *http.Response
 	client := &http.Client{}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	req, err := http.NewRequest(http.MethodPut, realURL,  bar.NewProxyReader(data))
+	req, err := http.NewRequest(http.MethodPost, url, bar.NewProxyReader(&buffer))
+	req.Header.Set("Content-Type", w.FormDataContentType())
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client: ", err)
 		return 997
@@ -66,8 +92,6 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	if(username != "") {
 		req.SetBasicAuth(username, passwd)
 	} //end if
-	req.TransferEncoding = []string{"identity"} // forces to change the default chunked transfer encoding and set it to gzip (support wider servers)
-	req.ContentLength = datalen
 	//--
 	resp, err = client.Do(req)
 	if(err != nil) {
@@ -75,36 +99,36 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	} //end if
 	//--
 //	bar.Finish()
-	bar.FinishPrint("Data Transfer Completed: " + realURL)
+	bar.FinishPrint("Data Form Post Completed: " + url)
 	//--
 	return resp.StatusCode
 	//--
 } //END FUNCTION
 
 
-func testPutText() int {
-	//-- sample PUT text
+func testPostText() int {
+	//-- sample POST text
 	var txtStr string = "any thing"
 	//--
-	log.Println("Sample: HTTP PUT Text: `" + txtStr + "` / Length:", len(txtStr), "bytes")
+	log.Println("Sample: HTTP POST Text: `" + txtStr + "` / Length:", len(txtStr), "bytes")
 	//--
-	return putRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, THE_URL, "#", strings.NewReader(txtStr), int64(len(txtStr)))
+	return postRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, THE_URL, "#", strings.NewReader(txtStr), int64(len(txtStr)))
 	//--
 } //END FUNCTION
 
 
-func testPutJson() int {
-	//-- sample PUT json
+func testPostJson() int {
+	//-- sample POST json
 	var jsonStr string = `{"name":"Rob", "title":"developer"}`
 	//--
-	log.Println("Sample: HTTP PUT Json: `" + jsonStr + "` / Length:", len(jsonStr), "bytes")
+	log.Println("Sample: HTTP POST Json: `" + jsonStr + "` / Length:", len(jsonStr), "bytes")
 	//--
-	return putRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, THE_URL, "#", bytes.NewBuffer([]byte(jsonStr)), int64(len(jsonStr)))
+	return postRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, THE_URL, "#", bytes.NewBuffer([]byte(jsonStr)), int64(len(jsonStr)))
 	//--
 } //END FUNCTION
 
 
-func testPutFile(fPath string) int {
+func testPostFile(fPath string) int {
 	//--
 	var fName string = strings.TrimSpace(fPath)
 	if(fName == "") {
@@ -118,7 +142,7 @@ func testPutFile(fPath string) int {
 	} //end if
 	//--
 	theFile := "test/" + fName
-	log.Println("Sample: HTTP PUT File: `" + theFile + "`")
+	log.Println("Sample: HTTP POST File: `" + theFile + "`")
 	//-- test if file exists, get the file size and read the file (open)
 	fi, err := os.Stat(theFile);
 	if(err != nil) {
@@ -131,7 +155,7 @@ func testPutFile(fPath string) int {
 	} //end if
 	defer data.Close()
 	//--
-	return putRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, strings.TrimRight(THE_URL, "/") + "/webdav/", theFile, data, size)
+	return postRequest(THE_AUTH_USERNAME, THE_AUTH_PASSWORD, THE_URL, theFile, data, size)
 	//--
 } //END FUNCTION
 
@@ -139,7 +163,7 @@ func testPutFile(fPath string) int {
 func main()  {
 	//--
 	if(len(os.Args) < 2) {
-		log.Println("Usage: http-put-request text|json|file")
+		log.Println("Usage: http-post-request text|json|file")
 		os.Exit(1)
 	} //end if
 	//--
@@ -147,17 +171,17 @@ func main()  {
 	//--
 	switch(os.Args[1]) {
 		case "text":
-			httpRequestStatusCode = testPutText()
+			httpRequestStatusCode = testPostText()
 			break;
 		case "json":
-			httpRequestStatusCode = testPutJson()
+			httpRequestStatusCode = testPostJson()
 			break;
 		case "file":
 			if(len(os.Args) != 3) {
-				log.Println("Usage: http-put-request file test/<filename>")
+				log.Println("Usage: http-post-request file test/<filename>")
 				os.Exit(1)
 			} //end if
-			httpRequestStatusCode = testPutFile(os.Args[2])
+			httpRequestStatusCode = testPostFile(os.Args[2])
 			break;
 		default:
 			log.Println("Invalid mode. Invoke -help to see the arguments ...")
