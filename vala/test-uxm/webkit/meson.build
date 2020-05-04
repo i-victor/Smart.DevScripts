@@ -26,7 +26,8 @@ valadeps = [
 ]
 
 # define executable ; Sample: executable('prog', 'main.vala', 'class1.vala', 'class2.vala', dependencies : valadeps)
-executable('webkit-sample', 'webkit-sample.vala', dependencies: valadeps)
+executable('webkit-sample',  'webkit-sample.vala',  dependencies: valadeps)
+executable('webkit-sample2', 'webkit-sample2.vala', dependencies: valadeps)
 
 # check min vala version required
 vala = meson.get_compiler('vala')
