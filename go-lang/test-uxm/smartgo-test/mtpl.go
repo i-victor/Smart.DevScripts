@@ -1,7 +1,7 @@
 
 // GO Lang
 // Markers TPL dev
-// r.20200425.1525 :: STABLE
+// r.20200504.1323 :: STABLE
 
 package main
 
@@ -86,7 +86,7 @@ func main() {
 
 	//-----
 
-	var testStr = "1234567890_ abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ:;\"'~`!@#$%^&*()+=[]{}|\\<>,.?/\t\r\n@"
+	var testStr string = "1234567890_ abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ:;\"'~`!@#$%^&*()+=[]{}|\\<>,.?/\t\r\n@"
 	testStr = " Lorem Ipsum șȘțȚâÂăĂîÎ is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.       \r\n      \r\n\r\n"
 	testStr = `{"a":2, "b":"<c d=\"About:https://a.b?d=1&c=2\">"}`
 
@@ -100,11 +100,129 @@ func main() {
 		"MARKER2": 	`<Tyler="test">`,
 	}
 
-	var u = uid.Uuid()
+	var u int = uid.Uuid()
 	u = uid.Uuid()
 	u = uid.Uuid()
 	tpl := smart.RenderMarkersTpl(THE_TPL, arr, false, false)
-	fmt.Println("UUID:", u, "\n" + "TPL: " + "\n" + tpl)
+	fmt.Println("UUID:", u, "\n" + "TPL: `" + tpl + "`" + "\n")
+
+	var thePath string = "a/path/to/a/file.ext"
+	fmt.Println("Base Path of `" + thePath + "` is `" + smart.PathBaseName(thePath) + "`");
+
+	if(smart.PathIsAbsolute(thePath) == true) {
+		log.Fatal("Absolute Path Detection Failed. This is not an absolute path: " + thePath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Absolute Path Test OK (not absolute path): " + thePath)
+	} //end if
+	var theAPath string = "/" + thePath
+	if(smart.PathIsAbsolute(theAPath) != true) {
+		log.Fatal("Absolute Path Detection Failed. This is an absolute path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Absolute Path Test OK (it is an absolute path): " + theAPath)
+	} //end if
+	theAPath = ":" + thePath
+	if(smart.PathIsAbsolute(theAPath) != true) {
+		log.Fatal("Absolute Path Detection Failed. This is an absolute path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Absolute Path Test OK (it is an absolute path): " + theAPath)
+	} //end if
+	theAPath = "C:" + thePath
+	if(smart.PathIsAbsolute(theAPath) != true) {
+		log.Fatal("Absolute Path Detection Failed. This is an absolute path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Absolute Path Test OK (it is an absolute path): " + theAPath)
+	} //end if
+
+	if(smart.PathIsBackwardUnsafe(thePath) == true) {
+		log.Fatal("Backward Unsafe Path Detection Failed. This is not a backward unsafe path: " + thePath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Backward Unsafe Path Test OK (not backward unsafe path): " + thePath)
+	} //end if
+	theAPath = thePath + "/../"
+	if(smart.PathIsBackwardUnsafe(theAPath) != true) {
+		log.Fatal("Backward Unsafe Path Detection Failed. This is a backward unsafe path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Backward Unsafe Path Test OK (it is a backward unsafe path): " + theAPath)
+	} //end if
+	theAPath = thePath + "/./"
+	if(smart.PathIsBackwardUnsafe(theAPath) != true) {
+		log.Fatal("Backward Unsafe Path Detection Failed. This is a backward unsafe path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Backward Unsafe Path Test OK (it is a backward unsafe path): " + theAPath)
+	} //end if
+	theAPath = thePath + "/.."
+	if(smart.PathIsBackwardUnsafe(theAPath) != true) {
+		log.Fatal("Backward Unsafe Path Detection Failed. This is a backward unsafe path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Backward Unsafe Path Test OK (it is a backward unsafe path): " + theAPath)
+	} //end if
+	theAPath = thePath + "../"
+	if(smart.PathIsBackwardUnsafe(theAPath) != true) {
+		log.Fatal("Backward Unsafe Path Detection Failed. This is a backward unsafe path: " + theAPath)
+		os.Exit(1)
+	} else {
+		fmt.Println("Backward Unsafe Path Test OK (it is a backward unsafe path): " + theAPath)
+	} //end if
+
+	if(smart.PathExists("./nonexisting") == true) {
+		log.Fatal("Errors encountered while testing a non-existing path exists")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsDir("./nonexisting") == true) {
+		log.Fatal("Errors encountered while testing a non-existing path is a dir")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsFile("./nonexisting") == true) {
+		log.Fatal("Errors encountered while testing a non-existing path is a file")
+		os.Exit(1)
+	} //end if
+
+	if(smart.PathExists("./") != true) {
+		log.Fatal("Errors encountered while testing if the current directory ./ exists")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsDir("./") != true) {
+		log.Fatal("Errors encountered while testing if the current directory ./ is a dir")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsFile("./") == true) {
+		log.Fatal("Errors encountered while testing if the current directory ./ is not a file")
+		os.Exit(1)
+	} //end if
+
+	if(smart.PathExists("mtpl.go") != true) {
+		log.Fatal("Errors encountered while testing if the file mtpl.go exists")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsDir("mtpl.go") == true) {
+		log.Fatal("Errors encountered while testing if the file mtpl.go is not a dir")
+		os.Exit(1)
+	} //end if
+	if(smart.PathIsFile("mtpl.go") != true) {
+		log.Fatal("Errors encountered while testing if the file mtpl.go is a file")
+		os.Exit(1)
+	} //end if
+
+	fContent, err := smart.ReadSafePathFile("mtpl.go", false)
+	if(err != nil) {
+		log.Fatal("Errors encountered while reading the file: mtpl.go: ", err)
+		os.Exit(1)
+	} //end if
+	if(fContent == "") {
+		log.Fatal("Failed to read the file: mtpl.go: ", err)
+		os.Exit(1)
+	} else {
+		fmt.Println("ReadSafePathFile: mtpl.go: Length =", len(fContent), "bytes")
+	} //end if
+
 
 } //END FUNCTION
 
