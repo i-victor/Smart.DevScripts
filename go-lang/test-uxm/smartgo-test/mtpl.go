@@ -1,7 +1,7 @@
 
 // GO Lang
-// Markers TPL dev
-// r.20200504.1323 :: STABLE
+// Markers TPL dev tests for SmartGo
+// r.20200505.2315 :: STABLE
 
 package main
 
@@ -17,7 +17,7 @@ const (
 	THE_TPL = `[%%%COMMENT%%%]
 This is comment one ...
 [%%%/COMMENT%%%]
-Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###]
+Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###][%%%|T%%%][###MARKER2|html###]
 [%%%COMMENT%%%]
 This is another comment ...
 [%%%/COMMENT%%%]`
@@ -26,7 +26,7 @@ This is another comment ...
 
 func main() {
 
-	smart.LogToConsoleWithColors();
+	smart.LogToConsoleWithColors()
 
 	input := "Lorem Ipsum dolor sit Amet"
 
@@ -107,7 +107,7 @@ func main() {
 	fmt.Println("UUID:", u, "\n" + "TPL: `" + tpl + "`" + "\n")
 
 	var thePath string = "a/path/to/a/file.ext"
-	fmt.Println("Base Path of `" + thePath + "` is `" + smart.PathBaseName(thePath) + "`");
+	fmt.Println("Base Path of `" + thePath + "` is `" + smart.PathBaseName(thePath) + "`")
 
 	if(smart.PathIsAbsolute(thePath) == true) {
 		log.Fatal("Absolute Path Detection Failed. This is not an absolute path: " + thePath)
@@ -211,13 +211,13 @@ func main() {
 		os.Exit(1)
 	} //end if
 
-	fContent, err := smart.ReadSafePathFile("mtpl.go", false)
-	if(err != nil) {
-		log.Fatal("Errors encountered while reading the file: mtpl.go: ", err)
+	fContent, errmsg := smart.ReadSafePathFile("mtpl.go", false)
+	if(errmsg != "") {
+		log.Fatal("Errors encountered while reading the file: mtpl.go: ", errmsg)
 		os.Exit(1)
 	} //end if
 	if(fContent == "") {
-		log.Fatal("Failed to read the file: mtpl.go: ", err)
+		log.Fatal("Failed to read the file: mtpl.go (empty content)")
 		os.Exit(1)
 	} else {
 		fmt.Println("ReadSafePathFile: mtpl.go: Length =", len(fContent), "bytes")
