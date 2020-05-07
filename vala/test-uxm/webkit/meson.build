@@ -11,7 +11,7 @@
 project(
 	'vala-project', 'c', 'vala',
 	version : '1.0',
-	license : [ 'BSD'],
+	license : [ 'BSD' ],
 	meson_version : '>= 0.50.0',
 	default_options : [ 'backend=ninja', 'warning_level=1', 'buildtype=release', 'optimization=2', 'strip=true', 'cpp_std=c++11', 'prefix=/opt/unixman' ]
 )
