@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020 unix-world.org
-// r.20200507.1905 :: STABLE
+// r.20200509.1721 :: STABLE
 
 package main
 
@@ -26,9 +26,9 @@ This is another comment ...
 
 func LogToConsoleWithColors() {
 	//--
-//	smart.LogToFile("DEBUG", "test-mtpl.log", false) // plain log
-//	smart.LogToFile("DEBUG", "test-mtpl.json.log", true) // json log
-	smart.LogToConsole("DEBUG", true)
+//	smart.LogToStdErr("DEBUG")
+	smart.LogToConsole("DEBUG", true) // colored or not
+//	smart.LogToFile("DEBUG", "logs/", "json", true, true) // json | plain ; also on console ; colored or not
 	//--
 	log.Println("[DEBUG] Debugging")
 	log.Println("[NOTICE] Notice")
@@ -124,8 +124,15 @@ func testStrings() {
 
 	var test1Str string = "1234567890 abcdefgh șȘțȚâÂăĂîÎ _ abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ:;\"'~`!@#$%^&*()+=[]{}|\\<>,.?/\t\r\n@  abcdefgh șȘțȚâÂăĂîÎ üÜöÖäÄ"
 
+	if(!smart.StrStartsWith(test1Str, "1234567890 abcdefgh șȘțȚâÂăĂîÎ ")) {
+		fatalError("SubString Prefix Test FAILED !")
+	} //end if
+	if(!smart.StrEndsWith(test1Str, "  abcdefgh șȘțȚâÂăĂîÎ üÜöÖäÄ")) {
+		fatalError("SubString Suffix Test FAILED !")
+	} //end if
+
 	if(smart.StrMBSubstr(test1Str, 0, 0) != smart.StrSubstr(test1Str, 0, 0)) {
-		fatalError("SubString Comparison Test FAILED !")
+		fatalError("SubString ASCII/Unicode Comparison Test FAILED !")
 	} //end if
 
 	var needleStr string = ""
@@ -179,6 +186,74 @@ func testStrings() {
 		fatalError("StrRIPos (case insensitive) Test FAILED. Expected result is -1 but get: ", testThePos)
 	} //end if
 
+	fmt.Println("Strings SubStr Tests Result: PASSED");
+
+} //END FUNCTION
+
+
+func testNetFx() {
+	//--
+	var validIPv4 string = "127.0.0.1"
+	var validIPv6Long  string = "0:0:0:0:0:0:0:1"
+	var validIPv6Short string = "::1"
+	var validHostNameLocal string = "localhost"
+	var validHostNameInet string = "some-internet_domain.ext"
+	var validPort string = "8888"
+	//--
+	if(!smart.IsNetValidIpAddr(validIPv4)) {
+		fatalError("Net Validation Test Ipv4 failed with:", validIPv4)
+	} //end if
+	if(smart.IsNetValidIpAddr(validIPv4 + ".3")) {
+		fatalError("Net Validation Test Ipv4 failed with wrong IP:", validIPv4 + ".3")
+	} //end if
+	//--
+	if(!smart.IsNetValidIpAddr(validIPv6Long)) {
+		fatalError("Net Validation Test Ipv6-Long failed with:", validIPv6Long)
+	} //end if
+	if(smart.IsNetValidIpAddr(validIPv6Long + ":3")) {
+		fatalError("Net Validation Test Ipv6-Long failed with wrong IP:", validIPv6Long + ":3")
+	} //end if
+	//--
+	if(!smart.IsNetValidIpAddr(validIPv6Short)) {
+		fatalError("Net Validation Test Ipv6-Short failed with:", validIPv6Short)
+	} //end if
+	if(smart.IsNetValidIpAddr(validIPv6Short + "::3")) {
+		fatalError("Net Validation Test Ipv6-Short failed with wrong IP:", validIPv6Short + "::3")
+	} //end if
+	//--
+	if((smart.IsNetValidIpAddr("")) || (smart.IsNetValidIpAddr("0.0.0.0"))) {
+		fatalError("Net Validation Test Ipv4 failed with empty IP")
+	} //end if
+	if((smart.IsNetValidIpAddr("::0")) || (smart.IsNetValidIpAddr("::"))) {
+		fatalError("Net Validation Test Ipv6 failed with empty IP")
+	} //end if
+	//--
+	if(!smart.IsNetValidHostName(validHostNameLocal)) {
+		fatalError("Net Validation Test LocalHost failed with:", validHostNameLocal)
+	} //end if
+	if(!smart.IsNetValidHostName(validHostNameInet)) {
+		fatalError("Net Validation Test InetHost failed with:", validHostNameInet)
+	} //end if
+	//--
+	if(!smart.IsNetValidPortNum(smart.ParseIntegerStrAsInt64(validPort))) {
+		fatalError("Net Validation Test ValidPort (int64) failed with:", validPort)
+	} //end if
+	//--
+	if(!smart.IsNetValidPortStr(validPort)) {
+		fatalError("Net Validation Test ValidPort (string) failed with:", validPort)
+	} //end if
+	if(smart.IsNetValidPortStr(validPort + "8")) {
+		fatalError("Net Validation Test ValidPort (string) failed with wrong Port:", validPort + "8")
+	} //end if
+	if(smart.IsNetValidPortStr(validPort + ":")) {
+		fatalError("Net Validation Test ValidPort (string) failed with wrong Port:", validPort + ":")
+	} //end if
+	if(smart.IsNetValidPortStr(":" + validPort)) {
+		fatalError("Net Validation Test ValidPort (string) failed with wrong Port:", ":" + validPort)
+	} //end if
+	//--
+	fmt.Println("Net Validation Tests Result: PASSED");
+	//--
 } //END FUNCTION
 
 
@@ -186,17 +261,40 @@ func testFileSystem(input string) {
 
 	var thePath string = "a/path/to/some/file.ext"
 
+	var pathRegex string = smart.REGEX_SMART_SAFE_PATH_NAME
+	var pathFileRegex string = smart.REGEX_SMART_SAFE_FILE_NAME
+
 	fmt.Println("------------------------- Path Get BaseName / DirName TESTS -------------------------")
+
+	if(!smart.StrRegexMatchString(pathRegex, thePath)) {
+		fatalError("Path Regex `" + pathRegex + "` Match Failed: `" + thePath + "`")
+	} //end if
+
+	fBaseExt := smart.PathBaseExtension(thePath)
+	if(fBaseExt != ".ext") {
+		fatalError("Path Get BaseExtension FAILED ; BaseExtension = `" + fBaseExt + "` ; Path = `" + thePath + "`")
+	} //end if
+	if(!smart.StrRegexMatchString(pathFileRegex, fBaseExt)) {
+		fatalError("File Name Ext Regex `" + pathFileRegex + "` Match Failed: `" + fBaseExt + "`")
+	} //end if
 
 	fBaseName := smart.PathBaseName(thePath)
 	if(fBaseName != "file.ext") {
 		fatalError("Path Get BaseName FAILED ; BaseName = `" + fBaseName + "` ; Path = `" + thePath + "`")
 	} //end if
+	if(!smart.StrRegexMatchString(pathFileRegex, fBaseName)) {
+		fatalError("File Name Regex `" + pathFileRegex + "` Match Failed: `" + fBaseName + "`")
+	} //end if
+
 	fDirName := smart.PathDirName(thePath)
 	if(fDirName != "a/path/to/some") {
 		fatalError("Path Get DirName FAILED ; DirName = `" + fDirName + "` ; Path = `" + thePath + "`")
 	} //end if
-	fmt.Println("Path Get BaseName and DirName OK ; Path = `" + thePath + "` ; BaseName = `" + fBaseName + "` ; DirName = `" + fDirName + "`")
+	if(!smart.StrRegexMatchString(pathRegex, fDirName)) {
+		fatalError("Path (Dir) Regex `" + pathRegex + "` Match Failed: `" + fDirName + "`")
+	} //end if
+
+	fmt.Println("Path Get / Regex Check BaseName and DirName OK ; Path = `" + thePath + "` ; BaseName = `" + fBaseName + "` ; DirName = `" + fDirName + "`")
 
 	fmt.Println("------------------------- Absolute Path TESTS -------------------------")
 
@@ -276,14 +374,20 @@ func testFileSystem(input string) {
 		fatalError("Errors encountered while testing if the current directory ./ is not a file")
 	} //end if
 
-	if(smart.PathExists("mtpl.go") != true) {
-		fatalError("Errors encountered while testing if the file mtpl.go exists")
+	var crrBinGoFile string = smart.PathGetCurrentExecutableName()
+	if(crrBinGoFile == "") {
+		fatalError("FAILED to get the current GO executable Name")
 	} //end if
-	if(smart.PathIsDir("mtpl.go") == true) {
-		fatalError("Errors encountered while testing if the file mtpl.go is not a dir")
+	var crrSrcGoFile string = crrBinGoFile + ".go"
+	fmt.Println("Current Executable Name: `" + crrBinGoFile + "`");
+	if(smart.PathExists(crrSrcGoFile) != true) {
+		fatalError("Errors encountered while testing if the current source file exists:", crrSrcGoFile)
 	} //end if
-	if(smart.PathIsFile("mtpl.go") != true) {
-		fatalError("Errors encountered while testing if the file mtpl.go is a file")
+	if(smart.PathIsFile(crrSrcGoFile) != true) {
+		fatalError("Errors encountered while testing if the current source file is a file:", crrSrcGoFile)
+	} //end if
+	if(smart.PathIsDir(crrSrcGoFile) == true) {
+		fatalError("Errors encountered while testing if the current source file is not a dir:", crrSrcGoFile)
 	} //end if
 
 	fmt.Println("Path Exists Test Result: PASSED");
@@ -437,6 +541,12 @@ func testFileSystem(input string) {
 	} //end if
 	fmt.Println("Test PASSED ; CopyFile: `" + theNewTestFile + "` to `" + theCopyTestFile + "` ; Result =", isCpSuccess)
 
+	var theScanDir string = theBaseDir
+	fmt.Println("------------------------- Dir Scan (Non-Recursive) TESTS: `" + theScanDir + "` -------------------------")
+	testScanDir(theScanDir, false)
+	fmt.Println("------------------------- Dir Scan (Recursive) TESTS `" + theScanDir + "` -------------------------")
+	testScanDir(theScanDir, true)
+
 	fmt.Println("------------------------- File Delete TESTS -------------------------")
 
 	isDSuccess, errmsg := smart.SafePathFileDelete(theNewTestFile, false)
@@ -502,6 +612,59 @@ func testFileSystem(input string) {
 	} //end if
 	fmt.Println("Test PASSED ; DirNonExistingDelete: `" + theBaseDir + "` ; Result =", isOkDirDeleteNonExisting)
 
+	fmt.Println("------------------------- Current Dir Get Absolute Path TESTS -------------------------")
+
+	var theAbsoluteCurrentPath string = smart.PathGetAbsoluteFromRelative("./")
+	fmt.Println("Current Absolute Path of current dir `./` is: `" +  theAbsoluteCurrentPath + "`")
+
+
+} //END FUNCTION
+
+
+func testScanDir(theScanDir string, scanRecursive bool) {
+	//--
+	scanOk, errScanMsg, arrDirs, arrFiles := smart.SafePathDirScan(theScanDir, scanRecursive, false)
+	if((scanOk != true) || (errScanMsg != "")) {
+		fatalError("Failed to recursive scan the `" + theScanDir + "` ( result is:", scanOk, " ; errMsg is:", errScanMsg, ")")
+	} //end if
+	for _, dir := range arrDirs {
+		fmt.Println("DIR: `" + dir + "`")
+	} //end for
+	for _, file := range arrFiles {
+		fmt.Println("FILE: `" + file + "`")
+	} //end for
+	//--
+} //END FUNCTION
+
+
+func testExecProgr() {
+
+	/*
+	var inputStr = "abc:"
+	for i:=0; i<10000; i++ {
+		inputStr += smart.ConvertIntToStr(i) + ","
+	}
+	isSuccess, outStd, errStd := smart.ExecCmd("output", "output", "", inputStr, "cat")
+	*/
+
+	isSuccess, outStd, errStd := smart.ExecCmd("output", "output", "", "", "ping", "-c 5", "unix-world.org")
+	if(isSuccess != true) {
+		fatalError("ERROR: ExecCmd", "StdOut:\n`", outStd, "`\n", "StdErr:\n`", errStd, "`\n")
+	} //end if
+	fmt.Println("OK: ExecCmd", "StdOut:\n`", outStd, "`\n", "StdErr:\n`", errStd, "`\n")
+
+} //END FUNCTION
+
+
+func testExecTimedProgr() {
+
+	isSuccess, outStd, errStd := smart.ExecTimedCmd(3, "output", "output", "", "", "ping", "-c 25", "yahoo.com")
+	if((isSuccess != true) && (smart.StrContains(errStd, smart.CMD_EXEC_ERR_SIGNATURE + " signal: killed"))) {
+		fmt.Println("OK: ExecTimedCmd (3 sec) was ended because Timed out ...", "StdOut:\n`", outStd, "`\n", "StdErr:\n`", errStd, "`\n")
+	} else {
+		fatalError("ERROR: ExecTimedCmd (3 sec)", "StdOut:\n`", outStd, "`\n", "StdErr:\n`", errStd, "`\n")
+	} //end if
+
 } //END FUNCTION
 
 
@@ -510,6 +673,44 @@ func main() {
 	var input string = "Lorem Ipsum dolor sit Amet"
 
 	LogToConsoleWithColors()
+
+	fmt.Println("========================= NUMERIC TESTS =========================")
+
+	var numInt int = 64
+	var numInt64 int64 = 64
+
+	if(int64(numInt) != numInt64) {
+		fatalError("Numeric Tests Failed with numInt vs. numInt64")
+	} //end if
+	if(uint64(numInt) != uint64(numInt64)) {
+		fatalError("Numeric Tests Failed with UINT numInt vs. numInt64")
+	} //end if
+
+	var numStrInt string = smart.ConvertIntToStr(numInt)
+	var numStrInt64 string = smart.ConvertInt64ToStr(numInt64)
+	if(numStrInt != "64") {
+		fatalError("Numeric to String Conversion Tests Failed with numInt")
+	} //end if
+	if(numStrInt64 != "64") {
+		fatalError("Numeric to String Conversion Tests Failed with numStrInt64")
+	} //end if
+
+	var numParsedInt int = smart.ParseIntegerStrAsInt(numStrInt)
+	var numParsedInt64 int64 = smart.ParseIntegerStrAsInt64(numStrInt64)
+	if(numParsedInt != 64) {
+		fatalError("String to Numeric Conversion Tests Failed with numParsedInt")
+	} //end if
+	if(numParsedInt64 != 64) {
+		fatalError("String to Numeric Conversion Tests Failed with numParsedInt64")
+	} //end if
+	if(int64(numParsedInt) != numParsedInt64) {
+		fatalError("Numeric Tests Failed with numParsedInt vs. numParsedInt64")
+	} //end if
+	if(uint64(numParsedInt) != uint64(numParsedInt64)) {
+		fatalError("Numeric Tests Failed with UINT numParsedInt vs. numParsedInt64")
+	} //end if
+
+	fmt.Println("OK: Numeric Tests PASSED")
 
 	fmt.Println("========================= DATE/TIME TESTS =========================")
 
@@ -589,8 +790,6 @@ func main() {
 
 	testStrings()
 
-	fmt.Println("Strings SubStr Test Result: PASSED");
-
 	fmt.Println("========================= UUID TESTS =========================")
 
 	var u int = uid.UuidSessionSequence()
@@ -634,6 +833,18 @@ func main() {
 	fmt.Println("========================= File System TESTS =========================")
 
 	testFileSystem(input)
+
+	fmt.Println("========================= Net Validation TESTS =========================")
+
+	testNetFx()
+
+	fmt.Println("========================= Run Timed Cmd TEST =========================")
+
+	testExecTimedProgr()
+
+	fmt.Println("========================= Run Cmd TEST =========================")
+
+	testExecProgr()
 
 	fmt.Println("========================= # TESTS DONE # =========================")
 
