@@ -54,9 +54,9 @@ sub start_gui {
         $window->set_icon( $transparent );
     }
 
-    my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
     my $eb = Gtk2::EventBox->new;
-    $eb->modify_bg( 'normal', $white );
+#   my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
+#   $eb->modify_bg( 'normal', $white );
     $window->add( $eb );
 
     $top_box = Gtk2::VBox->new( FALSE, 5 );

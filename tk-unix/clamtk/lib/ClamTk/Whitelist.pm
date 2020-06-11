@@ -27,8 +27,8 @@ my $system_whitelist = ClamTk::App->get_path( 'whitelist_dir' );
 sub show_window {
     my $eb = Gtk2::EventBox->new;
 
-    my $white = Gtk2::Gdk::Color->new( 0xFFFF, 0xFFFF, 0xFFFF );
-    $eb->modify_bg( 'normal', $white );
+#   my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
+#   $eb->modify_bg( 'normal', $white );
 
     my $box = Gtk2::VBox->new( FALSE, 5 );
     $eb->add( $box );

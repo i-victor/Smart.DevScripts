@@ -117,8 +117,8 @@ sub filter {
 
     my $eb = Gtk2::EventBox->new;
     $window->get_content_area->add( $eb );
-    my $white = Gtk2::Gdk::Color->new( 0xFFFF, 0xFFFF, 0xFFFF );
-    $eb->modify_bg( 'normal', $white );
+#   my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
+#   $eb->modify_bg( 'normal', $white );
 
     my $box = Gtk2::VBox->new( FALSE, 5 );
     $eb->add( $box );

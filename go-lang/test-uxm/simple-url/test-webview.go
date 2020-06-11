@@ -1,8 +1,8 @@
 
 // GO Lang
 // go build test-webview.go (on openbsd may need to: CGO_LDFLAGS_ALLOW='-Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib' go build test-webview.go)
-// (c) 2017-2018 unix-world.org
-// version: 2018.12.02
+// (c) 2017-2020 unix-world.org
+// version: 2020.05.17
 
 package main
 

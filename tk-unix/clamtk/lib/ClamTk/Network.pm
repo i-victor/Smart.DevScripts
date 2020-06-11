@@ -28,8 +28,8 @@ my $infobar;               # Gtk2::InfoBar
 sub show_window {
     my $eb = Gtk2::EventBox->new;
 
-    my $white = Gtk2::Gdk::Color->new( 0xFFFF, 0xFFFF, 0xFFFF );
-    $eb->modify_bg( 'normal', $white );
+#   my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
+#   $eb->modify_bg( 'normal', $white );
 
     #$eb->override_background_color( 'normal',
     #    Gtk2::Gdk::RGBA->new( .93, .93, .93, .93 ),

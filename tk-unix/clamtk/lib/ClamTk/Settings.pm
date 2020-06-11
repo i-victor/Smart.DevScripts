@@ -25,8 +25,8 @@ use Locale::gettext;
 sub show_window {
     my $top_box = Gtk2::EventBox->new;
 
-    my $white = Gtk2::Gdk::Color->new( 0xFFFF, 0xFFFF, 0xFFFF );
-    $top_box->modify_bg( 'normal', $white );
+#   my $white = Gtk2::Gdk::Color->new( 0x9999, 0x9999, 0x9999 );
+#   $top_box->modify_bg( 'normal', $white );
 
     my $box = Gtk2::VBox->new( FALSE, 0 );
     $top_box->add( $box );

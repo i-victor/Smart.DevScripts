@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020 unix-world.org
-// r.20200509.1721 :: STABLE
+// r.20200517.1101 :: STABLE
 
 package main
 
@@ -26,6 +26,8 @@ This is another comment ...
 
 func LogToConsoleWithColors() {
 	//--
+	smart.ClearPrintTerminal()
+	//--
 //	smart.LogToStdErr("DEBUG")
 	smart.LogToConsole("DEBUG", true) // colored or not
 //	smart.LogToFile("DEBUG", "logs/", "json", true, true) // json | plain ; also on console ; colored or not
@@ -36,7 +38,8 @@ func LogToConsoleWithColors() {
 	log.Println("[ERROR] Error")
 	log.Println("A log message, with no type")
 	//--
-}
+} //END FUNCTION
+
 
 func fatalError(logMessages ...interface{}) {
 	//--
@@ -186,7 +189,7 @@ func testStrings() {
 		fatalError("StrRIPos (case insensitive) Test FAILED. Expected result is -1 but get: ", testThePos)
 	} //end if
 
-	fmt.Println("Strings SubStr Tests Result: PASSED");
+	fmt.Println("Strings SubStr Tests Result: PASSED")
 
 } //END FUNCTION
 
@@ -252,7 +255,7 @@ func testNetFx() {
 		fatalError("Net Validation Test ValidPort (string) failed with wrong Port:", ":" + validPort)
 	} //end if
 	//--
-	fmt.Println("Net Validation Tests Result: PASSED");
+	fmt.Println("Net Validation Tests Result: PASSED")
 	//--
 } //END FUNCTION
 
@@ -379,7 +382,7 @@ func testFileSystem(input string) {
 		fatalError("FAILED to get the current GO executable Name")
 	} //end if
 	var crrSrcGoFile string = crrBinGoFile + ".go"
-	fmt.Println("Current Executable Name: `" + crrBinGoFile + "`");
+	fmt.Println("Current Executable Name: `" + crrBinGoFile + "`")
 	if(smart.PathExists(crrSrcGoFile) != true) {
 		fatalError("Errors encountered while testing if the current source file exists:", crrSrcGoFile)
 	} //end if
@@ -390,7 +393,7 @@ func testFileSystem(input string) {
 		fatalError("Errors encountered while testing if the current source file is not a dir:", crrSrcGoFile)
 	} //end if
 
-	fmt.Println("Path Exists Test Result: PASSED");
+	fmt.Println("Path Exists Test Result: PASSED")
 
 	fmt.Println("------------------------- Dir Create and Rename TESTS -------------------------")
 
@@ -478,6 +481,14 @@ func testFileSystem(input string) {
 	fmt.Println("Test PASSED ; Append/WriteFile: `" + theTestFile + "` ; Result =", isASuccess)
 
 	fmt.Println("------------------------- File Read TESTS -------------------------")
+
+	fMd5Sum, errmsg := smart.SafePathFileMd5(theEmptyTestFile, false)
+	if(errmsg != "") {
+		fatalError("Errors encountered while making the MD5 sum of file: `" + theEmptyTestFile + "`", errmsg)
+	} //end if
+	if(fMd5Sum != "d41d8cd98f00b204e9800998ecf8427e") { // compare it with the md5 of empty string, should match ! (this is because the file contents is empty)
+		fatalError("The MD5 sum of file: `" + theEmptyTestFile + "` is INVALID: `" + fMd5Sum + "`")
+	} //end if
 
 	fEmptyContent, errmsg := smart.SafePathFileRead(theEmptyTestFile, false)
 	if(errmsg != "") {
@@ -827,6 +838,9 @@ func main() {
 
 	tpl := smart.MarkersTplRender(THE_TPL, arr, false, false)
 	fmt.Println("\n" + "Raw TPL: `" + THE_TPL + "`" + "\n")
+	eTpl := smart.MarkersTplEscapeTpl(THE_TPL)
+	fmt.Println("\n" + "Escaped TPL (for javascript): `" + eTpl + "`" + "\n")
+	fmt.Println("\n" + "Escaped TPL (for javascript) + RawUrlDecode: `" + smart.RawUrlDecode(eTpl) + "`" + "\n")
 	fmt.Println("---------- ---------- ----------")
 	fmt.Println("\n" + "Rendered TPL: `" + tpl + "`" + "\n")
 

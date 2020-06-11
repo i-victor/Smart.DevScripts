@@ -1,0 +1,205 @@
+
+mode mode       If the driver for the interface supports the media
+                     selection system, force the mode of the interface to the
+                     given mode.  For IEEE 802.11 wireless interfaces that
+                     support multiple modes, this directive is used to select
+                     between 802.11a ("11a"), 802.11b ("11b"), 802.11g
+                     ("11g"), and 802.11n ("11n") modes.
+
+     -mode           Select the mode automatically.  This is the default for
+                     IEEE 802.11 wireless interfaces.
+
+
+IEEE 802.11 (WIRELESS DEVICES)
+     ifconfig wireless-interface [[-]bssid bssid] [[-]chan [n]] [[-]join id]
+              [[-]joinlist] [[-]nwflag flag] [[-]nwid id] [[-]nwkey key]
+              [[-]powersave [duration]] [scan] [[-]wpa] [wpaakms akm,akm,...]
+              [wpaciphers cipher,cipher,...] [wpagroupcipher cipher]
+              [[-]wpakey passphrase | hexkey] [wpaprotos proto,proto,...]
+
+     The following options are available for a wireless interface:
+
+     bssid bssid
+             Set the desired BSSID.
+
+     -bssid  Unset the desired BSSID.  The interface will automatically select
+             a BSSID in this mode, which is the default.
+
+     chan [n]
+             Set the channel (radio frequency) to n.
+
+             With no channel specified, show the list of channels supported by
+             the device.
+
+     -chan   Unset the desired channel.  It doesn't affect the channel to be
+             created for IBSS or Host AP mode.
+
+     join id
+             Add the network with NWID/ESSID id to the list of auto-join
+             networks.  Information about such networks is retained, such that
+             configured interfaces can automatically switch to such networks
+             as necessary.  Note that join does not represent a complete
+             "wireless profile" as only the wpakey, nwkey, and nwid parameters
+             are retained.  IEEE802.11 mode (11a/11b/11g/11n) and channel
+             parameters are not retained, so should not be included.
+
+             The id can either be any text string up to 32 characters in
+             length, or a series of hexadecimal digits up to 64 digits.  Any
+             necessary wpakey or nwkey arguments should be specified on the
+             same line.  The empty string allows the interface to
+             automatically connect to any available access points if no known
+             access points are found.  May not be used with nwid.
+
+     -join id
+
+
+     joinlist
+             Show the list of currently configured auto-join networks.
+
+     -joinlist
+             Remove all networks in the list of auto-join networks.
+
+     nwflag flag
+             Set specified flag.  The flag name can be:
+
+             hidenwid    The `hidenwid' flag will hide the network ID (ESSID)
+                         in beacon frames when operating in Host AP mode.  It
+                         will also prevent responses to probe requests with an
+                         unspecified network ID.
+
+             nobridge    The `nobridge' flag will disable the direct bridging
+                         of frames between associated nodes when operating in
+                         Host AP mode.  Setting this flag will block and
+                         filter direct inter-station communications.
+
+             stayauth    The `stayauth' flag will cause the interface to
+                         ignore deauth frames.  This flag should only be used
+                         on wifi networks which are being attacked with
+                         spoofed deauth frames.  It breaks interoperability
+                         with spectrum management solutions and access points
+                         that perform band-steering of clients.
+
+             Note that the `hidenwid' and `nobridge' options do not provide
+             any security.  The hidden network ID will be sent in clear text
+             by associating stations and can be easily discovered with tools
+             like tcpdump(8) and hostapd(8).
+
+     -nwflag flag
+             Remove specified flag.
+
+
+   nwid id
+             Connect to the network with NWID id.  Unlike auto-join networks,
+             information about the network is not retained.  The empty string
+             allows the interface to connect to any available access points.
+             May not be used with join.
+
+     -nwid   Set the NWID to the empty string to allow the interface to
+             connect to any available access point.
+
+     nwkey key
+             Enable WEP encryption using the specified key.  The key can
+             either be a string, a series of hexadecimal digits (preceded by
+             `0x'), or a set of keys of the form "n:k1,k2,k3,k4" where `n'
+             specifies which of the keys will be used for transmitted packets,
+             and the four keys, "k1" through "k4", are configured as WEP keys.
+             If a set of keys is specified, a comma (`,') within the key must
+             be escaped with a backslash.  Note that if multiple keys are
+             used, their order must be the same within the network.
+
+             The length of each key must be either 40 bits for 64-bit
+             encryption (5-character ASCII string or 10 hexadecimal digits) or
+             104 bits for 128-bit encryption (13-character ASCII string or 26
+             hexadecimal digits).
+
+     -nwkey  Disable WEP encryption.
+
+     nwkey persist
+             Enable WEP encryption using the persistent key stored in the
+             network card.
+
+     nwkey persist:key
+             Write key to the persistent memory of the network card, and
+             enable WEP encryption using that key.
+
+     powersave
+             Enable 802.11 power saving mode.  Power saving is disabled by
+             default.  See driver specific manual pages to see details of the
+             implementation relevant to that device.
+
+     -powersave
+             Disable 802.11 power saving mode.
+
+     scan    Show the results of an access point scan.  In Host AP mode, this
+             will dump the list of known nodes without scanning.  In station
+             mode, this will list each access point's SSID, channel, MAC
+             address (BSSID), received signal strength indicator, maximum data
+             transfer rate, and supported feature flags.  If an access point
+             cannot be selected due to incompatibilities with the interface
+             configuration, ifconfig indicates mismatching configuration items
+             with an exclamation mark.
+
+     wpa     Enable Wi-Fi Protected Access.  WPA is a Wi-Fi Alliance protocol
+             based on the IEEE 802.11i standard.  It was designed to enhance
+             the security of wireless networks.  Notice that not all drivers
+             support WPA.  Check the driver's manual page to know if this
+             option is supported.
+
+     -wpa    Disable Wi-Fi Protected Access.
+
+     wpaakms akm,akm,...
+             Set the comma-separated list of allowed authentication and key
+             management protocols.
+
+             The supported values are "psk" and "802.1x".  psk authentication
+             (also known as personal mode) uses a 256-bit pre-shared key.
+             802.1x authentication (also known as enterprise mode) is used
+             with an external IEEE 802.1X authentication server, such as
+             wpa_supplicant.  The default value is "psk".  "psk" can only be
+             used if a pre-shared key is configured using the wpakey option.
+
+    wpaciphers cipher,cipher,...
+             Set the comma-separated list of allowed pairwise ciphers.
+
+             The supported values are "tkip", "ccmp", and "usegroup".
+             usegroup specifies that no pairwise ciphers are supported and
+             that only group keys should be used.  The default value is
+             "ccmp".  If multiple pairwise ciphers are specified, the pairwise
+             cipher will be negotiated between the station and the access
+             point at association time.  A station will always try to use ccmp
+             over tkip if both ciphers are allowed and supported by the access
+             point.  If the selected cipher is not supported by the hardware,
+             software encryption will be used.  Check the driver's manual page
+             to know which ciphers are supported in hardware.
+
+     wpagroupcipher cipher
+             Set the group cipher used to encrypt broadcast and multicast
+             traffic.
+
+             The supported values are "wep40", "wep104", "tkip", and "ccmp".
+             The default value is "ccmp".  The use of tkip or wep40 or wep104
+             as the group cipher is discouraged due to weaknesses in TKIP and
+             WEP.  The wpagroupcipher option is available in Host AP mode
+             only.  A station will always use the group cipher of the BSS.
+
+     wpakey passphrase | hexkey
+             Set the WPA key and enable WPA.  The key can be given using
+             either a passphrase or a full length hex key, starting with 0x.
+             If a passphrase is used the nwid or join option must first be
+             specified, since ifconfig will hash the nwid along with the
+             passphrase to create the key.
+
+     -wpakey
+             Delete the pre-shared WPA key and disable WPA.
+
+
+     wpaprotos proto,proto,...
+             Set the comma-separated list of allowed WPA protocol versions.
+
+             The supported values are "wpa1" and "wpa2".  wpa1 is based on
+             draft 3 of the IEEE 802.11i standard whereas wpa2 is based on the
+             ratified standard.  The default value is "wpa2".  If "wpa1,wpa2"
+             is specified, a station will always use the wpa2 protocol when
+             supported by the access point.
+
+
