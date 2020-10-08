@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020 unix-world.org
-// r.20200517.1101 :: STABLE
+// r.20200717.1853 :: STABLE
 
 package main
 
@@ -17,7 +17,7 @@ const (
 	THE_TPL = `[%%%COMMENT%%%]
 This is comment one ...
 [%%%/COMMENT%%%]
-Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###][%%%|T%%%][###MARKER2|js###]
+Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###][%%%|T%%%][###MARKER2|js###][%%%|T%%%][###MARKER3|idtxt###]
 [%%%COMMENT%%%]
 This is another comment ...
 [%%%/COMMENT%%%]`
@@ -834,6 +834,7 @@ func main() {
 	var arr = map[string]string{
 		"MARKER": 	test3Str,
 		"MARKER2": 	`<Tyler="test"` + "\n" + `>`,
+		"MARKER3": 	`this_is_an_ID`,
 	}
 
 	tpl := smart.MarkersTplRender(THE_TPL, arr, false, false)

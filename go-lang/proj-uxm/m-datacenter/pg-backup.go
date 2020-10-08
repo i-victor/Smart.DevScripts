@@ -18,9 +18,10 @@ import (
 
 
 const (
-	PROGR_VERSION = "r.20200510.2259"
+	PROGR_VERSION = "r.20200820.1617"
 
 	CMD_TIMEOUT = 3600 // 1h per cmd
+	CMD_RERUN_TIME = 30 // !IMPORTANT! This have to be greater than CMD_TIMEOUT
 
 	PG_HOST = "127.0.0.1"
 	PG_PORT = "5432"
@@ -528,9 +529,9 @@ func runBackupTask(taskNum int64) {
 	fmt.Println("")
 	//--
 	fmt.Println("========== Archiving (7-Zip): START ==========")
-	fmt.Println("7za: `" + theBkpFolder + "/` > `" + theArchName + "`")
+	fmt.Println("7za a: `" + theBkpFolder + "/` > `" + theArchName + "`")
 	//--
-	isSuccess, _, errStd := smart.ExecTimedCmd(CMD_TIMEOUT, "output", "capture+output", "", "", "7za", "a", "-t7z", "-m0=lzma", "-mx=5", "-md=256m", "-bb0", theArchName, theBkpFolder + "/")
+	isSuccess, _, errStd := smart.ExecTimedCmd(CMD_TIMEOUT, "output", "capture+output", "", "", "7za", "a", "-t7z", "-m0=lzma", "-mx=5", "-md=256m", "-bb0", "-y", theArchName, theBkpFolder + "/")
 	if((isSuccess != true) || (errStd != "")) {
 		logBackupError("7-Zip Archiver encountered Errors / StdErr:\n`" + errStd + "`\n")
 		uxmIsBackupRunning = false
@@ -566,7 +567,7 @@ func runBackupTask(taskNum int64) {
 
 	//--
 	fmt.Println("")
-	fmt.Println(color.HiGreenString("### [OK: backup COMPLETED] :: " + DateTimeEndUtc + " ###"))
+	fmt.Println(color.HiGreenString("### [OK: Backup COMPLETED] :: " + DateTimeEndUtc + " ###"))
 	fmt.Println("")
 	//--
 
@@ -608,7 +609,6 @@ func main() {
 		//--
 	}
 	//--
-
 
 } //END FUNCTION
 

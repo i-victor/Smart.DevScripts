@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo :: Smart.Go.Framework
 // (c) 2020 unix-world.org
-// r.20200517.1701 :: STABLE
+// r.20200717.1853 :: STABLE
 
 package smartgo
 
@@ -530,7 +530,7 @@ func blowfishChecksizeAndPad(str string, chr byte) string {
 	//-- calculate modulus of plaintext to blowfish's cipher block size
 	modulus := len(pt) % blowfish.BlockSize
 	//-- if result is not 0, then need to pad
-	if modulus != 0 {
+	if(modulus != 0) {
 		//-- how many bytes do we need to pad to make pt to be a multiple of blowfish's block size?
 		padlen := blowfish.BlockSize - modulus
 		//-- let's add the required padding
@@ -693,7 +693,7 @@ func BlowfishDecryptCBC(str string, key string) string {
 
 func GzDeflate(str string, level int) string {
 	//--
-	if(level < 1 || level > 9) {
+	if((level < 1) || (level > 9)) {
 		level = -1 // zlib default compression
 	} //end if
 	//--
@@ -2399,7 +2399,7 @@ func MarkersTplRevertNosyntaxContent(tpl string) string {
 } //END FUNCTION
 
 
-func MarkersTplRender(template string, arrobj map[string]string, isEncoded bool, revertSyntax bool) string { // r.20200121
+func MarkersTplRender(template string, arrobj map[string]string, isEncoded bool, revertSyntax bool) string { // r.20200717
 	//--
 	if(isEncoded == true) {
 		template = RawUrlDecode(template)
@@ -2460,6 +2460,9 @@ func MarkersTplRender(template string, arrobj map[string]string, isEncoded bool,
 								tmp_marker_val = ParseFloatAsStrDecimal(tmp_marker_val, 4)
 							} else if(escaping == "|num") { // Number (Float / Decimal / Integer)
 								tmp_marker_val = ParseFloatAsStrFloat(tmp_marker_val)
+							} else if(escaping == "|idtxt") { // id_txt: Id-Txt
+								tmp_marker_val = StrReplaceWithLimit(tmp_marker_val, "_", "-", -1) // replace all
+								tmp_marker_val = strings.Title(strings.ToLower(tmp_marker_val))
 							} else if(escaping == "|slug") { // Slug: a-zA-Z0-9_- / - / -- : -
 								tmp_marker_val = StrCreateSlug(tmp_marker_val)
 							} else if(escaping == "|htmid") { // HTML-ID: a-zA-Z0-9_-
