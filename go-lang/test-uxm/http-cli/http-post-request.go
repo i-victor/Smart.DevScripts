@@ -144,7 +144,7 @@ func testPostFile(fPath string) int {
 	theFile := "test/" + fName
 	log.Println("Sample: HTTP POST File: `" + theFile + "`")
 	//-- test if file exists, get the file size and read the file (open)
-	fi, err := os.Stat(theFile);
+	fi, err := os.Stat(theFile)
 	if(err != nil) {
 		log.Fatal(err)
 	} //end if
@@ -172,36 +172,36 @@ func main()  {
 	switch(os.Args[1]) {
 		case "text":
 			httpRequestStatusCode = testPostText()
-			break;
+			break
 		case "json":
 			httpRequestStatusCode = testPostJson()
-			break;
+			break
 		case "file":
 			if(len(os.Args) != 3) {
 				log.Println("Usage: http-post-request file test/<filename>")
 				os.Exit(1)
 			} //end if
 			httpRequestStatusCode = testPostFile(os.Args[2])
-			break;
+			break
 		default:
 			log.Println("Invalid mode. Invoke -help to see the arguments ...")
 			os.Exit(2)
 	} //end switch
 	//--
 	if(httpRequestStatusCode == 200) {
-		fmt.Println("HTTP 200 OK");
+		fmt.Println("HTTP 200 OK")
 	} else if(httpRequestStatusCode == 201) {
-		fmt.Println("HTTP 201 CREATED");
+		fmt.Println("HTTP 201 CREATED")
 	} else if(httpRequestStatusCode == 202) {
-		fmt.Println("HTTP 202 ACCEPTED");
+		fmt.Println("HTTP 202 ACCEPTED")
 	} else if(httpRequestStatusCode == 400) {
-		fmt.Println("HTTP 400 BAD REQUEST");
+		fmt.Println("HTTP 400 BAD REQUEST")
 	} else if(httpRequestStatusCode == 401) {
-		fmt.Println("HTTP 401 UNAUTHORIZED (Authentication Failed)");
+		fmt.Println("HTTP 401 UNAUTHORIZED (Authentication Failed)")
 	} else if(httpRequestStatusCode == 403) {
-		fmt.Println("HTTP 403 FORBIDDEN (Access Denied)");
+		fmt.Println("HTTP 403 FORBIDDEN (Access Denied)")
 	} else {
-		fmt.Println("HTTP Status NOT OK / Code: " + strconv.Itoa(httpRequestStatusCode));
+		fmt.Println("HTTP Status NOT OK / Code: " + strconv.Itoa(httpRequestStatusCode))
 	} //end if else
 	//--
 } //END FUNCTION
