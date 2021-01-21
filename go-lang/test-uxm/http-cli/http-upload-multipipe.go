@@ -1,6 +1,11 @@
 
-// multipart upload with io.Pipe
-// curl --insecure -X POST -H "Content-Type: multipart/form-data" -F 'webdav_action=upf' -F 'file=@page.pdf' https://user:pass@127.0.0.1/sites/smart-framework/admin.php/page/cloud.files/~/uploads
+// GoLang Sample
+// HTTP Client Upload Multipipe : stream file
+// (c) 2020-2021 unix-world.org
+// r.20210118.2155
+
+// # multipart upload with io.Pipe
+// # curl --insecure -X POST -H "Content-Type: multipart/form-data" -F 'webdav_action=upf' -F 'file=@page.pdf' https://user:pass@127.0.0.1/sites/smart-framework/admin.php/page/cloud.files/~/uploads
 
 package main
 
@@ -54,6 +59,7 @@ func main() {
 		// prepare request
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		req, err := http.NewRequest("POST", "https://127.0.0.1/sites/smart-framework/admin.php/page/cloud.files/~/uploads/", pipeOut)
+		req.Close = true
 		if username != "" {
 			req.SetBasicAuth(username, passwd)
 		}
@@ -81,6 +87,7 @@ func main() {
 			done <- err
 			return
 		}
+		resp.Body.Close()
 		switch resp.StatusCode {
 			case 200:
 				bar.FinishPrint("Status: 200 OK")

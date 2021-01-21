@@ -1,8 +1,8 @@
 
 // GoLang Sample
 // HTTP Client PUT : stream file | json | text
-// (c) 2020 unix-world.org
-// r.20200430.2030
+// (c) 2020-2021 unix-world.org
+// r.20210118.2155
 
 package main
 
@@ -34,14 +34,14 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	//--
 	if(fName == "") {
 		log.Println("ERROR: Empty File Name. Use `@` for using no File Name ...")
-		return 999
+		return 989
 	} //end if
 	if(fName != "#") {
 		fName = filepath.Base(strings.TrimSpace(fName))
 		fName = strings.TrimSpace(fName)
 		if(fName == "") {
 			log.Println("ERROR: Invalid File Name")
-			return 998
+			return 988
 		}
 	} //end if
 	//--
@@ -58,9 +58,10 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	client := &http.Client{}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	req, err := http.NewRequest(http.MethodPut, realURL,  bar.NewProxyReader(data))
+	req.Close = true
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client: ", err)
-		return 997
+		return 999
 	} //end if
 	//--
 	if(username != "") {
@@ -72,7 +73,9 @@ func putRequest(username string, passwd string, url string, fName string, data i
 	resp, err = client.Do(req)
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client Request: ", err)
+		return 998
 	} //end if
+	resp.Body.Close()
 	//--
 //	bar.Finish()
 	bar.FinishPrint("Data Transfer Completed: " + realURL)

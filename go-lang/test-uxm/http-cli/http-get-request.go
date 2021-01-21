@@ -2,7 +2,7 @@
 // GoLang Sample
 // HTTP Client GET
 // (c) 2020-2021 unix-world.org
-// r.20210114.1605
+// r.20210118.2155
 
 package main
 
@@ -17,7 +17,7 @@ import (
 
 
 const ( // all tests can be performed with: webdav-server.go which also serves plain HTTP(S) (on /)
-	THE_URL = "http://127.0.0.1:80/" 			// `http://127.0.0.1:80/` or `https://127.0.0.1:443/`
+	THE_URL = "http://127.0.0.1:8087/" 			// `http://127.0.0.1:80/` or `https://127.0.0.1:443/`
 	THE_AUTH_USERNAME = ""						// leave empty if no auth required or fill the auth username
 	THE_AUTH_PASSWORD = ""						// leave empty if no auth required or fill the auth password
 )
@@ -29,11 +29,12 @@ func getRequest(username string, passwd string, url string) int {
 	client := &http.Client{}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
-	req.Header.Add("x-test", "This is a test from GoLang ...")
+	req.Close = true
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client: ", err)
-		return 997
+		return 999
 	} //end if
+	req.Header.Add("x-test", "This is a test from GoLang ...")
 	//--
 	if(username != "") {
 		req.SetBasicAuth(username, passwd)
@@ -42,7 +43,9 @@ func getRequest(username string, passwd string, url string) int {
 	resp, err = client.Do(req)
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client Request: ", err)
+		return 998
 	} //end if
+	resp.Body.Close()
 	//--
 	return resp.StatusCode
 	//--

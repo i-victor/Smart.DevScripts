@@ -2,7 +2,7 @@
 // GoLang
 // HTTP Client GET : Hit Timer
 // (c) 2020-2021 unix-world.org
-// r.20210114.1634
+// r.20210118.2155
 
 package main
 
@@ -34,9 +34,10 @@ func getRequest(username string, passwd string, url string) int {
 	client := &http.Client{}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req.Close = true
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client: ", err)
-		return 997
+		return 999
 	} //end if
 	//--
 	if(username != "") {
@@ -46,7 +47,9 @@ func getRequest(username string, passwd string, url string) int {
 	resp, err = client.Do(req)
 	if(err != nil) {
 		log.Println("ERROR: Failed to handle HTTP Client Request: ", err)
+		return 998
 	} //end if
+	resp.Body.Close()
 	//--
 	return resp.StatusCode
 	//--

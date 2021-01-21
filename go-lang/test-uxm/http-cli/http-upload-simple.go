@@ -1,8 +1,15 @@
+
+// GoLang Sample
+// HTTP Client Upload Simple
+// (c) 2020-2021 unix-world.org
+// r.20210118.2155
+
 // curl -X POST -H "Content-Type: application/octet-stream" --data-binary '@filename' http://127.0.0.1:5050/upload
 
 package main
 
 import (
+	"log"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,13 +19,15 @@ import (
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	file, err := os.Create("./result")
+	file, err := os.Create("./upload/a.txt")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	n, err := io.Copy(file, r.Body)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 
 	w.Write([]byte(fmt.Sprintf("%d bytes are recieved.\n", n)))
@@ -36,17 +45,20 @@ func main() {
 }
 
 func upload() {
-	file, err := os.Open("./filename")
+	file, err := os.Open("./a.txt")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
 	defer file.Close()
 
-	res, err := http.Post("http://127.0.0.1:5050/upload", "binary/octet-stream", file)
+	req, err := http.Post("http://127.0.0.1:5050/upload", "binary/octet-stream", file)
+	req.Close = true
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+		return
 	}
-	defer res.Body.Close()
-	message, _ := ioutil.ReadAll(res.Body)
+	defer req.Body.Close()
+	message, _ := ioutil.ReadAll(req.Body)
 	fmt.Printf(string(message))
 }
