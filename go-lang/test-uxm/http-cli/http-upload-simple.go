@@ -45,7 +45,7 @@ func main() {
 }
 
 func upload() {
-	file, err := os.Open("./a.txt")
+	file, err := os.Open("./test/a.txt")
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -17,7 +17,7 @@ import (
 
 
 const ( // all tests can be performed with: webdav-server.go which also serves plain HTTP(S) (on /)
-	THE_URL = "http://127.0.0.1:8087/" 			// `http://127.0.0.1:80/` or `https://127.0.0.1:443/`
+	THE_URL = "http://127.0.0.1:13080/" 		// `http://127.0.0.1:80/` or `https://127.0.0.1:443/`
 	THE_AUTH_USERNAME = ""						// leave empty if no auth required or fill the auth username
 	THE_AUTH_PASSWORD = ""						// leave empty if no auth required or fill the auth password
 )
