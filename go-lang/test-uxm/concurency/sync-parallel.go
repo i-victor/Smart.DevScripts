@@ -1,8 +1,8 @@
 
 // GO Lang
 // sync parallel / concurrency
-// (c) 2017-2018 unix-world.org
-// version: 2018.12.02
+// (c) 2017-2021 unix-world.org
+// version: 20210328.2258
 
 package main
 
@@ -17,6 +17,7 @@ import (
 	"math/rand"
 
 	"github.com/fatih/color"
+//	color "github.com/unix-world/smartgo/colorstring"
 )
 
 func main() {

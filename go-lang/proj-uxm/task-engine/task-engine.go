@@ -2,7 +2,7 @@
 // GO Lang
 
 // parallel task engine with built-in HTTP service control
-// (c) 2017-2020 unix-world.org
+// (c) 2017-2021 unix-world.org
 
 package main
 
@@ -32,12 +32,12 @@ import (
 	"html"
 
 	"github.com/vaughan0/go-ini"
-	"github.com/fatih/color"
+	color "github.com/unix-world/smartgo/colorstring"
 )
 
 
 const (
-	THE_VERSION = "r.20200425.1635"
+	THE_VERSION = "r.20210328.2314"
 	INI_FILE = "task-engine.ini"
 	SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M3 4.949a2.5 2.5 0 10-1 0v8.049c0 .547.453 1 1 1h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-5h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-2.05zm9 2.55a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm-3 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 7.499a1.5 1.5 0 110-3.001 1.5 1.5 0 010 3zm-6-3a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>`
 	SVG_SPIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="grey" id="loading-spin-svg"><path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/><path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z"><animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite" /></path></svg>`
@@ -375,7 +375,7 @@ func tasks(maxParallelThreads int, LoopId int) {
 				}
 			}
 			if((flagSilent != true) || (inListTaskErr == true)) {
-				fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:") + color.HiBlackString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
+				fmt.Println("Task # " + color.HiYellowString(TaskId) + color.CyanString(" @ Thread.ID:") + color.GreyString(strconv.Itoa(LoopId)) + "." + color.HiBlueString(strconv.Itoa(i)) + " :: HTTP Response Status:" + status)
 			}
 			//-- sleep after each group
 			time.Sleep(time.Duration(250) * time.Millisecond)
@@ -564,11 +564,11 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println(color.HiBlackString("\n" + "##### DONE: TaskEngine #####"))
+		fmt.Println(color.GreyString("\n" + "##### DONE: TaskEngine #####"))
 		os.Exit(1)
 	}()
 	//--
-	fmt.Println(color.HiBlackString("\n" + "##### TaskEngine [ " + THE_VERSION + " ] :: Running on #CPUs: " + strconv.Itoa(runtime.NumCPU()) + " #####"))
+	fmt.Println(color.GreyString("\n" + "##### TaskEngine [ " + THE_VERSION + " ] :: Running on #CPUs: " + strconv.Itoa(runtime.NumCPU()) + " #####"))
 	//--
 
 	//-- parallel limits

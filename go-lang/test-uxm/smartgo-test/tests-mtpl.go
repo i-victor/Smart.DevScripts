@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
-// (c) 2020 unix-world.org
-// r.20200717.1853 :: STABLE
+// (c) 2020-2021 unix-world.org
+// r.20210328.2258 :: STABLE
 
 package main
 
@@ -36,6 +36,7 @@ func LogToConsoleWithColors() {
 	log.Println("[NOTICE] Notice")
 	log.Println("[WARNING] Warning")
 	log.Println("[ERROR] Error")
+	log.Println("[OK] OK")
 	log.Println("A log message, with no type")
 	//--
 } //END FUNCTION

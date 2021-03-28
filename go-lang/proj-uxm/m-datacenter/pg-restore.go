@@ -1,6 +1,6 @@
 
 // GO Lang :: M-DataCenter :: Pg-Backup
-// (c) 2020 unix-world.org
+// (c) 2020-2021 unix-world.org
 // STABLE
 
 package main
@@ -15,13 +15,13 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/fatih/color"
+	color "github.com/unix-world/smartgo/colorstring"
 	smart "github.com/unix-world/smartgo"
 )
 
 
 const (
-	PROGR_VERSION = "r.20200820.1617"
+	PROGR_VERSION = "r.20210328.2258"
 
 	CMD_TIMEOUT = 3600 // 1h per cmd
 	CMD_RERUN_TIME = 30 // !IMPORTANT! This have to be greater than CMD_TIMEOUT
