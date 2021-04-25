@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210328.2258 :: STABLE
+// r.20210425.2023 :: STABLE
 
 package main
 
@@ -761,13 +761,26 @@ func main() {
 	fmt.Println("Data-Arch: `" + arch + "`")
 	fmt.Println("Data-UnArch: `" + smart.DataUnArchive(arch) + "`")
 
+	// INFO: enc data difers a little from PHP, maybe by some zlib metadata, but decode must work
+	var phpStrGzEncodedB64 string = "H4sIAAAAAAAAAwvJyCxWAKJEheKSosy8dAA/Y3YIEAAAAA=="
+	var phpStrOriginalGzEnc = "This is a string"
+	phpStrGzDecodedB64 := smart.GzDecode(smart.Base64Decode(phpStrGzEncodedB64))
+	fmt.Println("GzDecode", phpStrGzDecodedB64);
+	if(phpStrGzDecodedB64 != phpStrOriginalGzEnc) {
+		fatalError("ERROR: Data GzEnc/GzDec TEST Failed ... Unarchived Data is NOT EQUAL with Unarchived Data from PHP")
+	} //end if
+	goStrGzEncodedB64 := smart.Base64Encode(smart.GzEncode(phpStrOriginalGzEnc))
+	if(smart.GzDecode(smart.Base64Decode(goStrGzEncodedB64)) != phpStrOriginalGzEnc) {
+		fatalError("ERROR: Data GzEnc/GzDec TEST Failed ... Archive + Unarchive Data is NOT EQUAL with Unarchived Data from PHP")
+	} //end if
+
 	// INFO: arch data difers a little from PHP, maybe by some zlib metadata, but decrypt must work
 	testPhpArchData := `HclBDkBAEETRw1hLplupZimDSMRKHMD06Psfgdj9/IfM1ZQ9Z00YLVlnfxNc+Zt+j6Phc+HM3tDkbcn7eR3tuU3SDKGhjwrCUaM4i6dbS7r9qRgEdIsq6i8=` + "\n" + `PHP.SF.151129/B64.ZLibRaw.HEX`;
 	fmt.Println("Data-Arch-PHP: `" + testPhpArchData + "`")
 	testPhpUnArchData := smart.DataUnArchive(testPhpArchData)
 	fmt.Println("Data-UnArch-PHP: `" + testPhpUnArchData + "`")
 	if(testPhpUnArchData != input) {
-		fatalError("ERROR: DataArchive TEST Failed ... Archived Data is NOT EQUAL with Archived Data from PHP")
+		fatalError("ERROR: Data Archive/Unarchive TEST Failed ... Archived Data is NOT EQUAL with Archived Data from PHP")
 	} //end if
 
 	fmt.Println("========================= BLOWFISH.CBC TESTS =========================")
