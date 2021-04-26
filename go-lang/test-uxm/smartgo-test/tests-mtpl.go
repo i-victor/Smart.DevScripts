@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210425.2023 :: STABLE
+// r.20210426.1130 :: STABLE
 
 package main
 
@@ -769,10 +769,11 @@ func main() {
 	if(phpStrGzDecodedB64 != phpStrOriginalGzEnc) {
 		fatalError("ERROR: Data GzEnc/GzDec TEST Failed ... Unarchived Data is NOT EQUAL with Unarchived Data from PHP")
 	} //end if
-	goStrGzEncodedB64 := smart.Base64Encode(smart.GzEncode(phpStrOriginalGzEnc))
+	goStrGzEncodedB64 := smart.Base64Encode(smart.GzEncode(phpStrOriginalGzEnc, 9))
 	if(smart.GzDecode(smart.Base64Decode(goStrGzEncodedB64)) != phpStrOriginalGzEnc) {
 		fatalError("ERROR: Data GzEnc/GzDec TEST Failed ... Archive + Unarchive Data is NOT EQUAL with Unarchived Data from PHP")
 	} //end if
+	fmt.Println("GzEncode", goStrGzEncodedB64);
 
 	// INFO: arch data difers a little from PHP, maybe by some zlib metadata, but decrypt must work
 	testPhpArchData := `HclBDkBAEETRw1hLplupZimDSMRKHMD06Psfgdj9/IfM1ZQ9Z00YLVlnfxNc+Zt+j6Phc+HM3tDkbcn7eR3tuU3SDKGhjwrCUaM4i6dbS7r9qRgEdIsq6i8=` + "\n" + `PHP.SF.151129/B64.ZLibRaw.HEX`;
