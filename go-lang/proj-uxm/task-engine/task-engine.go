@@ -37,7 +37,7 @@ import (
 
 
 const (
-	THE_VERSION = "r.20210328.2314"
+	THE_VERSION = "r.20210524.0412"
 	INI_FILE = "task-engine.ini"
 	SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M3 4.949a2.5 2.5 0 10-1 0v8.049c0 .547.453 1 1 1h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-5h2.05a2.5 2.5 0 004.9 0h1.1a2.5 2.5 0 100-1h-1.1a2.5 2.5 0 00-4.9 0H3v-2.05zm9 2.55a1.5 1.5 0 103 0 1.5 1.5 0 00-3 0zm-3 0a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0zm4.5 7.499a1.5 1.5 0 110-3.001 1.5 1.5 0 010 3zm-6-3a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg>`
 	SVG_SPIN = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="grey" id="loading-spin-svg"><path opacity=".25" d="M16 0 A16 16 0 0 0 16 32 A16 16 0 0 0 16 0 M16 4 A12 12 0 0 1 16 28 A12 12 0 0 1 16 4"/><path d="M16 0 A16 16 0 0 1 32 16 L28 16 A12 12 0 0 0 16 4z"><animateTransform attributeName="transform" type="rotate" from="0 16 16" to="360 16 16" dur="0.8s" repeatCount="indefinite" /></path></svg>`
@@ -114,6 +114,7 @@ try{ displayJson('json-code'); } catch(err){ console.log('FAILED to Color Format
 )
 
 
+var ServiceName string = ""
 var UrlBatchList string = ""
 var UrlTaskCall string = ""
 var bindTcpAddr string = ""
@@ -127,6 +128,7 @@ var startTime string = ""
 // in structures the keys that start with lowercase are private if used for json export ; they need to be re-mapped to json keys if need to have lowerkeys in json
 type uxmStuctStats struct {
 	Description string    `json:"description"`
+	ServiceName string    `json:"serviceName"`
 	ServiceVersion string `json:"serviceVersion"`
 	IsActive bool         `json:"isActive"`
 	IsSilent bool         `json:"isSilent"`
@@ -521,6 +523,7 @@ func main() {
 	if((parallelWorkers < 2) || (parallelWorkers > 1024)) {
 		parallelWorkers = runtime.NumCPU()
 	}
+	ServiceName = getIniStrVal(file, "MiniServer", "service-name")
 	srvHostAddr = getIniStrVal(file, "MiniServer", "http-addr")
 	if(srvHostAddr == "") {
 		srvHostAddr = "0.0.0.0"
@@ -534,6 +537,7 @@ func main() {
 	//--
 	uxmStats = &uxmStuctStats {
 		Description: `<TaskEngine GO> Runtime's "Statistics & Settings"`,
+		ServiceName: ServiceName,
 		ServiceVersion: THE_VERSION,
 		IsActive: true,
 		IsSilent: flagSilent,
