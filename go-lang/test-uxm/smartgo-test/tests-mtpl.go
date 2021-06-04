@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210426.1130 :: STABLE
+// r.20210604 :: STABLE
 
 package main
 
@@ -17,7 +17,7 @@ const (
 	THE_TPL = `[%%%COMMENT%%%]
 This is comment one ...
 [%%%/COMMENT%%%]
-Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###][%%%|T%%%][###MARKER2|js###][%%%|T%%%][###MARKER3|idtxt###]
+Hallo, this is Markers TPL:[%%%|N%%%][###MARKER|json###][%%%|T%%%][###MARKER2|url|html###][%%%|T%%%][###MARKER2|js###][%%%|T%%%][###MARKER3|idtxt###] [###MARKER3|hex###] [###MARKER3|b64###]
 [%%%COMMENT%%%]
 This is another comment ...
 [%%%/COMMENT%%%]`
@@ -849,7 +849,7 @@ func main() {
 	var arr = map[string]string{
 		"MARKER": 	test3Str,
 		"MARKER2": 	`<Tyler="test"` + "\n" + `>`,
-		"MARKER3": 	`this_is_an_ID`,
+		"MARKER3": 	`this_is_an_ID` + ` Test for AddCSlashes: ` + smart.AddCSlashes(`single and double quotes '"`, `'"`),
 	}
 
 	tpl := smart.MarkersTplRender(THE_TPL, arr, false, false)
