@@ -7,21 +7,17 @@
 package integration
 
 import (
-	"bytes"
-	"context"
 	"fmt"
-	"io"
-	"net"
-	"path"
+	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
+	"go.mongodb.org/mongo-driver/internal/testutil"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
@@ -29,11 +25,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/drivertest"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage"
 )
-
-const certificatesDir = "../../data/certificates"
 
 var noClientOpts = mtest.NewOptions().CreateClient(false)
 
@@ -71,7 +64,7 @@ func TestClient(t *testing.T) {
 
 		assert.Equal(mt, int64(-10), got.ID, "expected ID -10, got %v", got.ID)
 	})
-	mt.RunOpts("tls connection", mtest.NewOptions().MinServerVersion("3.0").Auth(true), func(mt *mtest.T) {
+	mt.RunOpts("tls connection", mtest.NewOptions().MinServerVersion("3.0").SSL(true), func(mt *mtest.T) {
 		var result bson.Raw
 		err := mt.Coll.Database().RunCommand(mtest.Background, bson.D{
 			{"serverStatus", 1},
@@ -86,66 +79,90 @@ func TestClient(t *testing.T) {
 		_, found = security.Document().LookupErr("SSLServerHasCertificateAuthority")
 		assert.Nil(mt, found, "SSLServerHasCertificateAuthority not found in result")
 	})
-	mt.RunOpts("x509", mtest.NewOptions().Auth(true), func(mt *mtest.T) {
-		const user = "C=US,ST=New York,L=New York City,O=MongoDB,OU=other,CN=external"
-		db := mt.Client.Database("$external")
-
-		// We don't care if the user doesn't already exist.
-		_ = db.RunCommand(
-			mtest.Background,
-			bson.D{{"dropUser", user}},
-		)
-		err := db.RunCommand(
-			mtest.Background,
-			bson.D{
-				{"createUser", user},
-				{"roles", bson.A{
-					bson.D{{"role", "readWrite"}, {"db", "test"}},
-				}},
+	mt.RunOpts("x509", mtest.NewOptions().Auth(true).SSL(true), func(mt *mtest.T) {
+		testCases := []struct {
+			certificate string
+			password    string
+		}{
+			{
+				"MONGO_GO_DRIVER_KEY_FILE",
+				"",
 			},
-		).Err()
-		assert.Nil(mt, err, "createUser error: %v", err)
-
-		baseConnString := mt.ConnString()
-		// remove username/password from base conn string
-		revisedConnString := "mongodb://"
-		split := strings.Split(baseConnString, "@")
-		assert.Equal(t, 2, len(split), "expected 2 parts after split, got %v (connstring %v)", split, baseConnString)
-		revisedConnString += split[1]
-
-		cs := fmt.Sprintf(
-			"%s&sslClientCertificateKeyFile=%s&authMechanism=MONGODB-X509&authSource=$external",
-			revisedConnString,
-			path.Join(certificatesDir, "client.pem"),
-		)
-		authClient, err := mongo.Connect(mtest.Background, options.Client().ApplyURI(cs))
-		assert.Nil(mt, err, "authClient Connect error: %v", err)
-		defer func() { _ = authClient.Disconnect(mtest.Background) }()
-
-		rdr, err := authClient.Database("test").RunCommand(mtest.Background, bson.D{
-			{"connectionStatus", 1},
-		}).DecodeBytes()
-		assert.Nil(mt, err, "connectionStatus error: %v", err)
-		users, err := rdr.LookupErr("authInfo", "authenticatedUsers")
-		assert.Nil(mt, err, "authenticatedUsers not found in response")
-		elems, err := users.Array().Elements()
-		assert.Nil(mt, err, "error getting users elements: %v", err)
-
-		for _, userElem := range elems {
-			rdr := userElem.Value().Document()
-			var u struct {
-				User string
-				DB   string
-			}
-
-			if err := bson.Unmarshal(rdr, &u); err != nil {
-				continue
-			}
-			if u.User == user && u.DB == "$external" {
-				return
-			}
+			{
+				"MONGO_GO_DRIVER_PKCS8_ENCRYPTED_KEY_FILE",
+				"&sslClientCertificateKeyPassword=password",
+			},
+			{
+				"MONGO_GO_DRIVER_PKCS8_UNENCRYPTED_KEY_FILE",
+				"",
+			},
 		}
-		mt.Fatal("unable to find authenticated user")
+		for _, tc := range testCases {
+			mt.Run(tc.certificate, func(mt *mtest.T) {
+				const user = "C=US,ST=New York,L=New York City,O=MDB,OU=Drivers,CN=client"
+				db := mt.Client.Database("$external")
+
+				// We don't care if the user doesn't already exist.
+				_ = db.RunCommand(
+					mtest.Background,
+					bson.D{{"dropUser", user}},
+				)
+				err := db.RunCommand(
+					mtest.Background,
+					bson.D{
+						{"createUser", user},
+						{"roles", bson.A{
+							bson.D{{"role", "readWrite"}, {"db", "test"}},
+						}},
+					},
+				).Err()
+				assert.Nil(mt, err, "createUser error: %v", err)
+
+				baseConnString := mtest.ClusterURI()
+				// remove username/password from base conn string
+				revisedConnString := "mongodb://"
+				split := strings.Split(baseConnString, "@")
+				assert.Equal(t, 2, len(split), "expected 2 parts after split, got %v (connstring %v)", split, baseConnString)
+				revisedConnString += split[1]
+
+				cs := fmt.Sprintf(
+					"%s&sslClientCertificateKeyFile=%s&authMechanism=MONGODB-X509&authSource=$external%s",
+					revisedConnString,
+					os.Getenv(tc.certificate),
+					tc.password,
+				)
+				authClientOpts := options.Client().ApplyURI(cs)
+				testutil.AddTestServerAPIVersion(authClientOpts)
+				authClient, err := mongo.Connect(mtest.Background, authClientOpts)
+				assert.Nil(mt, err, "authClient Connect error: %v", err)
+				defer func() { _ = authClient.Disconnect(mtest.Background) }()
+
+				rdr, err := authClient.Database("test").RunCommand(mtest.Background, bson.D{
+					{"connectionStatus", 1},
+				}).DecodeBytes()
+				assert.Nil(mt, err, "connectionStatus error: %v", err)
+				users, err := rdr.LookupErr("authInfo", "authenticatedUsers")
+				assert.Nil(mt, err, "authenticatedUsers not found in response")
+				elems, err := users.Array().Elements()
+				assert.Nil(mt, err, "error getting users elements: %v", err)
+
+				for _, userElem := range elems {
+					rdr := userElem.Value().Document()
+					var u struct {
+						User string
+						DB   string
+					}
+
+					if err := bson.Unmarshal(rdr, &u); err != nil {
+						continue
+					}
+					if u.User == user && u.DB == "$external" {
+						return
+					}
+				}
+				mt.Fatal("unable to find authenticated user")
+			})
+		}
 	})
 	mt.RunOpts("list databases", noClientOpts, func(mt *mtest.T) {
 		mt.RunOpts("filter", noClientOpts, func(mt *mtest.T) {
@@ -260,6 +277,7 @@ func TestClient(t *testing.T) {
 			invalidClientOpts := options.Client().
 				SetServerSelectionTimeout(100 * time.Millisecond).SetHosts([]string{"invalid:123"}).
 				SetConnectTimeout(500 * time.Millisecond).SetSocketTimeout(500 * time.Millisecond)
+			testutil.AddTestServerAPIVersion(invalidClientOpts)
 			client, err := mongo.Connect(mtest.Background, invalidClientOpts)
 			assert.Nil(mt, err, "Connect error: %v", err)
 			err = client.Ping(mtest.Background, readpref.Primary())
@@ -275,7 +293,7 @@ func TestClient(t *testing.T) {
 	})
 	mt.RunOpts("watch", noClientOpts, func(mt *mtest.T) {
 		mt.Run("disconnected", func(mt *mtest.T) {
-			c, err := mongo.NewClient(options.Client().ApplyURI(mt.ConnString()))
+			c, err := mongo.NewClient(options.Client().ApplyURI(mtest.ClusterURI()))
 			assert.Nil(mt, err, "NewClient error: %v", err)
 			_, err = c.Watch(mtest.Background, mongo.Pipeline{})
 			assert.Equal(mt, mongo.ErrClientDisconnected, err, "expected error %v, got %v", mongo.ErrClientDisconnected, err)
@@ -381,42 +399,41 @@ func TestClient(t *testing.T) {
 	})
 
 	testAppName := "foo"
-	hosts := options.Client().ApplyURI(mt.ConnString()).Hosts
-	appNameProxyDialer := newProxyDialer()
-	appNameDialerOpts := options.Client().
-		SetDialer(appNameProxyDialer).
-		SetHosts(hosts[:1]).
-		SetDirect(true).
+	appNameClientOpts := options.Client().
 		SetAppName(testAppName)
 	appNameMtOpts := mtest.NewOptions().
-		ClientOptions(appNameDialerOpts).
-		Topologies(mtest.Single).
-		Auth(false) // Can't run with auth because the proxy dialer won't work with TLS enabled.
+		ClientType(mtest.Proxy).
+		ClientOptions(appNameClientOpts).
+		Topologies(mtest.Single)
 	mt.RunOpts("app name is always sent", appNameMtOpts, func(mt *mtest.T) {
 		err := mt.Client.Ping(mtest.Background, mtest.PrimaryRp)
 		assert.Nil(mt, err, "Ping error: %v", err)
 
-		sent := appNameProxyDialer.sent
-		assert.True(mt, len(sent) >= 2, "expected at least 2 events sent, got %v", len(sent))
+		msgPairs := mt.GetProxiedMessages()
+		assert.True(mt, len(msgPairs) >= 2, "expected at least 2 events sent, got %v", len(msgPairs))
 
 		// First two messages should be connection handshakes: one for the heartbeat connection and the other for the
 		// application connection.
-		for idx, wm := range sent[:2] {
-			cmd, err := drivertest.GetCommandFromQueryWireMessage(wm)
-			assert.Nil(mt, err, "GetCommandFromQueryWireMessage error at index %d: %v", idx, err)
-			heartbeatCmdName := cmd.Index(0).Key()
-			assert.Equal(mt, "isMaster", heartbeatCmdName,
-				"expected command name isMaster at index %d, got %v", idx, heartbeatCmdName)
+		for idx, pair := range msgPairs[:2] {
+			helloCommand := "isMaster"
+			//  Expect "hello" command name with API version.
+			if os.Getenv("REQUIRE_API_VERSION") == "true" {
+				helloCommand = "hello"
+			}
+			assert.Equal(mt, pair.CommandName, helloCommand, "expected command name %s at index %d, got %s", helloCommand, idx,
+				pair.CommandName)
 
-			appNameVal, err := cmd.LookupErr("client", "application", "name")
-			assert.Nil(mt, err, "expected command %s at index %d to contain app name", cmd, idx)
+			sent := pair.Sent
+			appNameVal, err := sent.Command.LookupErr("client", "application", "name")
+			assert.Nil(mt, err, "expected command %s at index %d to contain app name", sent.Command, idx)
 			appName := appNameVal.StringValue()
-			assert.Equal(mt, testAppName, appName, "expected app name %v at index %d, got %v", testAppName, idx, appName)
+			assert.Equal(mt, testAppName, appName, "expected app name %v at index %d, got %v", testAppName, idx,
+				appName)
 		}
 	})
 
 	// Test that direct connections work as expected.
-	firstServerAddr := mt.GlobalTopology().Description().Servers[0].Addr
+	firstServerAddr := mtest.GlobalTopology().Description().Servers[0].Addr
 	directConnectionOpts := options.Client().
 		ApplyURI(fmt.Sprintf("mongodb://%s", firstServerAddr)).
 		SetReadPreference(readpref.Primary()).
@@ -441,89 +458,8 @@ func TestClient(t *testing.T) {
 	})
 }
 
-// proxyDialer is a ContextDialer implementation that wraps a net.Dialer and records the messages sent and received
-// using connections created through it.
-type proxyDialer struct {
-	*net.Dialer
-	sync.Mutex
-	sent     []wiremessage.WireMessage
-	received []wiremessage.WireMessage
-}
-
-var _ options.ContextDialer = (*proxyDialer)(nil)
-
-func newProxyDialer() *proxyDialer {
-	return &proxyDialer{
-		Dialer: &net.Dialer{Timeout: 30 * time.Second},
-	}
-}
-
-// DialContext creates a new proxyConnection.
-func (p *proxyDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	netConn, err := p.Dialer.DialContext(ctx, network, address)
-	if err != nil {
-		return netConn, err
-	}
-
-	proxy := &proxyConn{
-		Conn:           netConn,
-		dialer:         p,
-		currentReading: bytes.NewBuffer(nil),
-	}
-	return proxy, nil
-}
-
-// storeSentMessage stores a copy of the wire message being sent to the server.
-func (p *proxyDialer) storeSentMessage(msg []byte) {
-	p.Lock()
-	defer p.Unlock()
-
-	msgCopy := make(wiremessage.WireMessage, len(msg))
-	copy(msgCopy, msg)
-	p.sent = append(p.sent, msgCopy)
-}
-
-// storeReceivedMessage stores a copy of the wire message being received from the server.
-func (p *proxyDialer) storeReceivedMessage(msg []byte) {
-	p.Lock()
-	defer p.Unlock()
-
-	msgCopy := make(wiremessage.WireMessage, len(msg))
-	copy(msgCopy, msg)
-	p.received = append(p.received, msgCopy)
-}
-
-// proxyConn is a net.Conn that wraps a network connection. All messages sent/received through a proxyConn are stored
-// in the associated proxyDialer and are forwarded over the wrapped connection.
-type proxyConn struct {
-	net.Conn
-	dialer         *proxyDialer
-	currentReading *bytes.Buffer // The current message being read.
-}
-
-// Write stores the given message in the proxyDialer associated with this connection and forwards the message to the
-// server.
-func (pc *proxyConn) Write(msg []byte) (n int, err error) {
-	pc.dialer.storeSentMessage(msg)
-	return pc.Conn.Write(msg)
-}
-
-// Read reads the message from the server into the given buffer and stores the read message in the proxyDialer
-// associated with this connection.
-func (pc *proxyConn) Read(buffer []byte) (int, error) {
-	n, err := pc.Conn.Read(buffer)
-	if err != nil {
-		return n, err
-	}
-
-	_, err = io.Copy(pc.currentReading, bytes.NewReader(buffer))
-	if err != nil {
-		return 0, fmt.Errorf("error copying to mock: %v", err)
-	}
-	if len(buffer) != 4 {
-		pc.dialer.storeReceivedMessage(pc.currentReading.Bytes())
-		pc.currentReading.Reset()
-	}
-
-	return n, err
+type proxyMessage struct {
+	serverAddress string
+	sent          wiremessage.WireMessage
+	received      wiremessage.WireMessage
 }

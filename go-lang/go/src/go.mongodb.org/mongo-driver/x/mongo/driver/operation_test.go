@@ -10,12 +10,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/internal/testutil/assert"
+	"go.mongodb.org/mongo-driver/mongo/address"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/readconcern"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/address"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/uuid"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage"
@@ -112,11 +113,6 @@ func TestOperation(t *testing.T) {
 		}
 	})
 	t.Run("retryableWrite", func(t *testing.T) {
-		deploymentRetry := new(mockDeployment)
-		deploymentRetry.returns.retry = true
-
-		deploymentNoRetry := new(mockDeployment)
-
 		sessPool := session.NewPool(nil)
 		id, err := uuid.New()
 		noerr(t, err)
@@ -133,13 +129,15 @@ func TestOperation(t *testing.T) {
 		noerr(t, err)
 		err = sessInProgressTransaction.StartTransaction(nil)
 		noerr(t, err)
-		sessInProgressTransaction.ApplyCommand(description.Server{})
+		err = sessInProgressTransaction.ApplyCommand(description.Server{})
+		noerr(t, err)
 
 		wcAck := writeconcern.New(writeconcern.WMajority())
 		wcUnack := writeconcern.New(writeconcern.W(0))
 
-		descRetryable := description.Server{WireVersion: &description.VersionRange{Min: 0, Max: 7}}
-		descNotRetryable := description.Server{WireVersion: &description.VersionRange{Min: 0, Max: 5}}
+		descRetryable := description.Server{WireVersion: &description.VersionRange{Min: 0, Max: 7}, SessionTimeoutMinutes: 1}
+		descNotRetryableWireVersion := description.Server{WireVersion: &description.VersionRange{Min: 0, Max: 5}, SessionTimeoutMinutes: 1}
+		descNotRetryableStandalone := description.Server{WireVersion: &description.VersionRange{Min: 0, Max: 7}, SessionTimeoutMinutes: 1, Kind: description.Standalone}
 
 		testCases := []struct {
 			name string
@@ -147,22 +145,23 @@ func TestOperation(t *testing.T) {
 			desc description.Server
 			want Type
 		}{
-			{"deployment doesn't support", Operation{Deployment: deploymentNoRetry}, description.Server{}, Type(0)},
-			{"wire version too low", Operation{Deployment: deploymentRetry, Client: sess, WriteConcern: wcAck}, descNotRetryable, Type(0)},
+			{"deployment doesn't support", Operation{}, description.Server{}, Type(0)},
+			{"wire version too low", Operation{Client: sess, WriteConcern: wcAck}, descNotRetryableWireVersion, Type(0)},
+			{"standalone not supported", Operation{Client: sess, WriteConcern: wcAck}, descNotRetryableStandalone, Type(0)},
 			{
 				"transaction in progress",
-				Operation{Deployment: deploymentRetry, Client: sessInProgressTransaction, WriteConcern: wcAck},
+				Operation{Client: sessInProgressTransaction, WriteConcern: wcAck},
 				descRetryable, Type(0),
 			},
 			{
 				"transaction starting",
-				Operation{Deployment: deploymentRetry, Client: sessStartingTransaction, WriteConcern: wcAck},
+				Operation{Client: sessStartingTransaction, WriteConcern: wcAck},
 				descRetryable, Type(0),
 			},
-			{"unacknowledged write concern", Operation{Deployment: deploymentRetry, Client: sess, WriteConcern: wcUnack}, descRetryable, Type(0)},
+			{"unacknowledged write concern", Operation{Client: sess, WriteConcern: wcUnack}, descRetryable, Type(0)},
 			{
 				"acknowledged write concern",
-				Operation{Deployment: deploymentRetry, Client: sess, WriteConcern: wcAck, Type: Write},
+				Operation{Client: sess, WriteConcern: wcAck, Type: Write},
 				descRetryable, Write,
 			},
 		}
@@ -518,6 +517,93 @@ func TestOperation(t *testing.T) {
 			})
 		}
 	})
+	t.Run("ExecuteExhaust", func(t *testing.T) {
+		t.Run("errors if connection is not streaming", func(t *testing.T) {
+			conn := &mockConnection{
+				rStreaming: false,
+			}
+			err := Operation{}.ExecuteExhaust(context.TODO(), conn, nil)
+			assert.NotNil(t, err, "expected error, got nil")
+		})
+	})
+	t.Run("exhaustAllowed and moreToCome", func(t *testing.T) {
+		// Test the interaction between exhaustAllowed and moreToCome on requests/responses when using the Execute
+		// and ExecuteExhaust methods.
+
+		// Create a server response wire message that has moreToCome=false.
+		serverResponseDoc := bsoncore.BuildDocumentFromElements(nil,
+			bsoncore.AppendInt32Element(nil, "ok", 1),
+		)
+		nonStreamingResponse := createExhaustServerResponse(t, serverResponseDoc, false)
+
+		// Create a connection that reports that it cannot stream messages.
+		conn := &mockConnection{
+			rDesc: description.Server{
+				WireVersion: &description.VersionRange{
+					Max: 6,
+				},
+			},
+			rReadWM:    nonStreamingResponse,
+			rCanStream: false,
+		}
+		op := Operation{
+			CommandFn: func(dst []byte, desc description.SelectedServer) ([]byte, error) {
+				return bsoncore.AppendInt32Element(dst, "isMaster", 1), nil
+			},
+			Database:   "admin",
+			Deployment: SingleConnectionDeployment{conn},
+		}
+		err := op.Execute(context.TODO(), nil)
+		assert.Nil(t, err, "Execute error: %v", err)
+
+		// The wire message sent to the server should not have exhaustAllowed=true. After execution, the connection
+		// should not be in a streaming state.
+		assertExhaustAllowedSet(t, conn.pWriteWM, false)
+		assert.False(t, conn.CurrentlyStreaming(), "expected CurrentlyStreaming to be false")
+
+		// Modify the connection to report that it can stream and create a new server response with moreToCome=true.
+		streamingResponse := createExhaustServerResponse(t, serverResponseDoc, true)
+		conn.rReadWM = streamingResponse
+		conn.rCanStream = true
+		err = op.Execute(context.TODO(), nil)
+		assert.Nil(t, err, "Execute error: %v", err)
+		assertExhaustAllowedSet(t, conn.pWriteWM, true)
+		assert.True(t, conn.CurrentlyStreaming(), "expected CurrentlyStreaming to be true")
+
+		// Reset the server response and go through ExecuteExhaust to mimic streaming the next response. After
+		// execution, the connection should still be in a streaming state.
+		conn.rReadWM = streamingResponse
+		err = op.ExecuteExhaust(context.TODO(), conn, nil)
+		assert.Nil(t, err, "ExecuteExhaust error: %v", err)
+		assert.True(t, conn.CurrentlyStreaming(), "expected CurrentlyStreaming to be true")
+	})
+}
+
+func createExhaustServerResponse(t *testing.T, response bsoncore.Document, moreToCome bool) []byte {
+	idx, wm := wiremessage.AppendHeaderStart(nil, 0, wiremessage.CurrentRequestID()+1, wiremessage.OpMsg)
+	var flags wiremessage.MsgFlag
+	if moreToCome {
+		flags = wiremessage.MoreToCome
+	}
+	wm = wiremessage.AppendMsgFlags(wm, flags)
+	wm = wiremessage.AppendMsgSectionType(wm, wiremessage.SingleDocument)
+	wm = bsoncore.AppendDocument(wm, response)
+	return bsoncore.UpdateLength(wm, idx, int32(len(wm)))
+}
+
+func assertExhaustAllowedSet(t *testing.T, wm []byte, expected bool) {
+	t.Helper()
+	_, _, _, _, wm, ok := wiremessage.ReadHeader(wm)
+	if !ok {
+		t.Fatal("could not read wm header")
+	}
+	flags, wm, ok := wiremessage.ReadMsgFlags(wm)
+	if !ok {
+		t.Fatal("could not read wm flags")
+	}
+
+	actual := flags&wiremessage.ExhaustAllowed > 0
+	assert.Equal(t, expected, actual, "expected exhaustAllowed set %v, got %v", expected, actual)
 }
 
 type mockDeployment struct {
@@ -537,9 +623,6 @@ func (m *mockDeployment) SelectServer(ctx context.Context, desc description.Serv
 	return m.returns.server, m.returns.err
 }
 
-func (m *mockDeployment) SupportsRetryWrites() bool {
-	return m.returns.retry
-}
 func (m *mockDeployment) Kind() description.TopologyKind { return m.returns.kind }
 
 type mockServerSelector struct{}
@@ -554,19 +637,25 @@ type mockConnection struct {
 	pReadDst []byte
 
 	// returns
-	rWriteErr error
-	rReadWM   []byte
-	rReadErr  error
-	rDesc     description.Server
-	rCloseErr error
-	rID       string
-	rAddr     address.Address
+	rWriteErr  error
+	rReadWM    []byte
+	rReadErr   error
+	rDesc      description.Server
+	rCloseErr  error
+	rID        string
+	rAddr      address.Address
+	rCanStream bool
+	rStreaming bool
 }
 
 func (m *mockConnection) Description() description.Server { return m.rDesc }
 func (m *mockConnection) Close() error                    { return m.rCloseErr }
 func (m *mockConnection) ID() string                      { return m.rID }
 func (m *mockConnection) Address() address.Address        { return m.rAddr }
+func (m *mockConnection) SupportsStreaming() bool         { return m.rCanStream }
+func (m *mockConnection) CurrentlyStreaming() bool        { return m.rStreaming }
+func (m *mockConnection) SetStreaming(streaming bool)     { m.rStreaming = streaming }
+func (m *mockConnection) Stale() bool                     { return false }
 
 func (m *mockConnection) WriteWireMessage(_ context.Context, wm []byte) error {
 	m.pWriteWM = wm

@@ -10,10 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/internal/testutil"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/topology"
 )
@@ -37,11 +37,11 @@ func setUpMonitor() (*event.CommandMonitor, chan *event.CommandStartedEvent, cha
 }
 
 func skipIfBelow32(ctx context.Context, t *testing.T, topo *topology.Topology) {
-	server, err := topo.SelectServerLegacy(ctx, description.WriteSelector())
+	server, err := topo.SelectServer(ctx, description.WriteSelector())
 	noerr(t, err)
 
 	versionCmd := bsoncore.BuildDocument(nil, bsoncore.AppendInt32Element(nil, "serverStatus", 1))
-	serverStatus, err := testutil.RunCommand(t, server.Server, dbName, versionCmd)
+	serverStatus, err := testutil.RunCommand(t, server, dbName, versionCmd)
 	version, err := serverStatus.LookupErr("version")
 
 	if testutil.CompareVersions(t, version.StringValue(), "3.2") < 0 {

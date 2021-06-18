@@ -9,6 +9,7 @@ package integration
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/internal/testutil"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -30,9 +32,12 @@ import (
 var (
 	emptyDoc                        = []byte{5, 0, 0, 0, 0}
 	errorCommandNotFound      int32 = 59
+	errorLockTimeout          int32 = 24
+	errorCommandNotSupported  int32 = 115
 	killAllSessionsErrorCodes       = map[int32]struct{}{
-		errorInterrupted:     {},
-		errorCommandNotFound: {}, // the killAllSessions command does not exist on server versions < 3.6
+		errorInterrupted:         {}, // the command interrupts itself
+		errorCommandNotFound:     {}, // the killAllSessions command does not exist on server versions < 3.6
+		errorCommandNotSupported: {}, // the command is not supported on Atlas Data Lake
 	}
 )
 
@@ -88,16 +93,53 @@ func isExpectedKillAllSessionsError(err error) bool {
 func killSessions(mt *mtest.T) {
 	mt.Helper()
 
-	err := mt.GlobalClient().Database("admin").RunCommand(mtest.Background, bson.D{
+	cmd := bson.D{
 		{"killAllSessions", bson.A{}},
-	}, options.RunCmd().SetReadPreference(mtest.PrimaryRp)).Err()
+	}
+	runCmdOpts := options.RunCmd().SetReadPreference(mtest.PrimaryRp)
+
+	// killAllSessions has to be run against each mongos in a sharded cluster, so we use the runCommandOnAllServers
+	// helper.
+	err := runCommandOnAllServers(mt, func(client *mongo.Client) error {
+		return client.Database("admin").RunCommand(mtest.Background, cmd, runCmdOpts).Err()
+	})
+
 	if err == nil {
 		return
 	}
-
 	if !isExpectedKillAllSessionsError(err) {
 		mt.Fatalf("killAllSessions error: %v", err)
 	}
+}
+
+// Utility function to run a command on all servers. For standalones, the command is run against the one server. For
+// replica sets, the command is run against the primary. sharded clusters, the command is run against each mongos.
+func runCommandOnAllServers(mt *mtest.T, commandFn func(client *mongo.Client) error) error {
+	opts := options.Client().ApplyURI(mtest.ClusterURI())
+	testutil.AddTestServerAPIVersion(opts)
+
+	if mtest.ClusterTopologyKind() != mtest.Sharded {
+		client, err := mongo.Connect(mtest.Background, opts)
+		if err != nil {
+			return fmt.Errorf("error creating replica set client: %v", err)
+		}
+		defer func() { _ = client.Disconnect(mtest.Background) }()
+
+		return commandFn(client)
+	}
+
+	for _, host := range opts.Hosts {
+		shardClient, err := mongo.Connect(mtest.Background, opts.SetHosts([]string{host}))
+		if err != nil {
+			return fmt.Errorf("error creating client for mongos %v: %v", host, err)
+		}
+
+		err = commandFn(shardClient)
+		_ = shardClient.Disconnect(mtest.Background)
+		return err
+	}
+
+	return nil
 }
 
 // aggregator is an interface used to run collection and database-level aggregations
@@ -286,7 +328,7 @@ func executeInsertMany(mt *mtest.T, sess mongo.Session, args bson.Raw) (*mongo.I
 		})
 		return res, err
 	}
-	return mt.Coll.InsertMany(mtest.Background, docs)
+	return mt.Coll.InsertMany(mtest.Background, docs, opts)
 }
 
 func setFindModifiers(mt *mtest.T, modifiersDoc bson.Raw, opts *options.FindOptions) {
@@ -342,6 +384,8 @@ func executeFind(mt *mtest.T, sess mongo.Session, args bson.Raw) (*mongo.Cursor,
 			setFindModifiers(mt, val.Document(), opts)
 		case "allowDiskUse":
 			opts = opts.SetAllowDiskUse(val.Boolean())
+		case "projection":
+			opts = opts.SetProjection(val.Document())
 		case "session":
 		default:
 			mt.Fatalf("unrecognized find option: %v", key)
@@ -1150,7 +1194,8 @@ func executeEstimatedDocumentCount(mt *mtest.T, sess mongo.Session, args bson.Ra
 	mt.Helper()
 
 	// no arguments expected. add a Fatal in case arguments are added in the future
-	assert.Equal(mt, 0, len(args), "unexpected estimatedDocumentCount arguments: %v", args)
+	elems, _ := args.Elements()
+	assert.Equal(mt, 0, len(elems), "unexpected estimatedDocumentCount arguments %v", args)
 
 	if sess != nil {
 		var res int64
@@ -1359,6 +1404,48 @@ func executeCreateCollection(mt *mtest.T, sess mongo.Session, args bson.Raw) err
 	return mt.DB.RunCommand(mtest.Background, createCmd).Err()
 }
 
+func executeAdminCommand(mt *mtest.T, op *operation) {
+	// Per the streamable isMaster test format description, a separate client must be used to execute this operation.
+	clientOpts := options.Client().ApplyURI(mtest.ClusterURI())
+	testutil.AddTestServerAPIVersion(clientOpts)
+	client, err := mongo.Connect(mtest.Background, clientOpts)
+	assert.Nil(mt, err, "Connect error: %v", err)
+	defer func() {
+		_ = client.Disconnect(mtest.Background)
+	}()
+
+	cmd := op.Arguments.Lookup("command").Document()
+	if op.CommandName == "replSetStepDown" {
+		// replSetStepDown can fail with transient errors, so we use executeAdminCommandWithRetry to handle them and
+		// retry until a timeout is hit.
+		executeAdminCommandWithRetry(mt, client, cmd)
+		return
+	}
+
+	db := client.Database("admin")
+	err = db.RunCommand(mtest.Background, cmd).Err()
+	assert.Nil(mt, err, "RunCommand error for command %q: %v", op.CommandName, err)
+}
+
+func executeAdminCommandWithRetry(mt *mtest.T, client *mongo.Client, cmd interface{}, opts ...*options.RunCmdOptions) {
+	mt.Helper()
+
+	ctx, cancel := context.WithTimeout(mtest.Background, 10*time.Second)
+	defer cancel()
+
+	for {
+		err := client.Database("admin").RunCommand(ctx, cmd, opts...).Err()
+		if err == nil {
+			return
+		}
+
+		if ce, ok := err.(mongo.CommandError); ok && ce.Code == errorLockTimeout {
+			continue
+		}
+		mt.Fatalf("error executing command: %v", err)
+	}
+}
+
 // verification function to use for all count operations
 func verifyCountResult(mt *mtest.T, actualResult int64, expectedResult interface{}) {
 	mt.Helper()
@@ -1542,21 +1629,24 @@ func verifyListDatabasesResult(mt *mtest.T, actualResult mongo.ListDatabasesResu
 func verifyCursorResult(mt *mtest.T, cur *mongo.Cursor, result interface{}) {
 	mt.Helper()
 
+	// The Atlas Data Lake tests expect a getMore to be sent even though the operation does not have a Result field.
+	// To account for this, we fetch all documents via cursor.All and then compare them to the result if it's non-nil.
+	assert.NotNil(mt, cur, "expected cursor to not be nil")
+	var actual []bson.Raw
+	err := cur.All(mtest.Background, &actual)
+	assert.Nil(mt, err, "All error: %v", err)
+
 	if result == nil {
 		return
 	}
 
-	assert.NotNil(mt, cur, "expected cursor to not be nil")
-	for i, expected := range result.(bson.A) {
-		assert.True(mt, cur.Next(mtest.Background), "expected Next to return true but got false")
-		if err := compareDocs(mt, expected.(bson.Raw), cur.Current); err != nil {
-			mt.Fatalf("cursor document mismatch at index %d: %s", i, err)
-		}
+	resultsArray := result.(bson.A)
+	assert.Equal(mt, len(resultsArray), len(actual), "expected %d documents from cursor, got %d", len(resultsArray),
+		len(actual))
+	for i, expected := range resultsArray {
+		err := compareDocs(mt, expected.(bson.Raw), actual[i])
+		assert.Nil(mt, err, "cursor document mismatch at index %d: %v", i, err)
 	}
-
-	assert.False(mt, cur.Next(mtest.Background), "expected Next to return false but got true")
-	err := cur.Err()
-	assert.Nil(mt, err, "cursor error: %v", err)
 }
 
 func verifySingleResult(mt *mtest.T, actualResult *mongo.SingleResult, expectedResult interface{}) {

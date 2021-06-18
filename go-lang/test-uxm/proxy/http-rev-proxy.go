@@ -8,11 +8,46 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"crypto/tls"
+	"io/ioutil"
+	"bytes"
+	"strconv"
 )
 
 // # https://www.integralist.co.uk/posts/golang-reverse-proxy/
 
 // by unixman
+
+type transport struct {
+	http.RoundTripper
+}
+
+func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	resp, err = t.RoundTripper.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	//-- modify body
+//	b = bytes.Replace(b, []byte("Core Test Suite"), []byte("Core TEST Suite"), -1)
+	//--
+	body := ioutil.NopCloser(bytes.NewReader(b))
+	resp.Body = body
+	resp.ContentLength = int64(len(b))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	//--
+	fmt.Println("====================================================", "Status:", resp.Status)
+	fmt.Println(string(b)) // print the body to stdout
+	fmt.Println("====================================================")
+	//--
+	return resp, nil
+}
 
 func main() {
 
@@ -51,7 +86,10 @@ func main() {
 		req.Header.Add("X-Real-IP", "127.0.0.1")
 
 	}
+
+//	proxy := &httputil.ReverseProxy{Director: director, Transport:&transport{http.DefaultTransport}}
 	proxy := &httputil.ReverseProxy{Director: director}
+	proxy.Transport = &transport{http.DefaultTransport}
 
 	//-- TLS flexible, allow insecure
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

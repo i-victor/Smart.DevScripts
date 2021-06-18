@@ -14,7 +14,7 @@ The MongoDB supported driver for Go.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Bugs / Feature Reporting](#bugs--feature-reporting)
+- [Feedback](#feedback)
 - [Testing / Development](#testing--development)
 - [Continuous Integration](#continuous-integration)
 - [License](#license)
@@ -45,36 +45,38 @@ dep ensure -add "go.mongodb.org/mongo-driver/mongo"
 -------------------------
 ## Usage
 
-To get started with the driver, import the `mongo` package, create a `mongo.Client`:
+To get started with the driver, import the `mongo` package and create a `mongo.Client` with the `Connect` function:
 
 ```go
 import (
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-```
-
-And connect it to your running MongoDB server:
-
-```go
-ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-err = client.Connect(ctx)
-```
-
-To do this in a single step, you can use the `Connect` function:
-
-```go
-ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
 client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 ```
+
+Make sure to defer a call to `Disconnect` after instantiating your client:
+
+```go
+defer func() {
+    if err = client.Disconnect(ctx); err != nil {
+        panic(err)
+    }
+}()
+```
+
+For more advanced configuration and authentication, see the [documentation for mongo.Connect](https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo#Connect).
 
 Calling `Connect` does not block for server discovery. If you wish to know if a MongoDB server has been found and connected to,
 use the `Ping` method:
 
 ```go
-ctx, _ = context.WithTimeout(context.Background(), 2*time.Second)
+ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+defer cancel()
 err = client.Ping(ctx, readpref.Primary())
 ```
 
@@ -87,26 +89,41 @@ collection := client.Database("testing").Collection("numbers")
 The `Collection` instance can then be used to insert documents:
 
 ```go
-ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
-res, err := collection.InsertOne(ctx, bson.M{"name": "pi", "value": 3.14159})
+ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+res, err := collection.InsertOne(ctx, bson.D{{"name", "pi"}, {"value", 3.14159}})
 id := res.InsertedID
+```
+
+To use `bson.D`, you will need to add `"go.mongodb.org/mongo-driver/bson"` to your imports.
+
+Your import statement should now look like this:
+
+```go
+import (
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/mongo/readpref"
+)
 ```
 
 Several query methods return a cursor, which can be used like this:
 
 ```go
-ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
+ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+defer cancel()
 cur, err := collection.Find(ctx, bson.D{})
 if err != nil { log.Fatal(err) }
 defer cur.Close(ctx)
 for cur.Next(ctx) {
-   var result bson.M
-   err := cur.Decode(&result)
-   if err != nil { log.Fatal(err) }
-   // do something with result....
+    var result bson.D
+    err := cur.Decode(&result)
+    if err != nil { log.Fatal(err) }
+    // do something with result....
 }
 if err := cur.Err(); err != nil {
-  log.Fatal(err)
+    log.Fatal(err)
 }
 ```
 
@@ -116,10 +133,14 @@ For methods that return a single item, a `SingleResult` instance is returned:
 var result struct {
     Value float64
 }
-filter := bson.M{"name": "pi"}
-ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+filter := bson.D{{"name", "pi"}}
+ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
 err = collection.FindOne(ctx, filter).Decode(&result)
-if err != nil {
+if err == mongo.ErrNoDocuments {
+    // Do something when no record was found
+    fmt.Println("record does not exist")
+} else if err != nil {
     log.Fatal(err)
 }
 // Do something with result...
@@ -128,9 +149,11 @@ if err != nil {
 Additional examples and documentation can be found under the examples directory and [on the MongoDB Documentation website](https://docs.mongodb.com/drivers/go/).
 
 -------------------------
-## Bugs / Feature Reporting
+## Feedback
 
-New Features and bugs can be reported on jira: https://jira.mongodb.org/browse/GODRIVER
+For help with the driver, please post in the [MongoDB Community Forums](https://developer.mongodb.com/community/forums/tag/golang/).
+
+New features and bugs can be reported on jira: https://jira.mongodb.org/browse/GODRIVER
 
 -------------------------
 ## Testing / Development
@@ -143,30 +166,45 @@ To test a **replica set** or **sharded cluster**, set `MONGODB_URI="<connection-
 For example, for a local replica set named `rs1` comprised of three nodes on ports 27017, 27018, and 27019:
 
 ```
-MONGODB_URI="mongodb://localhost:27017,localhost:27018,localhost:27018/?replicaSet=rs1" make
+MONGODB_URI="mongodb://localhost:27017,localhost:27018,localhost:27019/?replicaSet=rs1" make
 ```
 
-### Testing Auth and SSL
+### Testing Auth and TLS
 
-To test authentication and SSL, first set up a MongoDB cluster with auth and SSL configured. Testing authentication requires a user with the `root` role on the `admin` database. The Go Driver repository comes with example certificates in the `data/certificates` directory. These certs can be used for testing. Here is an example command that would run a mongod with SSL correctly configured for tests:
+To test authentication and TLS, first set up a MongoDB cluster with auth and TLS configured. Testing authentication requires a user with the `root` role on the `admin` database. Here is an example command that would run a mongod with TLS correctly configured for tests. Either set or replace PATH_TO_SERVER_KEY_FILE and PATH_TO_CA_FILE with paths to their respective files:
 
 ```
 mongod \
 --auth \
---sslMode requireSSL \
---sslPEMKeyFile $(pwd)/data/certificates/server.pem \
---sslCAFile $(pwd)/data/certificates/ca.pem \
---sslWeakCertificateValidation
+--tlsMode requireTLS \
+--tlsCertificateKeyFile $PATH_TO_SERVER_KEY_FILE \
+--tlsCAFile $PATH_TO_CA_FILE \
+--tlsAllowInvalidCertificates
 ```
 
-To run the tests with `make`, set `MONGO_GO_DRIVER_CA_FILE` to the location of the CA file used by the database, set `MONGODB_URI` to the connection string of the server, set `AUTH=auth`, and set `SSL=ssl`. For example:
+To run the tests with `make`, set:
+- `MONGO_GO_DRIVER_CA_FILE` to the location of the CA file used by the database
+- `MONGO_GO_DRIVER_KEY_FILE` to the location of the client key file
+- `MONGO_GO_DRIVER_PKCS8_ENCRYPTED_KEY_FILE` to the location of the pkcs8 client key file encrypted with the password string: `password` 
+- `MONGO_GO_DRIVER_PKCS8_UNENCRYPTED_KEY_FILE` to the location of the unencrypted pkcs8 key file
+- `MONGODB_URI` to the connection string of the server
+- `AUTH=auth`
+- `SSL=ssl`
+
+For example:
 
 ```
-AUTH=auth SSL=ssl MONGO_GO_DRIVER_CA_FILE=$(pwd)/data/certificates/ca.pem  MONGODB_URI="mongodb://user:password@localhost:27017/?authSource=admin" make
+AUTH=auth SSL=ssl \
+MONGO_GO_DRIVER_CA_FILE=$PATH_TO_CA_FILE \
+MONGO_GO_DRIVER_KEY_FILE=$PATH_TO_CLIENT_KEY_FILE \
+MONGO_GO_DRIVER_PKCS8_ENCRYPTED_KEY_FILE=$PATH_TO_ENCRYPTED_KEY_FILE \
+MONGO_GO_DRIVER_PKCS8_UNENCRYPTED_KEY_FILE=$PATH_TO_UNENCRYPTED_KEY_FILE \
+MONGODB_URI="mongodb://user:password@localhost:27017/?authSource=admin" \
+make
 ```
 
 Notes:
-- The `--sslWeakCertificateValidation` flag is required on the server for the test suite to work correctly.
+- The `--tlsAllowInvalidCertificates` flag is required on the server for the test suite to work correctly.
 - The test suite requires the auth database to be set with `?authSource=admin`, not `/admin`.
 
 ### Testing Compression
@@ -180,10 +218,9 @@ MONGO_GO_DRIVER_COMPRESSOR=snappy make
 Ensure the [`--networkMessageCompressors` flag](https://docs.mongodb.com/manual/reference/program/mongod/#cmdoption-mongod-networkmessagecompressors) on mongod or mongos includes `zlib` if testing zLib compression.
 
 -------------------------
-## Feedback
+## Contribution
 
-The MongoDB Go Driver is not feature complete, so any help is appreciated. Check out the [project page](https://jira.mongodb.org/browse/GODRIVER)
-for tickets that need completing. See our [contribution guidelines](CONTRIBUTING.md) for details.
+Check out the [project page](https://jira.mongodb.org/browse/GODRIVER) for tickets that need completing. See our [contribution guidelines](CONTRIBUTING.md) for details.
 
 -------------------------
 ## Continuous Integration

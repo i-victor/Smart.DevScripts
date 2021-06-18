@@ -115,7 +115,7 @@ func TestScanConversion(t *testing.T) {
 	for _, tt := range scanConversionTests {
 		values := []interface{}{tt.src}
 		dest := reflect.New(reflect.TypeOf(tt.dest))
-		values, err := redis.Scan(values, dest.Interface())
+		_, err := redis.Scan(values, dest.Interface())
 		if err != nil {
 			t.Errorf("Scan(%v) returned error %v", tt, err)
 			continue
@@ -144,7 +144,7 @@ func TestScanConversionError(t *testing.T) {
 	for _, tt := range scanConversionErrorTests {
 		values := []interface{}{tt.src}
 		dest := reflect.New(reflect.TypeOf(tt.dest))
-		values, err := redis.Scan(values, dest.Interface())
+		_, err := redis.Scan(values, dest.Interface())
 		if err == nil {
 			t.Errorf("Scan(%v) did not return error", tt)
 		}
@@ -159,12 +159,30 @@ func ExampleScan() {
 	}
 	defer c.Close()
 
-	c.Send("HMSET", "album:1", "title", "Red", "rating", 5)
-	c.Send("HMSET", "album:2", "title", "Earthbound", "rating", 1)
-	c.Send("HMSET", "album:3", "title", "Beat")
-	c.Send("LPUSH", "albums", "1")
-	c.Send("LPUSH", "albums", "2")
-	c.Send("LPUSH", "albums", "3")
+	if err = c.Send("HMSET", "album:1", "title", "Red", "rating", 5); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("HMSET", "album:2", "title", "Earthbound", "rating", 1); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("HMSET", "album:3", "title", "Beat"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "1"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "2"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "3"); err != nil {
+		fmt.Println(err)
+		return
+	}
 	values, err := redis.Values(c.Do("SORT", "albums",
 		"BY", "album:*->rating",
 		"GET", "album:*->title",
@@ -298,67 +316,90 @@ func TestBadScanStructArgs(t *testing.T) {
 	test(&v2)
 }
 
+type sliceScanner struct {
+	Field string
+}
+
+func (ss *sliceScanner) RedisScan(s interface{}) error {
+	v, ok := s.([]interface{})
+	if !ok {
+		return fmt.Errorf("invalid type %T", s)
+	}
+	return redis.ScanStruct(v, ss)
+}
+
 var scanSliceTests = []struct {
+	name       string
 	src        []interface{}
 	fieldNames []string
 	ok         bool
 	dest       interface{}
 }{
 	{
+		"scanner",
+		[]interface{}{[]interface{}{[]byte("Field"), []byte("1")}},
+		nil,
+		true,
+		[]*sliceScanner{{"1"}},
+	},
+	{
+		"int",
 		[]interface{}{[]byte("1"), nil, []byte("-1")},
 		nil,
 		true,
 		[]int{1, 0, -1},
 	},
 	{
+		"uint",
 		[]interface{}{[]byte("1"), nil, []byte("2")},
 		nil,
 		true,
 		[]uint{1, 0, 2},
 	},
 	{
+		"uint-error",
 		[]interface{}{[]byte("-1")},
 		nil,
 		false,
 		[]uint{1},
 	},
 	{
+		"[]byte",
 		[]interface{}{[]byte("hello"), nil, []byte("world")},
 		nil,
 		true,
 		[][]byte{[]byte("hello"), nil, []byte("world")},
 	},
 	{
+		"string",
 		[]interface{}{[]byte("hello"), nil, []byte("world")},
 		nil,
 		true,
 		[]string{"hello", "", "world"},
 	},
 	{
+		"struct",
 		[]interface{}{[]byte("a1"), []byte("b1"), []byte("a2"), []byte("b2")},
 		nil,
 		true,
 		[]struct{ A, B string }{{"a1", "b1"}, {"a2", "b2"}},
 	},
 	{
+		"struct-error",
 		[]interface{}{[]byte("a1"), []byte("b1")},
 		nil,
 		false,
 		[]struct{ A, B, C string }{{"a1", "b1", ""}},
 	},
 	{
-		[]interface{}{[]byte("a1"), []byte("b1"), []byte("a2"), []byte("b2")},
-		nil,
-		true,
-		[]*struct{ A, B string }{{A: "a1", B: "b1"}, {A: "a2", B: "b2"}},
-	},
-	{
+		"struct-field-names",
 		[]interface{}{[]byte("a1"), []byte("b1"), []byte("a2"), []byte("b2")},
 		[]string{"A", "B"},
 		true,
 		[]struct{ A, C, B string }{{"a1", "", "b1"}, {"a2", "", "b2"}},
 	},
 	{
+		"struct-no-fields",
 		[]interface{}{[]byte("a1"), []byte("b1"), []byte("a2"), []byte("b2")},
 		nil,
 		false,
@@ -368,18 +409,18 @@ var scanSliceTests = []struct {
 
 func TestScanSlice(t *testing.T) {
 	for _, tt := range scanSliceTests {
+		t.Run(tt.name, func(t *testing.T) {
+			typ := reflect.ValueOf(tt.dest).Type()
+			dest := reflect.New(typ)
 
-		typ := reflect.ValueOf(tt.dest).Type()
-		dest := reflect.New(typ)
-
-		err := redis.ScanSlice(tt.src, dest.Interface(), tt.fieldNames...)
-		if tt.ok != (err == nil) {
-			t.Errorf("ScanSlice(%v, []%s, %v) returned error %v", tt.src, typ, tt.fieldNames, err)
-			continue
-		}
-		if tt.ok && !reflect.DeepEqual(dest.Elem().Interface(), tt.dest) {
-			t.Errorf("ScanSlice(src, []%s) returned %#v, want %#v", typ, dest.Elem().Interface(), tt.dest)
-		}
+			err := redis.ScanSlice(tt.src, dest.Interface(), tt.fieldNames...)
+			if tt.ok != (err == nil) {
+				t.Fatalf("ScanSlice(%v, []%s, %v) returned error %v", tt.src, typ, tt.fieldNames, err)
+			}
+			if tt.ok && !reflect.DeepEqual(dest.Elem().Interface(), tt.dest) {
+				t.Errorf("ScanSlice(src, []%s) returned %#v, want %#v", typ, dest.Elem().Interface(), tt.dest)
+			}
+		})
 	}
 }
 
@@ -391,12 +432,30 @@ func ExampleScanSlice() {
 	}
 	defer c.Close()
 
-	c.Send("HMSET", "album:1", "title", "Red", "rating", 5)
-	c.Send("HMSET", "album:2", "title", "Earthbound", "rating", 1)
-	c.Send("HMSET", "album:3", "title", "Beat", "rating", 4)
-	c.Send("LPUSH", "albums", "1")
-	c.Send("LPUSH", "albums", "2")
-	c.Send("LPUSH", "albums", "3")
+	if err = c.Send("HMSET", "album:1", "title", "Red", "rating", 5); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("HMSET", "album:2", "title", "Earthbound", "rating", 1); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("HMSET", "album:3", "title", "Beat", "rating", 4); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "1"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "2"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if err = c.Send("LPUSH", "albums", "3"); err != nil {
+		fmt.Println(err)
+		return
+	}
 	values, err := redis.Values(c.Do("SORT", "albums",
 		"BY", "album:*->rating",
 		"GET", "album:*->title",
@@ -419,12 +478,20 @@ func ExampleScanSlice() {
 	// [{Earthbound 1} {Beat 4} {Red 5}]
 }
 
+type Ed struct {
+	EdI int `redis:"edi"`
+}
+
+type Edp struct {
+	EdpI int `redis:"edpi"`
+}
+
 var argsTests = []struct {
 	title    string
 	actual   redis.Args
 	expected redis.Args
 }{
-	{"struct ptr",
+	{"struct-ptr",
 		redis.Args{}.AddFlat(&struct {
 			I    int               `redis:"i"`
 			U    uint              `redis:"u"`
@@ -444,15 +511,23 @@ var argsTests = []struct {
 		redis.Args{}.AddFlat(struct{ I int }{123}),
 		redis.Args{"I", 123},
 	},
-	{"struct with RedisArg",
+	{"struct-with-RedisArg-direct",
 		redis.Args{}.AddFlat(struct{ T CustomTime }{CustomTime{Time: time.Unix(1573231058, 0)}}),
+		redis.Args{"T", int64(1573231058)},
+	},
+	{"struct-with-RedisArg-direct-ptr",
+		redis.Args{}.AddFlat(struct{ T *CustomTime }{&CustomTime{Time: time.Unix(1573231058, 0)}}),
+		redis.Args{"T", int64(1573231058)},
+	},
+	{"struct-with-RedisArg-ptr",
+		redis.Args{}.AddFlat(struct{ T *CustomTimePtr }{&CustomTimePtr{Time: time.Unix(1573231058, 0)}}),
 		redis.Args{"T", int64(1573231058)},
 	},
 	{"slice",
 		redis.Args{}.Add(1).AddFlat([]string{"a", "b", "c"}).Add(2),
 		redis.Args{1, "a", "b", "c", 2},
 	},
-	{"struct omitempty",
+	{"struct-omitempty",
 		redis.Args{}.AddFlat(&struct {
 			Sdp *durationArg `redis:"Sdp,omitempty"`
 		}{
@@ -460,14 +535,34 @@ var argsTests = []struct {
 		}),
 		redis.Args{},
 	},
+	{"struct-anonymous",
+		redis.Args{}.AddFlat(struct {
+			Ed
+			*Edp
+		}{
+			Ed{EdI: 2},
+			&Edp{EdpI: 3},
+		}),
+		redis.Args{"edi", 2, "edpi", 3},
+	},
 }
 
 func TestArgs(t *testing.T) {
 	for _, tt := range argsTests {
-		if !reflect.DeepEqual(tt.actual, tt.expected) {
-			t.Fatalf("%s is %v, want %v", tt.title, tt.actual, tt.expected)
-		}
+		t.Run(tt.title, func(t *testing.T) {
+			if !reflect.DeepEqual(tt.actual, tt.expected) {
+				t.Fatalf("is %v, want %v", tt.actual, tt.expected)
+			}
+		})
 	}
+}
+
+type CustomTimePtr struct {
+	time.Time
+}
+
+func (t *CustomTimePtr) RedisArg() interface{} {
+	return t.Unix()
 }
 
 type CustomTime struct {

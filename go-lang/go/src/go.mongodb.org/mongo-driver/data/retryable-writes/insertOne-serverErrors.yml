@@ -4,7 +4,7 @@ runOn:
         topology: ["replicaset"]
     -
         minServerVersion: "4.1.7"
-        topology: ["sharded"]
+        topology: ["sharded", "load-balanced"]
 
 data:
     - { _id: 1, x: 11 }
@@ -442,6 +442,7 @@ tests:
                 writeConcernError:
                     code: 91
                     errmsg: Replication is being shut down
+                    errorLabels: ["RetryableWriteError"]
         operation:
             name: "insertOne"
             arguments:

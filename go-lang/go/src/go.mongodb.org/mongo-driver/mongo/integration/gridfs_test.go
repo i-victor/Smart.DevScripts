@@ -9,12 +9,15 @@ package integration
 import (
 	"bytes"
 	"context"
+	"io"
 	"math/rand"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/internal/testutil/israce"
@@ -27,6 +30,83 @@ import (
 func TestGridFS(x *testing.T) {
 	mt := mtest.New(x, noClientOpts)
 	defer mt.Close()
+
+	mt.Run("skipping download", func(mt *mtest.T) {
+		data := []byte("abc.def.ghi")
+		var chunkSize int32 = 4
+
+		testcases := []struct {
+			name string
+
+			read              int
+			skip              int64
+			expectedSkipN     int64
+			expectedSkipErr   error
+			expectedRemaining int
+		}{
+			{
+				"read 0, skip 0", 0, 0, 0, nil, 11,
+			},
+			{
+				"read 0, skip to end of chunk", 0, 4, 4, nil, 7,
+			},
+			{
+				"read 0, skip 1", 0, 1, 1, nil, 10,
+			},
+			{
+				"read 1, skip to end of chunk", 1, 3, 3, nil, 7,
+			},
+			{
+				"read all, skip beyond", 11, 1, 0, nil, 0,
+			},
+			{
+				"skip all", 0, 11, 11, nil, 0,
+			},
+			{
+				"read 1, skip to last chunk", 1, 8, 8, nil, 2,
+			},
+			{
+				"read to last chunk, skip to end", 9, 2, 2, nil, 0,
+			},
+			{
+				"read to last chunk, skip beyond", 9, 4, 2, nil, 0,
+			},
+		}
+
+		for _, tc := range testcases {
+			mt.Run(tc.name, func(mt *mtest.T) {
+				bucket, err := gridfs.NewBucket(mt.DB, options.GridFSBucket().SetChunkSizeBytes(chunkSize))
+				assert.Nil(mt, err, "NewBucket error: %v", err)
+
+				ustream, err := bucket.OpenUploadStream("foo")
+				assert.Nil(mt, err, "OpenUploadStream error: %v", err)
+
+				id := ustream.FileID
+				_, err = ustream.Write(data)
+				assert.Nil(mt, err, "Write error: %v", err)
+				err = ustream.Close()
+				assert.Nil(mt, err, "Close error: %v", err)
+
+				dstream, err := bucket.OpenDownloadStream(id)
+				assert.Nil(mt, err, "OpenDownloadStream error")
+				dst := make([]byte, tc.read)
+				_, err = dstream.Read(dst)
+				assert.Nil(mt, err, "Read error: %v", err)
+
+				n, err := dstream.Skip(tc.skip)
+				assert.Equal(mt, tc.expectedSkipErr, err, "expected error on Skip: %v, got %v", tc.expectedSkipErr, err)
+				assert.Equal(mt, tc.expectedSkipN, n, "expected Skip to return: %v, got %v", tc.expectedSkipN, n)
+
+				// Read the rest.
+				dst = make([]byte, len(data))
+				remaining, err := dstream.Read(dst)
+				if err != nil {
+					assert.Equal(mt, err, io.EOF, "unexpected Read error: %v", err)
+				}
+				assert.Equal(mt, tc.expectedRemaining, remaining, "expected remaining data to be: %v, got %v", tc.expectedRemaining, remaining)
+			})
+		}
+	})
 
 	mt.Run("index creation", func(mt *mtest.T) {
 		// Unit tests showing that UploadFromStream creates indexes on the chunks and files collections.
@@ -247,6 +327,103 @@ func TestGridFS(x *testing.T) {
 					})
 				})
 			}
+		})
+		mt.Run("chunk size determined by files collection document", func(mt *mtest.T) {
+			// Test that the chunk size for a file download is determined by the chunkSize field in the files
+			// collection document, not the bucket's chunk size.
+
+			bucket, err := gridfs.NewBucket(mt.DB)
+			assert.Nil(mt, err, "NewBucket error: %v", err)
+			defer func() { _ = bucket.Drop() }()
+
+			fileData := []byte("hello world")
+			uploadOpts := options.GridFSUpload().SetChunkSizeBytes(4)
+			fileID, err := bucket.UploadFromStream("file", bytes.NewReader(fileData), uploadOpts)
+			assert.Nil(mt, err, "UploadFromStream error: %v", err)
+
+			// If the bucket's chunk size was used, this would error because the actual chunk size is 4 and the bucket
+			// chunk size is 255 KB.
+			var downloadBuffer bytes.Buffer
+			_, err = bucket.DownloadToStream(fileID, &downloadBuffer)
+			assert.Nil(mt, err, "DownloadToStream error: %v", err)
+
+			downloadedBytes := downloadBuffer.Bytes()
+			assert.Equal(mt, fileData, downloadedBytes, "expected bytes %s, got %s", fileData, downloadedBytes)
+		})
+		mt.Run("error if files collection document does not have a chunkSize field", func(mt *mtest.T) {
+			// Test that opening a download returns ErrMissingChunkSize if the files collection document has no
+			// chunk size field.
+
+			oid := primitive.NewObjectID()
+			filesDoc := bson.D{
+				{"_id", oid},
+				{"length", 10},
+				{"filename", "filename"},
+			}
+			_, err := mt.DB.Collection("fs.files").InsertOne(mtest.Background, filesDoc)
+			assert.Nil(mt, err, "InsertOne error for files collection: %v", err)
+
+			bucket, err := gridfs.NewBucket(mt.DB)
+			assert.Nil(mt, err, "NewBucket error: %v", err)
+			defer func() { _ = bucket.Drop() }()
+
+			_, err = bucket.OpenDownloadStream(oid)
+			assert.Equal(mt, gridfs.ErrMissingChunkSize, err, "expected error %v, got %v", gridfs.ErrMissingChunkSize, err)
+		})
+		mt.Run("cursor error during read after downloading", func(mt *mtest.T) {
+			// To simulate a cursor error we upload a file larger than the 16MB default batch size,
+			// so the underlying cursor remains open on the server. Since the ReadDeadline is
+			// set in the past, Read should cause a timeout.
+
+			fileName := "read-error-test"
+			fileData := make([]byte, 17000000)
+
+			bucket, err := gridfs.NewBucket(mt.DB)
+			assert.Nil(mt, err, "NewBucket error: %v", err)
+			defer func() { _ = bucket.Drop() }()
+
+			dataReader := bytes.NewReader(fileData)
+			_, err = bucket.UploadFromStream(fileName, dataReader)
+			assert.Nil(mt, err, "UploadFromStream error: %v", err)
+
+			ds, err := bucket.OpenDownloadStreamByName(fileName)
+			assert.Nil(mt, err, "OpenDownloadStreamByName error: %v", err)
+
+			err = ds.SetReadDeadline(time.Now().Add(-1 * time.Second))
+			assert.Nil(mt, err, "SetReadDeadline error: %v", err)
+
+			p := make([]byte, len(fileData))
+			_, err = ds.Read(p)
+			assert.NotNil(mt, err, "expected error from Read, got nil")
+			assert.True(mt, strings.Contains(err.Error(), "context deadline exceeded"),
+				"expected error to contain 'context deadline exceeded', got %v", err.Error())
+		})
+		mt.Run("cursor error during skip after downloading", func(mt *mtest.T) {
+			// To simulate a cursor error we upload a file larger than the 16MB default batch size,
+			// so the underlying cursor remains open on the server. Since the ReadDeadline is
+			// set in the past, Skip should cause a timeout.
+
+			fileName := "skip-error-test"
+			fileData := make([]byte, 17000000)
+
+			bucket, err := gridfs.NewBucket(mt.DB)
+			assert.Nil(mt, err, "NewBucket error: %v", err)
+			defer func() { _ = bucket.Drop() }()
+
+			dataReader := bytes.NewReader(fileData)
+			_, err = bucket.UploadFromStream(fileName, dataReader)
+			assert.Nil(mt, err, "UploadFromStream error: %v", err)
+
+			ds, err := bucket.OpenDownloadStreamByName(fileName)
+			assert.Nil(mt, err, "OpenDownloadStreamByName error: %v", err)
+
+			err = ds.SetReadDeadline(time.Now().Add(-1 * time.Second))
+			assert.Nil(mt, err, "SetReadDeadline error: %v", err)
+
+			_, err = ds.Skip(int64(len(fileData)))
+			assert.NotNil(mt, err, "expected error from Skip, got nil")
+			assert.True(mt, strings.Contains(err.Error(), "context deadline exceeded"),
+				"expected error to contain 'context deadline exceeded', got %v", err.Error())
 		})
 	})
 

@@ -17,14 +17,14 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/topology"
 )
 
 const (
-	seedlistDiscoveryTestsDir = "../../data/initial-dns-seedlist-discovery"
+	seedlistDiscoveryTestsBaseDir = "../../data/initial-dns-seedlist-discovery"
 )
 
 type seedlistTest struct {
@@ -36,13 +36,22 @@ type seedlistTest struct {
 }
 
 func TestInitialDNSSeedlistDiscoverySpec(t *testing.T) {
-	mtOpts := mtest.NewOptions().Topologies(mtest.ReplicaSet).CreateClient(false)
-	mt := mtest.New(t, mtOpts)
+	mt := mtest.New(t, noClientOpts)
 	defer mt.Close()
 
-	for _, file := range jsonFilesInDir(mt, seedlistDiscoveryTestsDir) {
+	mt.RunOpts("replica set", mtest.NewOptions().Topologies(mtest.ReplicaSet).CreateClient(false), func(mt *mtest.T) {
+		runSeedlistDiscoveryDirectory(mt, "replica-set")
+	})
+	mt.RunOpts("load balanced", mtest.NewOptions().Topologies(mtest.LoadBalanced).CreateClient(false), func(mt *mtest.T) {
+		runSeedlistDiscoveryDirectory(mt, "load-balanced")
+	})
+}
+
+func runSeedlistDiscoveryDirectory(mt *mtest.T, subdirectory string) {
+	directoryPath := path.Join(seedlistDiscoveryTestsBaseDir, subdirectory)
+	for _, file := range jsonFilesInDir(mt, directoryPath) {
 		mt.RunOpts(file, noClientOpts, func(mt *mtest.T) {
-			runSeedlistDiscoveryTest(mt, path.Join(seedlistDiscoveryTestsDir, file))
+			runSeedlistDiscoveryTest(mt, path.Join(directoryPath, file))
 		})
 	}
 }
@@ -118,6 +127,14 @@ func verifyConnstringOptions(mt *mtest.T, expected bson.Raw, cs connstring.ConnS
 		case "authSource":
 			source := opt.StringValue()
 			assert.Equal(mt, source, cs.AuthSource, "expected auth source value %v, got %v", source, cs.AuthSource)
+		case "directConnection":
+			dc := opt.Boolean()
+			assert.True(mt, cs.DirectConnectionSet, "expected cs.DirectConnectionSet to be true, got false")
+			assert.Equal(mt, dc, cs.DirectConnection, "expected cs.DirectConnection to be %v, got %v", dc, cs.DirectConnection)
+		case "loadBalanced":
+			lb := opt.Boolean()
+			assert.True(mt, cs.LoadBalancedSet, "expected cs.LoadBalancedSet set to be true, got false")
+			assert.Equal(mt, lb, cs.LoadBalanced, "expected cs.LoadBalanced to be %v, got %v", lb, cs.LoadBalanced)
 		default:
 			mt.Fatalf("unrecognized connstring option %v", key)
 		}
@@ -168,9 +185,14 @@ func getServerByAddress(address string, topo *topology.Topology) (description.Se
 		return []description.Server{}, nil
 	})
 
-	selectedServer, err := topo.SelectServerLegacy(context.Background(), selectByName)
+	selectedServer, err := topo.SelectServer(context.Background(), selectByName)
 	if err != nil {
 		return description.Server{}, err
 	}
-	return selectedServer.Server.Description(), nil
+	selectedServerConnection, err := selectedServer.Connection(context.Background())
+	if err != nil {
+		return description.Server{}, err
+	}
+	defer selectedServerConnection.Close()
+	return selectedServerConnection.Description(), nil
 }

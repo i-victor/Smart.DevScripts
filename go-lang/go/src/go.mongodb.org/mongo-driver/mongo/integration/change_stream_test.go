@@ -12,6 +12,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
@@ -235,6 +236,7 @@ func TestChangeStream_ReplicaSet(t *testing.T) {
 			Code:    errorHostUnreachable,
 			Name:    "foo",
 			Message: "bar",
+			Labels:  []string{"ResumableChangeStreamError"},
 		})
 		killCursorsRes := mtest.CreateCommandErrorResponse(mtest.CommandError{
 			Code:    errorInterrupted,
@@ -498,6 +500,138 @@ func TestChangeStream_ReplicaSet(t *testing.T) {
 			defer closeStream(cs)
 			tryNextGetmoreError(mt, cs)
 		})
+	})
+
+	customDeploymentClientOpts := options.Client().
+		SetPoolMonitor(poolMonitor).
+		SetWriteConcern(mtest.MajorityWc).
+		SetReadConcern(mtest.MajorityRc).
+		SetRetryReads(false)
+	customDeploymentOpts := mtest.NewOptions().
+		Topologies(mtest.ReplicaSet). // Avoid complexity of sharded fail points.
+		MinServerVersion("4.0").      // 4.0 is needed to use replica set fail points.
+		ClientOptions(customDeploymentClientOpts).
+		CreateClient(false)
+	mt.RunOpts("custom deployment", customDeploymentOpts, func(mt *mtest.T) {
+		// Tests for the changeStreamDeployment type. These are written as integration tests for ChangeStream rather
+		// than unit/integration tests for changeStreamDeployment to ensure that the deployment is correctly wired
+		// by ChangeStream when executing an aggregate.
+
+		mt.Run("errors are processed for SDAM on initial aggregate", func(mt *mtest.T) {
+			clearPoolChan()
+			mt.SetFailPoint(mtest.FailPoint{
+				ConfigureFailPoint: "failCommand",
+				Mode: mtest.FailPointMode{
+					Times: 1,
+				},
+				Data: mtest.FailPointData{
+					FailCommands:    []string{"aggregate"},
+					CloseConnection: true,
+				},
+			})
+
+			_, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+			assert.NotNil(mt, err, "expected Watch error, got nil")
+			assert.True(mt, isPoolCleared(), "expected pool to be cleared after non-timeout network error but was not")
+		})
+		mt.Run("errors are processed for SDAM on getMore", func(mt *mtest.T) {
+			clearPoolChan()
+			mt.SetFailPoint(mtest.FailPoint{
+				ConfigureFailPoint: "failCommand",
+				Mode: mtest.FailPointMode{
+					Times: 1,
+				},
+				Data: mtest.FailPointData{
+					FailCommands:    []string{"getMore"},
+					CloseConnection: true,
+				},
+			})
+
+			cs, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+			assert.Nil(mt, err, "Watch error: %v", err)
+			defer closeStream(cs)
+
+			_, err = mt.Coll.InsertOne(mtest.Background, bson.D{{"x", 1}})
+			assert.Nil(mt, err, "InsertOne error: %v", err)
+
+			assert.True(mt, cs.Next(mtest.Background), "expected Next to return true, got false (iteration error %v)",
+				cs.Err())
+			assert.True(mt, isPoolCleared(), "expected pool to be cleared after non-timeout network error but was not")
+		})
+		retryAggClientOpts := options.Client().SetRetryReads(true).SetPoolMonitor(poolMonitor)
+		retryAggMtOpts := mtest.NewOptions().ClientOptions(retryAggClientOpts)
+		mt.RunOpts("errors are processed for SDAM on retried aggregate", retryAggMtOpts, func(mt *mtest.T) {
+			clearPoolChan()
+
+			mt.SetFailPoint(mtest.FailPoint{
+				ConfigureFailPoint: "failCommand",
+				Mode: mtest.FailPointMode{
+					Times: 2,
+				},
+				Data: mtest.FailPointData{
+					FailCommands:    []string{"aggregate"},
+					CloseConnection: true,
+				},
+			})
+
+			_, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+			assert.NotNil(mt, err, "expected Watch error, got nil")
+
+			var numClearedEvents int
+			for len(poolChan) > 0 {
+				curr := <-poolChan
+				if curr.Type == event.PoolCleared {
+					numClearedEvents++
+				}
+			}
+			assert.Equal(mt, 2, numClearedEvents, "expected two PoolCleared events, got %d", numClearedEvents)
+		})
+	})
+	// Setting min server version as 4.0 since v3.6 does not send a "dropEvent"
+	mt.RunOpts("call to cursor.Next after cursor closed", mtest.NewOptions().MinServerVersion("4.0"), func(mt *mtest.T) {
+		cs, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+		assert.Nil(mt, err, "Watch error: %v", err)
+		defer closeStream(cs)
+
+		// Generate insert events
+		generateEvents(mt, 5)
+		// Call Coll.Drop to generate drop and invalidate event
+		err = mt.Coll.Drop(mtest.Background)
+		assert.Nil(mt, err, "Drop error: %v", err)
+
+		// Test that all events were successful
+		for i := 0; i < 7; i++ {
+			assert.True(mt, cs.Next(mtest.Background), "Next returned false at index %d; iteration error: %v", i, cs.Err())
+		}
+
+		operationType := cs.Current.Lookup("operationType").StringValue()
+		assert.Equal(mt, operationType, "invalidate", "expected invalidate event but returned %q event", operationType)
+		// next call to cs.Next should return False since cursor is closed
+		assert.False(mt, cs.Next(mtest.Background), "expected to return false, but returned true")
+	})
+	mt.Run("getMore commands are monitored", func(mt *mtest.T) {
+		cs, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+		assert.Nil(mt, err, "Watch error: %v", err)
+		defer closeStream(cs)
+
+		_, err = mt.Coll.InsertOne(mtest.Background, bson.M{"x": 1})
+		assert.Nil(mt, err, "InsertOne error: %v", err)
+
+		mt.ClearEvents()
+		assert.True(mt, cs.Next(mtest.Background), "Next returned false with error %v", cs.Err())
+		evt := mt.GetStartedEvent()
+		assert.Equal(mt, "getMore", evt.CommandName, "expected command 'getMore', got %q", evt.CommandName)
+	})
+	mt.Run("killCursors commands are monitored", func(mt *mtest.T) {
+		cs, err := mt.Coll.Watch(mtest.Background, mongo.Pipeline{})
+		assert.Nil(mt, err, "Watch error: %v", err)
+		defer closeStream(cs)
+
+		mt.ClearEvents()
+		err = cs.Close(mtest.Background)
+		assert.Nil(mt, err, "Close error: %v", err)
+		evt := mt.GetStartedEvent()
+		assert.Equal(mt, "killCursors", evt.CommandName, "expected command 'killCursors', got %q", evt.CommandName)
 	})
 }
 

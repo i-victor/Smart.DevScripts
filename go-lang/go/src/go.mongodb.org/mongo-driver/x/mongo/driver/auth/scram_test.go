@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/drivertest"
 )
 
@@ -74,7 +74,7 @@ func TestSCRAM(t *testing.T) {
 					Desc:     desc,
 				}
 
-				err = authenticator.Auth(context.Background(), desc, conn)
+				err = authenticator.Auth(context.Background(), &Config{Description: desc, Connection: conn})
 				assert.Nil(t, err, "Auth error: %v\n", err)
 
 				// Verify that the first command sent is saslStart.

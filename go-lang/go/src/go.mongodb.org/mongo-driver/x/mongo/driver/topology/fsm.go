@@ -9,24 +9,35 @@ package topology
 import (
 	"bytes"
 	"fmt"
+	"sync/atomic"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/address"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
+	"go.mongodb.org/mongo-driver/mongo/address"
+	"go.mongodb.org/mongo-driver/mongo/description"
 )
 
-var supportedWireVersions = description.NewVersionRange(2, 9)
-var minSupportedMongoDBVersion = "2.6"
+var (
+	// SupportedWireVersions is the range of wire versions supported by the driver.
+	SupportedWireVersions = description.NewVersionRange(2, 9)
+)
+
+const (
+	// MinSupportedMongoDBVersion is the version string for the lowest MongoDB version supported by the driver.
+	MinSupportedMongoDBVersion = "2.6"
+)
 
 type fsm struct {
 	description.Topology
-	SetName       string
-	maxElectionID primitive.ObjectID
-	maxSetVersion uint32
+	maxElectionID    primitive.ObjectID
+	maxSetVersion    uint32
+	compatible       atomic.Value
+	compatibilityErr error
 }
 
 func newFSM() *fsm {
-	return new(fsm)
+	f := fsm{}
+	f.compatible.Store(true)
+	return &f
 }
 
 // apply takes a new server description and modifies the FSM's topology description based on it. It returns the
@@ -36,7 +47,6 @@ func newFSM() *fsm {
 // apply should operation on immutable descriptions so we don't have to lock for the entire time we're applying the
 // server description.
 func (f *fsm) apply(s description.Server) (description.Topology, description.Server, error) {
-
 	newServers := make([]description.Server, len(f.Servers))
 	copy(newServers, f.Servers)
 
@@ -44,6 +54,7 @@ func (f *fsm) apply(s description.Server) (description.Topology, description.Ser
 	f.Topology = description.Topology{
 		Kind:    f.Kind,
 		Servers: newServers,
+		SetName: f.SetName,
 	}
 
 	// For data bearing servers, set SessionTimeoutMinutes to the lowest among them
@@ -69,29 +80,6 @@ func (f *fsm) apply(s description.Server) (description.Topology, description.Ser
 		return f.Topology, s, nil
 	}
 
-	if s.WireVersion != nil {
-		if s.WireVersion.Max < supportedWireVersions.Min {
-			return description.Topology{}, s, fmt.Errorf(
-				"server at %s reports wire version %d, but this version of the Go driver requires "+
-					"at least %d (MongoDB %s)",
-				s.Addr.String(),
-				s.WireVersion.Max,
-				supportedWireVersions.Min,
-				minSupportedMongoDBVersion,
-			)
-		}
-
-		if s.WireVersion.Min > supportedWireVersions.Max {
-			return description.Topology{}, s, fmt.Errorf(
-				"server at %s requires wire version %d, but this version of the Go driver only "+
-					"supports up to %d",
-				s.Addr.String(),
-				s.WireVersion.Min,
-				supportedWireVersions.Max,
-			)
-		}
-	}
-
 	updatedDesc := s
 	switch f.Kind {
 	case description.Unknown:
@@ -106,6 +94,38 @@ func (f *fsm) apply(s description.Server) (description.Topology, description.Ser
 		updatedDesc = f.applyToSingle(s)
 	}
 
+	for _, server := range f.Servers {
+		if server.WireVersion != nil {
+			if server.WireVersion.Max < SupportedWireVersions.Min {
+				f.compatible.Store(false)
+				f.compatibilityErr = fmt.Errorf(
+					"server at %s reports wire version %d, but this version of the Go driver requires "+
+						"at least %d (MongoDB %s)",
+					server.Addr.String(),
+					server.WireVersion.Max,
+					SupportedWireVersions.Min,
+					MinSupportedMongoDBVersion,
+				)
+				f.Topology.CompatibilityErr = f.compatibilityErr
+				return f.Topology, s, nil
+			}
+
+			if server.WireVersion.Min > SupportedWireVersions.Max {
+				f.compatible.Store(false)
+				f.compatibilityErr = fmt.Errorf(
+					"server at %s requires wire version %d, but this version of the Go driver only supports up to %d",
+					server.Addr.String(),
+					server.WireVersion.Min,
+					SupportedWireVersions.Max,
+				)
+				f.Topology.CompatibilityErr = f.compatibilityErr
+				return f.Topology, s, nil
+			}
+		}
+	}
+
+	f.compatible.Store(true)
+	f.compatibilityErr = nil
 	return f.Topology, updatedDesc, nil
 }
 

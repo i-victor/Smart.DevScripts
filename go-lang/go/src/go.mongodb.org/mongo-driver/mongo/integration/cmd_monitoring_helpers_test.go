@@ -10,9 +10,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 )
@@ -187,10 +189,53 @@ func compareDocs(mt *mtest.T, expected, actual bson.Raw) error {
 	return compareDocsHelper(mt, expected, actual, "")
 }
 
-func checkExpectations(mt *mtest.T, expectations []*expectation, id0, id1 bson.Raw) {
+func checkExpectations(mt *mtest.T, expectations *[]*expectation, id0, id1 bson.Raw) {
 	mt.Helper()
 
-	for idx, expectation := range expectations {
+	// If the expectations field in the test JSON is null, we want to skip all command monitoring assertions.
+	if expectations == nil {
+		return
+	}
+
+	// Filter out events that shouldn't show up in monitoring expectations.
+	ignoredEvents := map[string]struct{}{
+		"configureFailPoint": {},
+	}
+	mt.FilterStartedEvents(func(evt *event.CommandStartedEvent) bool {
+		// ok is true if the command should be ignored, so return !ok
+		_, ok := ignoredEvents[evt.CommandName]
+		return !ok
+	})
+	mt.FilterSucceededEvents(func(evt *event.CommandSucceededEvent) bool {
+		// ok is true if the command should be ignored, so return !ok
+		_, ok := ignoredEvents[evt.CommandName]
+		return !ok
+	})
+	mt.FilterFailedEvents(func(evt *event.CommandFailedEvent) bool {
+		// ok is true if the command should be ignored, so return !ok
+		_, ok := ignoredEvents[evt.CommandName]
+		return !ok
+	})
+
+	// If the expectations field in the test JSON is non-null but is empty, we want to assert that no events were
+	// emitted.
+	if len(*expectations) == 0 {
+		// One of the bulkWrite spec tests expects update and updateMany to be grouped together into a single batch,
+		// but this isn't the case because of GODRIVER-1157. To work around this, we expect one event to be emitted for
+		// that test rather than 0. This assertion should be changed when GODRIVER-1157 is done.
+		numExpectedEvents := 0
+		bulkWriteTestName := "BulkWrite_on_server_that_doesn't_support_arrayFilters_with_arrayFilters_on_second_op"
+		if strings.HasSuffix(mt.Name(), bulkWriteTestName) {
+			numExpectedEvents = 1
+		}
+
+		numActualEvents := len(mt.GetAllStartedEvents())
+		assert.Equal(mt, numExpectedEvents, numActualEvents, "expected %d events to be sent, but got %d events",
+			numExpectedEvents, numActualEvents)
+		return
+	}
+
+	for idx, expectation := range *expectations {
 		var err error
 
 		if expectation.CommandStartedEvent != nil {
@@ -232,26 +277,21 @@ func compareStartedEvent(mt *mtest.T, expectation *expectation, id0, id1 bson.Ra
 		key := elem.Key()
 		val := elem.Value()
 
-		actualVal := evt.Command.Lookup(key)
+		actualVal, err := evt.Command.LookupErr(key)
 
 		// Keys that may be nil
 		if val.Type == bson.TypeNull {
-			if actualVal.Type != 0 || len(actualVal.Value) > 0 {
-				return fmt.Errorf("expected value for key %s to be nil but got %s", key, actualVal)
-			}
+			assert.NotNil(mt, err, "expected key %q to be omitted but got %q", key, actualVal)
 			continue
 		}
-		if key == "ordered" || key == "cursor" || key == "batchSize" {
-			// TODO: some tests specify that "ordered" must be a key in the event but ordered isn't a valid option for
-			// some of these cases (e.g. insertOne)
-			// TODO: some FLE tests specify "cursor" subdocument for listCollections
-			// TODO: find.json cmd monitoring tests expect different batch sizes for find/getMore commands based on an
-			// optional limit
-			continue
-		}
+		assert.Nil(mt, err, "expected command to contain key %q", key)
 
-		if err = actualVal.Validate(); err != nil {
-			return fmt.Errorf("error validatinmg value for key %s: %s", key, err)
+		if key == "batchSize" {
+			// Some command monitoring tests expect that the driver will send a lower batch size if the required batch
+			// size is lower than the operation limit. We only do this for legacy servers <= 3.0 because those server
+			// versions do not support the limit option, but not for 3.2+. We've already validated that the command
+			// contains a batchSize field above and we can skip the actual value comparison below.
+			continue
 		}
 
 		switch key {

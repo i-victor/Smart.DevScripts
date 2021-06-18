@@ -16,10 +16,11 @@ import (
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
-	changeStreamsTestsDir = "../../data/change-streams"
+	changeStreamsTestsDir = "../../data/change-streams/legacy"
 )
 
 type changeStreamTestFile struct {
@@ -40,7 +41,7 @@ type changeStreamTest struct {
 	Pipeline         []bson.Raw              `bson:"changeStreamPipeline"`
 	Options          bson.Raw                `bson:"changeStreamOptions"`
 	Operations       []changeStreamOperation `bson:"operations"`
-	Expectations     []*expectation          `bson:"expectations"`
+	Expectations     *[]*expectation         `bson:"expectations"`
 	Result           changeStreamResult      `bson:"result"`
 
 	// set of namespaces created in a test
@@ -94,12 +95,21 @@ func runChangeStreamTestFile(mt *mtest.T, file string) {
 }
 
 func runChangeStreamTest(mt *mtest.T, test changeStreamTest, testFile changeStreamTestFile) {
-	mtOpts := mtest.NewOptions().MinServerVersion(test.MinServerVersion).MaxServerVersion(test.MaxServerVersion).
-		Topologies(test.Topology...).DatabaseName(testFile.DatabaseName).CollectionName(testFile.CollectionName)
+	// Use a low heartbeat frequency so the Client will quickly recover when using failpoints that cause SDAM state
+	// changes.
+	clientOpts := options.Client().
+		SetHeartbeatInterval(defaultHeartbeatInterval)
+	mtOpts := mtest.NewOptions().
+		MinServerVersion(test.MinServerVersion).
+		MaxServerVersion(test.MaxServerVersion).
+		Topologies(test.Topology...).
+		DatabaseName(testFile.DatabaseName).
+		CollectionName(testFile.CollectionName).
+		ClientOptions(clientOpts)
 
 	// Pin to a single mongos because some tests set fail points and in a sharded cluster, the failpoint and command
 	// that fail must be sent to the same mongos.
-	if mt.TopologyKind() == mtest.Sharded {
+	if mtest.ClusterTopologyKind() == mtest.Sharded {
 		mtOpts = mtOpts.ClientType(mtest.Pinned)
 	}
 
@@ -182,7 +192,7 @@ func runChangeStreamOperations(mt *mtest.T, test changeStreamTest) error {
 			}, false)
 		}
 		// Use the global client to run the operations so they don't show up in the expectations
-		mt.DB = mt.GlobalClient().Database(op.Database)
+		mt.DB = mtest.GlobalClient().Database(op.Database)
 		mt.Coll = mt.DB.Collection(op.Collection)
 
 		var err error

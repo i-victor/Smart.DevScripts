@@ -15,10 +15,10 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/event"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
 )
 
@@ -34,11 +34,13 @@ type Update struct {
 	database                 string
 	deployment               driver.Deployment
 	hint                     *bool
+	arrayFilters             *bool
 	selector                 description.ServerSelector
 	writeConcern             *writeconcern.WriteConcern
 	retry                    *driver.RetryMode
 	result                   UpdateResult
 	crypt                    *driver.Crypt
+	serverAPI                *driver.ServerAPIOptions
 }
 
 // Upsert contains the information for an upsert in an Update operation.
@@ -120,10 +122,17 @@ func NewUpdate(updates ...bsoncore.Document) *Update {
 // Result returns the result of executing this operation.
 func (u *Update) Result() UpdateResult { return u.result }
 
-func (u *Update) processResponse(response bsoncore.Document, srvr driver.Server, desc description.Server) error {
-	var err error
+func (u *Update) processResponse(info driver.ResponseInfo) error {
+	ur, err := buildUpdateResult(info.ServerResponse, info.Server)
 
-	u.result, err = buildUpdateResult(response, srvr)
+	u.result.N += ur.N
+	u.result.NModified += ur.NModified
+	if info.CurrentIndex > 0 {
+		for ind := range ur.Upserted {
+			ur.Upserted[ind].Index += int64(info.CurrentIndex)
+		}
+	}
+	u.result.Upserted = append(u.result.Upserted, ur.Upserted...)
 	return err
 
 }
@@ -153,6 +162,7 @@ func (u *Update) Execute(ctx context.Context) error {
 		Selector:          u.selector,
 		WriteConcern:      u.writeConcern,
 		Crypt:             u.crypt,
+		ServerAPI:         u.serverAPI,
 	}.Execute(ctx, nil)
 
 }
@@ -172,9 +182,14 @@ func (u *Update) command(dst []byte, desc description.SelectedServer) ([]byte, e
 
 		if desc.WireVersion == nil || !desc.WireVersion.Includes(5) {
 			return nil, errors.New("the 'hint' command parameter requires a minimum server wire version of 5")
-			// If the server version is >3.4 and <4.2 and writes are unacknowledged, return an error
-		} else if desc.WireVersion.Includes(6) && !desc.WireVersion.Includes(8) && !u.writeConcern.Acknowledged() {
-			return nil, errors.New("the 'hint' command parameter with unacknowledged WriteConcern requires a minimum server wire version of 8")
+		}
+		if !u.writeConcern.Acknowledged() {
+			return nil, errUnacknowledgedHint
+		}
+	}
+	if u.arrayFilters != nil && *u.arrayFilters {
+		if desc.WireVersion == nil || !desc.WireVersion.Includes(6) {
+			return nil, errors.New("the 'arrayFilters' command parameter requires a minimum server wire version of 6")
 		}
 	}
 
@@ -201,6 +216,17 @@ func (u *Update) Hint(hint bool) *Update {
 	}
 
 	u.hint = &hint
+	return u
+}
+
+// ArrayFilters is a flag to indicate that the update document contains an arrayFilters field. This option is only
+// supported on server versions 3.6 and higher. For servers < 3.6, the driver will return an error.
+func (u *Update) ArrayFilters(arrayFilters bool) *Update {
+	if u == nil {
+		u = new(Update)
+	}
+
+	u.arrayFilters = &arrayFilters
 	return u
 }
 
@@ -326,5 +352,15 @@ func (u *Update) Crypt(crypt *driver.Crypt) *Update {
 	}
 
 	u.crypt = crypt
+	return u
+}
+
+// ServerAPI sets the server API version for this operation.
+func (u *Update) ServerAPI(serverAPI *driver.ServerAPIOptions) *Update {
+	if u == nil {
+		u = new(Update)
+	}
+
+	u.serverAPI = serverAPI
 	return u
 }

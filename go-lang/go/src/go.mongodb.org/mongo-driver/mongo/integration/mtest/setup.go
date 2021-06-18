@@ -18,11 +18,12 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
+	"go.mongodb.org/mongo-driver/x/mongo/driver"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/ocsp"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/topology"
 )
@@ -36,28 +37,53 @@ const (
 // once during the global setup in TestMain. These variables should only be accessed indirectly through MongoTest
 // instances.
 var testContext struct {
-	connString       connstring.ConnString
-	topo             *topology.Topology
-	topoKind         TopologyKind
-	client           *mongo.Client // client used for setup and teardown
-	serverVersion    string
-	authEnabled      bool
-	enterpriseServer bool
+	connString connstring.ConnString
+	topo       *topology.Topology
+	topoKind   TopologyKind
+	// shardedReplicaSet will be true if we're connected to a sharded cluster and each shard is backed by a replica set.
+	// We track this as a separate boolean rather than setting topoKind to ShardedReplicaSet because a general
+	// "Sharded" constraint in a test should match both Sharded and ShardedReplicaSet.
+	shardedReplicaSet           bool
+	client                      *mongo.Client // client used for setup and teardown
+	serverVersion               string
+	authEnabled                 bool
+	sslEnabled                  bool
+	enterpriseServer            bool
+	dataLake                    bool
+	requireAPIVersion           bool
+	serverParameters            bson.Raw
+	singleMongosLoadBalancerURI string
+	multiMongosLoadBalancerURI  string
 }
 
 func setupClient(cs connstring.ConnString, opts *options.ClientOptions) (*mongo.Client, error) {
 	wcMajority := writeconcern.New(writeconcern.WMajority())
-	return mongo.Connect(Background, opts.ApplyURI(cs.Original).SetWriteConcern(wcMajority))
+	// set ServerAPIOptions to latest version if required
+	if opts.ServerAPIOptions == nil && testContext.requireAPIVersion {
+		opts.SetServerAPIOptions(options.ServerAPI(driver.TestServerAPIVersion))
+	}
+	// for sharded clusters, pin to one host. Due to how the cache is implemented on 4.0 and 4.2, behavior
+	// can be inconsistent when multiple mongoses are used
+	return mongo.Connect(Background, opts.ApplyURI(cs.Original).SetWriteConcern(wcMajority).SetHosts(cs.Hosts[:1]))
 }
 
 // Setup initializes the current testing context.
 // This function must only be called one time and must be called before any tests run.
-func Setup() error {
+func Setup(setupOpts ...*SetupOptions) error {
+	opts := MergeSetupOptions(setupOpts...)
 	var err error
-	testContext.connString, err = getConnString()
+
+	switch {
+	case opts.URI != nil:
+		testContext.connString, err = connstring.ParseAndValidate(*opts.URI)
+	default:
+		testContext.connString, err = getClusterConnString()
+	}
 	if err != nil {
 		return fmt.Errorf("error getting connection string: %v", err)
 	}
+	testContext.dataLake = os.Getenv("ATLAS_DATA_LAKE_INTEGRATION_TEST") == "true"
+	testContext.requireAPIVersion = os.Getenv("REQUIRE_API_VERSION") == "true"
 
 	connectionOpts := []topology.ConnectionOption{
 		topology.WithOCSPCache(func(ocsp.Cache) ocsp.Cache {
@@ -69,6 +95,14 @@ func Setup() error {
 			return append(opts, connectionOpts...)
 		}),
 	}
+	if testContext.requireAPIVersion {
+		serverOpts = append(serverOpts,
+			topology.WithServerAPI(func(*driver.ServerAPIOptions) *driver.ServerAPIOptions {
+				return driver.NewServerAPIOptions(driver.TestServerAPIVersion)
+			}),
+		)
+	}
+
 	testContext.topo, err = topology.New(
 		topology.WithConnString(func(connstring.ConnString) connstring.ConnString {
 			return testContext.connString
@@ -107,21 +141,61 @@ func Setup() error {
 		testContext.topoKind = ReplicaSet
 	case description.Sharded:
 		testContext.topoKind = Sharded
+	case description.LoadBalanced:
+		testContext.topoKind = LoadBalanced
 	default:
 		return fmt.Errorf("could not detect topology kind; current topology: %s", testContext.topo.String())
 	}
 
-	if testContext.topoKind == ReplicaSet && compareVersions(testContext.serverVersion, "4.0") >= 0 {
-		err = testContext.client.Database("admin").RunCommand(Background, bson.D{
-			{"setParameter", 1},
-			{"transactionLifetimeLimitSeconds", 3},
-		}).Err()
+	// If we're connected to a sharded cluster, determine if the cluster is backed by replica sets.
+	if testContext.topoKind == Sharded {
+		// Run a find against config.shards and get each document in the collection.
+		cursor, err := testContext.client.Database("config").Collection("shards").Find(Background, bson.D{})
 		if err != nil {
-			return fmt.Errorf("error setting transactionLifetimeLimitSeconds: %v", err)
+			return fmt.Errorf("error running find against config.shards: %v", err)
+		}
+		defer cursor.Close(Background)
+
+		var shards []struct {
+			Host string `bson:"host"`
+		}
+		if err := cursor.All(Background, &shards); err != nil {
+			return fmt.Errorf("error getting results find against config.shards: %v", err)
+		}
+
+		// Each document's host field will contain a single hostname if the shard is a standalone. If it's a replica
+		// set, the host field will be in the format "replicaSetName/host1,host2,...". Therefore, we can determine that
+		// the shard is a standalone if the "/" character isn't present.
+		var foundStandalone bool
+		for _, shard := range shards {
+			if strings.Index(shard.Host, "/") == -1 {
+				foundStandalone = true
+				break
+			}
+		}
+		if !foundStandalone {
+			testContext.shardedReplicaSet = true
 		}
 	}
 
-	testContext.authEnabled = len(os.Getenv("MONGO_GO_DRIVER_CA_FILE")) != 0
+	// For load balanced clusters, retrieve the required LB URIs and add additional information (e.g. TLS options) to
+	// them if necessary.
+	if testContext.topoKind == LoadBalanced {
+		singleMongosURI := os.Getenv("SINGLE_MONGOS_LB_URI")
+		if singleMongosURI == "" {
+			return errors.New("SINGLE_MONGOS_LB_URI must be set when running against load balanced clusters")
+		}
+		testContext.singleMongosLoadBalancerURI = addNecessaryParamsToURI(singleMongosURI)
+
+		multiMongosURI := os.Getenv("MULTI_MONGOS_LB_URI")
+		if multiMongosURI == "" {
+			return errors.New("MULTI_MONGOS_LB_URI must be set when running against load balanced clusters")
+		}
+		testContext.multiMongosLoadBalancerURI = addNecessaryParamsToURI(multiMongosURI)
+	}
+
+	testContext.authEnabled = os.Getenv("AUTH") == "auth"
+	testContext.sslEnabled = os.Getenv("SSL") == "ssl"
 	biRes, err := testContext.client.Database("admin").RunCommand(Background, bson.D{{"buildInfo", 1}}).DecodeBytes()
 	if err != nil {
 		return fmt.Errorf("buildInfo error: %v", err)
@@ -137,14 +211,26 @@ func Setup() error {
 			}
 		}
 	}
+
+	// Get server parameters if test is not running against ADL; ADL does not have "getParameter" command.
+	if !testContext.dataLake {
+		db := testContext.client.Database("admin")
+		testContext.serverParameters, err = db.RunCommand(Background, bson.D{{"getParameter", "*"}}).DecodeBytes()
+		if err != nil {
+			return fmt.Errorf("error getting serverParameters: %v", err)
+		}
+	}
 	return nil
 }
 
 // Teardown cleans up resources initialized by Setup.
 // This function must be called once after all tests have finished running.
 func Teardown() error {
-	if err := testContext.client.Database(TestDb).Drop(Background); err != nil {
-		return fmt.Errorf("error dropping test database: %v", err)
+	// Dropping the test database causes an error against Atlas Data Lake.
+	if !testContext.dataLake {
+		if err := testContext.client.Database(TestDb).Drop(Background); err != nil {
+			return fmt.Errorf("error dropping test database: %v", err)
+		}
 	}
 	if err := testContext.client.Disconnect(Background); err != nil {
 		return fmt.Errorf("error disconnecting test client: %v", err)
@@ -159,7 +245,7 @@ func getServerVersion() (string, error) {
 	var serverStatus bson.Raw
 	err := testContext.client.Database(TestDb).RunCommand(
 		Background,
-		bson.D{{"serverStatus", 1}},
+		bson.D{{"buildInfo", 1}},
 	).Decode(&serverStatus)
 	if err != nil {
 		return "", err
@@ -214,24 +300,28 @@ func addCompressors(uri string) string {
 	return addOptions(uri, "compressors=", comp)
 }
 
-// ConnString gets the globally configured connection string.
-func getConnString() (connstring.ConnString, error) {
+// getClusterConnString gets the globally configured connection string.
+func getClusterConnString() (connstring.ConnString, error) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		uri = "mongodb://localhost:27017"
 	}
-	uri = addTLSConfig(uri)
-	uri = addCompressors(uri)
+	uri = addNecessaryParamsToURI(uri)
 	return connstring.ParseAndValidate(uri)
 }
 
-// compareVersions compares two version number strings (i.e. positive integers separated by
+func addNecessaryParamsToURI(uri string) string {
+	uri = addTLSConfig(uri)
+	return addCompressors(uri)
+}
+
+// CompareServerVersions compares two version number strings (i.e. positive integers separated by
 // periods). Comparisons are done to the lesser precision of the two versions. For example, 3.2 is
 // considered equal to 3.2.11, whereas 3.2.0 is considered less than 3.2.11.
 //
 // Returns a positive int if version1 is greater than version2, a negative int if version1 is less
 // than version2, and 0 if version1 is equal to version2.
-func compareVersions(v1 string, v2 string) int {
+func CompareServerVersions(v1 string, v2 string) int {
 	n1 := strings.Split(v1, ".")
 	n2 := strings.Split(v2, ".")
 

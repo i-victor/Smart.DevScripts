@@ -8,14 +8,16 @@ package testutil // import "go.mongodb.org/mongo-driver/internal/testutil"
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/mongo/description"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/topology"
 )
@@ -94,10 +96,17 @@ func DisableMaxTimeFailPoint(t *testing.T, s *topology.Server) {
 }
 
 // RunCommand runs an arbitrary command on a given database of target server
-func RunCommand(t *testing.T, s *topology.Server, db string, cmd bsoncore.Document) (bsoncore.Document, error) {
+func RunCommand(t *testing.T, s driver.Server, db string, cmd bsoncore.Document) (bsoncore.Document, error) {
 	op := operation.NewCommand(cmd).
 		Database(db).Deployment(driver.SingleServerDeployment{Server: s})
 	err := op.Execute(context.Background())
 	res := op.Result()
 	return res, err
+}
+
+// AddTestServerAPIVersion adds the latest server API version in a ServerAPIOptions to passed-in opts.
+func AddTestServerAPIVersion(opts *options.ClientOptions) {
+	if os.Getenv("REQUIRE_API_VERSION") == "true" {
+		opts.SetServerAPIOptions(options.ServerAPI(driver.TestServerAPIVersion))
+	}
 }

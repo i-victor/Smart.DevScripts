@@ -14,10 +14,13 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )
 
 const (
@@ -59,6 +62,64 @@ func TestDatabase(t *testing.T) {
 			assert.Nil(mt, err, "RunCommand error: %v", err)
 			assert.Equal(mt, true, result.IsMaster, "expected isMaster value true, got false")
 			assert.Equal(mt, 1.0, result.Ok, "expected ok value 1.0, got %v", result.Ok)
+		})
+
+		// We set min server version 3.6 because pre-3.6 servers use OP_QUERY, so the command document will look like
+		// {$query: {...}, $readPreference: {...}}. Per the command monitoring spec, the $query subdocument is unwrapped
+		// and the $readPreference is dropped for monitoring purposes, so we can't examine it.
+		readPrefOpts := mtest.NewOptions().
+			Topologies(mtest.Sharded).
+			MinServerVersion("3.6")
+		mt.RunOpts("read pref passed to mongos", readPrefOpts, func(mt *mtest.T) {
+			// When communicating with a mongos, the supplied read preference should be passed down to the operations
+			// layer, which should add a top-level $readPreference field to the command.
+
+			runCmdOpts := options.RunCmd().
+				SetReadPreference(readpref.SecondaryPreferred())
+			err := mt.DB.RunCommand(mtest.Background, bson.D{{"isMaster", 1}}, runCmdOpts).Err()
+			assert.Nil(mt, err, "RunCommand error: %v", err)
+
+			expected := bson.Raw(bsoncore.NewDocumentBuilder().
+				AppendString("mode", "secondaryPreferred").
+				Build())
+			evt := mt.GetStartedEvent()
+			assert.Equal(mt, "isMaster", evt.CommandName, "expected 'isMaster' command to be sent, got %q", evt.CommandName)
+			actual, ok := evt.Command.Lookup("$readPreference").DocumentOK()
+			assert.True(mt, ok, "expected command %v to contain a $readPreference document", evt.Command)
+			assert.Equal(mt, expected, actual, "expected $readPreference document %v, got %v", expected, actual)
+		})
+		failpointOpts := mtest.NewOptions().MinServerVersion("4.0").Topologies(mtest.ReplicaSet)
+		mt.RunOpts("gets result and error", failpointOpts, func(mt *mtest.T) {
+			mt.SetFailPoint(mtest.FailPoint{
+				ConfigureFailPoint: "failCommand",
+				Mode: mtest.FailPointMode{
+					Times: 1,
+				},
+				Data: mtest.FailPointData{
+					FailCommands: []string{"insert"},
+					WriteConcernError: &mtest.WriteConcernErrorData{
+						Code: 100,
+					},
+				},
+			})
+			cmd := bson.D{
+				{"insert", "test"},
+				{"documents", bson.A{bson.D{{"a", 1}}}},
+			}
+			res, gotErr := mt.DB.RunCommand(mtest.Background, cmd).DecodeBytes()
+
+			n, ok := res.Lookup("n").Int32OK()
+			assert.True(mt, ok, "expected n in response")
+			assert.Equal(mt, int32(1), n, "expected n value 1, got %v", n)
+
+			writeExcept, ok := gotErr.(mongo.WriteException)
+			assert.True(mt, ok, "expected WriteCommandError, got %T", gotErr)
+			assert.NotNil(mt, writeExcept.WriteConcernError, "expected WriteConcernError to be non-nil")
+			assert.Equal(mt, writeExcept.WriteConcernError.Code, 100, "expeced error code 100, got %v", writeExcept.WriteConcernError.Code)
+		})
+		mt.Run("multi key map command", func(mt *mtest.T) {
+			err := mt.DB.RunCommand(mtest.Background, bson.M{"insert": "test", "documents": bson.A{bson.D{{"a", 1}}}}).Err()
+			assert.Equal(mt, mongo.ErrMapForOrderedArgument{"cmd"}, err, "expected error %v, got %v", mongo.ErrMapForOrderedArgument{"cmd"}, err)
 		})
 	})
 
@@ -109,45 +170,167 @@ func TestDatabase(t *testing.T) {
 	})
 
 	mt.RunOpts("list collections", noClientOpts, func(mt *mtest.T) {
-		testCases := []struct {
-			name             string
-			expectedTopology mtest.TopologyKind
-			cappedOnly       bool
-		}{
-			{"standalone no filter", mtest.Single, false},
-			{"standalone filter", mtest.Single, true},
-			{"replica set no filter", mtest.ReplicaSet, false},
-			{"replica set filter", mtest.ReplicaSet, true},
-			{"sharded no filter", mtest.Sharded, false},
-			{"sharded filter", mtest.Sharded, true},
-		}
-		for _, tc := range testCases {
-			tcOpts := mtest.NewOptions().Topologies(tc.expectedTopology)
-			mt.RunOpts(tc.name, tcOpts, func(mt *mtest.T) {
-				mt.CreateCollection(mtest.Collection{Name: listCollUncapped}, true)
+		createCollections := func(mt *mtest.T, numCollections int) {
+			mt.Helper()
+
+			for i := 0; i < numCollections; i++ {
 				mt.CreateCollection(mtest.Collection{
-					Name:       listCollCapped,
-					CreateOpts: bson.D{{"capped", true}, {"size", 64 * 1024}},
+					Name: fmt.Sprintf("list-collections-test-%d", i),
 				}, true)
-
-				filter := bson.D{}
-				if tc.cappedOnly {
-					filter = bson.D{{"options.capped", true}}
-				}
-
-				var err error
-				for i := 0; i < 1; i++ {
-					cursor, err := mt.DB.ListCollections(mtest.Background, filter)
-					assert.Nil(mt, err, "ListCollections error (iteration %v): %v", i, err)
-
-					err = verifyListCollections(cursor, tc.cappedOnly)
-					if err == nil {
-						return
-					}
-				}
-				mt.Fatalf("error verifying list collections result: %v", err)
-			})
+			}
 		}
+
+		mt.RunOpts("verify results", noClientOpts, func(mt *mtest.T) {
+			testCases := []struct {
+				name             string
+				expectedTopology mtest.TopologyKind
+				cappedOnly       bool
+			}{
+				{"standalone no filter", mtest.Single, false},
+				{"standalone filter", mtest.Single, true},
+				{"replica set no filter", mtest.ReplicaSet, false},
+				{"replica set filter", mtest.ReplicaSet, true},
+				{"sharded no filter", mtest.Sharded, false},
+				{"sharded filter", mtest.Sharded, true},
+			}
+			for _, tc := range testCases {
+				tcOpts := mtest.NewOptions().Topologies(tc.expectedTopology)
+				mt.RunOpts(tc.name, tcOpts, func(mt *mtest.T) {
+					mt.CreateCollection(mtest.Collection{Name: listCollUncapped}, true)
+					mt.CreateCollection(mtest.Collection{
+						Name:       listCollCapped,
+						CreateOpts: bson.D{{"capped", true}, {"size", 64 * 1024}},
+					}, true)
+
+					filter := bson.D{}
+					if tc.cappedOnly {
+						filter = bson.D{{"options.capped", true}}
+					}
+
+					var err error
+					for i := 0; i < 1; i++ {
+						cursor, err := mt.DB.ListCollections(mtest.Background, filter)
+						assert.Nil(mt, err, "ListCollections error (iteration %v): %v", i, err)
+
+						err = verifyListCollections(cursor, tc.cappedOnly)
+						if err == nil {
+							return
+						}
+					}
+					mt.Fatalf("error verifying list collections result: %v", err)
+				})
+			}
+		})
+
+		// For server versions below 3.0, we internally execute ListCollections() as a legacy
+		// OP_QUERY against the system.namespaces collection. Command monitoring upconversions
+		// translate this to a "find" command rather than "listCollections".
+		cmdMonitoringCmdName := "listCollections"
+		if mtest.CompareServerVersions(mtest.ServerVersion(), "3.0") < 0 {
+			cmdMonitoringCmdName = "find"
+		}
+		mt.Run("batch size", func(mt *mtest.T) {
+			// Create two new collections so there will be three total.
+			createCollections(mt, 2)
+
+			mt.ClearEvents()
+			lcOpts := options.ListCollections().SetBatchSize(2)
+			_, err := mt.DB.ListCollectionNames(mtest.Background, bson.D{}, lcOpts)
+			assert.Nil(mt, err, "ListCollectionNames error: %v", err)
+
+			evt := mt.GetStartedEvent()
+			assert.Equal(
+				mt,
+				cmdMonitoringCmdName,
+				evt.CommandName,
+				"expected %q command to be sent, got %q",
+				cmdMonitoringCmdName,
+				evt.CommandName)
+			_, err = evt.Command.LookupErr("cursor", "batchSize")
+			assert.Nil(mt, err, "expected command %s to contain key 'batchSize'", evt.Command)
+		})
+		mt.Run("getMore commands are monitored", func(mt *mtest.T) {
+			createCollections(mt, 2)
+			assertGetMoreCommandsAreMonitored(mt, cmdMonitoringCmdName, func() (*mongo.Cursor, error) {
+				return mt.DB.ListCollections(mtest.Background, bson.D{}, options.ListCollections().SetBatchSize(2))
+			})
+		})
+		mt.Run("killCursors commands are monitored", func(mt *mtest.T) {
+			createCollections(mt, 2)
+			assertKillCursorsCommandsAreMonitored(mt, cmdMonitoringCmdName, func() (*mongo.Cursor, error) {
+				return mt.DB.ListCollections(mtest.Background, bson.D{}, options.ListCollections().SetBatchSize(2))
+			})
+		})
+	})
+
+	mt.RunOpts("list collection specifications", noClientOpts, func(mt *mtest.T) {
+		mt.Run("filter passed to listCollections", func(mt *mtest.T) {
+			// Test that ListCollectionSpecifications correctly uses the supplied filter.
+			cappedName := "list-collection-specs-capped"
+			mt.CreateCollection(mtest.Collection{
+				Name: cappedName,
+				CreateOpts: bson.D{
+					{"capped", true},
+					{"size", 4096},
+				},
+			}, true)
+
+			filter := bson.M{
+				"options.capped": true,
+			}
+			cursor, err := mt.DB.ListCollections(mtest.Background, filter)
+			assert.Nil(mt, err, "ListCollections error: %v", err)
+			defer cursor.Close(mtest.Background)
+			assert.True(mt, cursor.Next(mtest.Background), "expected Next to return true, got false; cursor error: %v",
+				cursor.Err())
+
+			optionsDoc := bsoncore.NewDocumentBuilder().
+				AppendBoolean("capped", true).
+				AppendInt32("size", 4096).
+				Build()
+
+			expectedSpec := &mongo.CollectionSpecification{
+				Name:     cappedName,
+				Type:     "collection",
+				ReadOnly: false,
+				Options:  bson.Raw(optionsDoc),
+			}
+			if mtest.CompareServerVersions(mtest.ServerVersion(), "3.6") >= 0 {
+				uuidSubtype, uuidData := cursor.Current.Lookup("info", "uuid").Binary()
+				expectedSpec.UUID = &primitive.Binary{Subtype: uuidSubtype, Data: uuidData}
+			}
+			if mtest.CompareServerVersions(mtest.ServerVersion(), "3.4") >= 0 {
+				keysDoc := bsoncore.NewDocumentBuilder().
+					AppendInt32("_id", 1).
+					Build()
+				expectedSpec.IDIndex = &mongo.IndexSpecification{
+					Name:         "_id_",
+					Namespace:    mt.DB.Name() + "." + cappedName,
+					KeysDocument: bson.Raw(keysDoc),
+					Version:      2,
+				}
+			}
+
+			specs, err := mt.DB.ListCollectionSpecifications(mtest.Background, filter)
+			assert.Nil(mt, err, "ListCollectionSpecifications error: %v", err)
+			assert.Equal(mt, 1, len(specs), "expected 1 CollectionSpecification, got %d", len(specs))
+			assert.Equal(mt, expectedSpec, specs[0], "expected specification %v, got %v", expectedSpec, specs[0])
+		})
+
+		mt.RunOpts("options passed to listCollections", mtest.NewOptions().MinServerVersion("3.0"), func(mt *mtest.T) {
+			// Test that ListCollectionSpecifications correctly uses the supplied options.
+
+			opts := options.ListCollections().SetNameOnly(true)
+			_, err := mt.DB.ListCollectionSpecifications(mtest.Background, bson.D{}, opts)
+			assert.Nil(mt, err, "ListCollectionSpecifications error: %v", err)
+
+			evt := mt.GetStartedEvent()
+			assert.Equal(mt, "listCollections", evt.CommandName, "expected %q command to be sent, got %q",
+				"listCollections", evt.CommandName)
+			nameOnly, ok := evt.Command.Lookup("nameOnly").BooleanOK()
+			assert.True(mt, ok, "expected command %v to contain %q field", evt.Command, "nameOnly")
+			assert.True(mt, nameOnly, "expected nameOnly value to be true, got false")
+		})
 	})
 
 	mt.RunOpts("run command cursor", noClientOpts, func(mt *mtest.T) {
@@ -204,6 +387,29 @@ func TestDatabase(t *testing.T) {
 				assert.Equal(mt, tc.numExpected, count, "expected document count %v, got %v", tc.numExpected, count)
 			})
 		}
+
+		// The find command does not exist on server versions below 3.2.
+		cmdMonitoringMtOpts := mtest.NewOptions().MinServerVersion("3.2")
+		mt.RunOpts("getMore commands are monitored", cmdMonitoringMtOpts, func(mt *mtest.T) {
+			initCollection(mt, mt.Coll)
+			assertGetMoreCommandsAreMonitored(mt, "find", func() (*mongo.Cursor, error) {
+				findCmd := bson.D{
+					{"find", mt.Coll.Name()},
+					{"batchSize", 2},
+				}
+				return mt.DB.RunCommandCursor(mtest.Background, findCmd)
+			})
+		})
+		mt.RunOpts("killCursors commands are monitored", cmdMonitoringMtOpts, func(mt *mtest.T) {
+			initCollection(mt, mt.Coll)
+			assertKillCursorsCommandsAreMonitored(mt, "find", func() (*mongo.Cursor, error) {
+				findCmd := bson.D{
+					{"find", mt.Coll.Name()},
+					{"batchSize", 2},
+				}
+				return mt.DB.RunCommandCursor(mtest.Background, findCmd)
+			})
+		})
 	})
 
 	mt.RunOpts("create collection", noClientOpts, func(mt *mtest.T) {

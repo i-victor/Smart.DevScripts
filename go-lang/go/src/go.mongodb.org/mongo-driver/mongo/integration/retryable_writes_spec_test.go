@@ -58,9 +58,12 @@ func runRetryableWritesFile(t *testing.T, filePath string) {
 }
 
 func runRetryableWritesTest(mt *mtest.T, test retryableWritesTest, testFile retryableWritesTestFile) {
+	// Use a low heartbeat frequency so the Client will quickly recover when using failpoints that cause SDAM state
+	// changes.
 	testClientOpts := createClientOptions(mt, test.ClientOptions)
+	testClientOpts.SetHeartbeatInterval(defaultHeartbeatInterval)
 	opts := mtest.NewOptions().ClientOptions(testClientOpts)
-	if mt.TopologyKind() == mtest.Sharded && !test.UseMultipleMongoses {
+	if mtest.ClusterTopologyKind() == mtest.Sharded && !test.UseMultipleMongoses {
 		// pin to a single mongos
 		opts = opts.ClientType(mtest.Pinned)
 	}

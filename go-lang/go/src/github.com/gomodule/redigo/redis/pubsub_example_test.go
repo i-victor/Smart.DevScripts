@@ -84,7 +84,7 @@ func listenPubSubChannels(ctx context.Context, redisServerAddr string,
 	ticker := time.NewTicker(healthCheckPeriod)
 	defer ticker.Stop()
 loop:
-	for err == nil {
+	for {
 		select {
 		case <-ticker.C:
 			// Send ping to test health of connection and server. If
@@ -102,7 +102,9 @@ loop:
 	}
 
 	// Signal the receiving goroutine to exit by unsubscribing from all channels.
-	psc.Unsubscribe()
+	if err := psc.Unsubscribe(); err != nil {
+		return err
+	}
 
 	// Wait for goroutine to complete.
 	return <-done
@@ -116,9 +118,18 @@ func publish() {
 	}
 	defer c.Close()
 
-	c.Do("PUBLISH", "c1", "hello")
-	c.Do("PUBLISH", "c2", "world")
-	c.Do("PUBLISH", "c1", "goodbye")
+	if _, err = c.Do("PUBLISH", "c1", "hello"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if _, err = c.Do("PUBLISH", "c2", "world"); err != nil {
+		fmt.Println(err)
+		return
+	}
+	if _, err = c.Do("PUBLISH", "c1", "goodbye"); err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 // This example shows how receive pubsub notifications with cancelation and

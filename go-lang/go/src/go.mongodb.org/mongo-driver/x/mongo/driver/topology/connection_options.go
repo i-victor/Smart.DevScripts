@@ -6,9 +6,9 @@ import (
 	"net"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
-	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/ocsp"
 )
 
@@ -36,30 +36,36 @@ var DefaultDialer Dialer = &net.Dialer{}
 // initialization. Implementations must be goroutine safe.
 type Handshaker = driver.Handshaker
 
+// generationNumberFn is a callback type used by a connection to fetch its generation number given its service ID.
+type generationNumberFn func(serviceID *primitive.ObjectID) uint64
+
 type connectionConfig struct {
 	appName                  string
 	connectTimeout           time.Duration
 	dialer                   Dialer
 	handshaker               Handshaker
 	idleTimeout              time.Duration
-	lifeTimeout              time.Duration
 	cmdMonitor               *event.CommandMonitor
+	poolMonitor              *event.PoolMonitor
 	readTimeout              time.Duration
 	writeTimeout             time.Duration
 	tlsConfig                *tls.Config
 	compressors              []string
 	zlibLevel                *int
 	zstdLevel                *int
-	descCallback             func(description.Server)
 	ocspCache                ocsp.Cache
 	disableOCSPEndpointCheck bool
+	errorHandlingCallback    func(error, uint64, *primitive.ObjectID)
+	tlsConnectionSource      tlsConnectionSource
+	loadBalanced             bool
+	getGenerationFn          generationNumberFn
 }
 
 func newConnectionConfig(opts ...ConnectionOption) (*connectionConfig, error) {
 	cfg := &connectionConfig{
-		connectTimeout: 30 * time.Second,
-		dialer:         nil,
-		lifeTimeout:    30 * time.Minute,
+		connectTimeout:      30 * time.Second,
+		dialer:              nil,
+		tlsConnectionSource: defaultTLSConnectionSource,
 	}
 
 	for _, opt := range opts {
@@ -70,21 +76,28 @@ func newConnectionConfig(opts ...ConnectionOption) (*connectionConfig, error) {
 	}
 
 	if cfg.dialer == nil {
-		cfg.dialer = &net.Dialer{Timeout: cfg.connectTimeout}
+		cfg.dialer = &net.Dialer{}
 	}
 
 	return cfg, nil
 }
 
-func withServerDescriptionCallback(callback func(description.Server), opts ...ConnectionOption) []ConnectionOption {
-	return append(opts, ConnectionOption(func(c *connectionConfig) error {
-		c.descCallback = callback
-		return nil
-	}))
-}
-
 // ConnectionOption is used to configure a connection.
 type ConnectionOption func(*connectionConfig) error
+
+func withTLSConnectionSource(fn func(tlsConnectionSource) tlsConnectionSource) ConnectionOption {
+	return func(c *connectionConfig) error {
+		c.tlsConnectionSource = fn(c.tlsConnectionSource)
+		return nil
+	}
+}
+
+func withErrorHandlingCallback(fn func(error, uint64, *primitive.ObjectID)) ConnectionOption {
+	return func(c *connectionConfig) error {
+		c.errorHandlingCallback = fn
+		return nil
+	}
+}
 
 // WithCompressors sets the compressors that can be used for communication.
 func WithCompressors(fn func([]string) []string) ConnectionOption {
@@ -128,14 +141,6 @@ func WithIdleTimeout(fn func(time.Duration) time.Duration) ConnectionOption {
 	}
 }
 
-// WithLifeTimeout configures the maximum life of a connection.
-func WithLifeTimeout(fn func(time.Duration) time.Duration) ConnectionOption {
-	return func(c *connectionConfig) error {
-		c.lifeTimeout = fn(c.lifeTimeout)
-		return nil
-	}
-}
-
 // WithReadTimeout configures the maximum read time for a connection.
 func WithReadTimeout(fn func(time.Duration) time.Duration) ConnectionOption {
 	return func(c *connectionConfig) error {
@@ -164,6 +169,14 @@ func WithTLSConfig(fn func(*tls.Config) *tls.Config) ConnectionOption {
 func WithMonitor(fn func(*event.CommandMonitor) *event.CommandMonitor) ConnectionOption {
 	return func(c *connectionConfig) error {
 		c.cmdMonitor = fn(c.cmdMonitor)
+		return nil
+	}
+}
+
+// withPoolMonitor configures a event for connection monitoring.
+func withPoolMonitor(fn func(*event.PoolMonitor) *event.PoolMonitor) ConnectionOption {
+	return func(c *connectionConfig) error {
+		c.poolMonitor = fn(c.poolMonitor)
 		return nil
 	}
 }
@@ -198,6 +211,21 @@ func WithOCSPCache(fn func(ocsp.Cache) ocsp.Cache) ConnectionOption {
 func WithDisableOCSPEndpointCheck(fn func(bool) bool) ConnectionOption {
 	return func(c *connectionConfig) error {
 		c.disableOCSPEndpointCheck = fn(c.disableOCSPEndpointCheck)
+		return nil
+	}
+}
+
+// WithConnectionLoadBalanced specifies whether or not the connection is to a server behind a load balancer.
+func WithConnectionLoadBalanced(fn func(bool) bool) ConnectionOption {
+	return func(c *connectionConfig) error {
+		c.loadBalanced = fn(c.loadBalanced)
+		return nil
+	}
+}
+
+func withGenerationNumberFn(fn func(generationNumberFn) generationNumberFn) ConnectionOption {
+	return func(c *connectionConfig) error {
+		c.getGenerationFn = fn(c.getGenerationFn)
 		return nil
 	}
 }

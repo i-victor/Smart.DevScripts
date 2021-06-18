@@ -12,12 +12,12 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/internal/testutil/assert"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )
 
@@ -146,84 +146,80 @@ func TestHintErrors(t *testing.T) {
 	})
 }
 
-func TestHintWithUnacknowledgedWriteErrors(t *testing.T) {
-	mtOpts := mtest.NewOptions().MinServerVersion("3.6").MaxServerVersion("4.0").CreateClient(false).
-		CollectionOptions(options.Collection().SetWriteConcern(writeconcern.New(writeconcern.W(0))))
-	mt := mtest.New(t, mtOpts)
-	defer mt.Close()
-
-	expected := errors.New("the 'hint' command parameter with unacknowledged WriteConcern requires a minimum server wire version of 8")
-	mt.Run("UpdateMany", func(mt *mtest.T) {
-
-		_, got := mt.Coll.UpdateMany(mtest.Background, bson.D{{"a", 1}}, bson.D{{"$inc", bson.D{{"a", 1}}}},
-			options.Update().SetHint("_id_"))
-		assert.NotNil(mt, got, "expected non-nil error, got nil")
-		assert.Equal(mt, got, expected, "expected: %v got: %v", expected, got)
-	})
-
-	mt.Run("ReplaceOne", func(mt *mtest.T) {
-
-		_, got := mt.Coll.ReplaceOne(mtest.Background, bson.D{{"a", 1}}, bson.D{{"a", 2}},
-			options.Replace().SetHint("_id_"))
-		assert.NotNil(mt, got, "expected non-nil error, got nil")
-		assert.Equal(mt, got, expected, "expected: %v got: %v", expected, got)
-	})
-
-	mt.Run("BulkWrite", func(mt *mtest.T) {
-		models := []mongo.WriteModel{
-			&mongo.ReplaceOneModel{Filter: bson.D{{"_id", 2}}, Replacement: bson.D{{"a", 2}}, Hint: "_id_"},
-		}
-		_, got := mt.Coll.BulkWrite(mtest.Background, models)
-		assert.NotNil(mt, got, "expected non-nil error, got nil")
-		assert.Equal(mt, got, expected, "expected: %v got: %v", expected, got)
-	})
+type testValueMarshaler struct {
+	val []bson.D
 }
 
-func TestAggregateSecondaryPreferredReadPreference(t *testing.T) {
-	// Use secondaryPreferred instead of secondary because sharded clusters started up by mongo-orchestration have
-	// one-node shards, so a secondary read preference is not satisfiable.
-	secondaryPrefClientOpts := options.Client().
+func (tvm testValueMarshaler) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(tvm.val)
+}
+
+func TestAggregatePrimaryPreferredReadPreference(t *testing.T) {
+	primaryPrefClientOpts := options.Client().
 		SetWriteConcern(mtest.MajorityWc).
-		SetReadPreference(readpref.SecondaryPreferred()).
+		SetReadPreference(readpref.PrimaryPreferred()).
 		SetReadConcern(mtest.MajorityRc)
 	mtOpts := mtest.NewOptions().
-		ClientOptions(secondaryPrefClientOpts).
+		ClientOptions(primaryPrefClientOpts).
 		MinServerVersion("4.1.0") // Consistent with tests in aggregate-out-readConcern.json
 
 	mt := mtest.New(t, mtOpts)
-	mt.Run("aggregate $out with read preference secondary", func(mt *mtest.T) {
+	mt.Run("aggregate $out with non-primary read preference", func(mt *mtest.T) {
 		doc, err := bson.Marshal(bson.D{
 			{"_id", 1},
 			{"x", 11},
 		})
 		assert.Nil(mt, err, "Marshal error: %v", err)
-		_, err = mt.Coll.InsertOne(mtest.Background, doc)
-		assert.Nil(mt, err, "InsertOne error: %v", err)
-
-		mt.ClearEvents()
-		outputCollName := "aggregate-read-pref-secondary-output"
-		outStage := bson.D{
-			{"$out", outputCollName},
+		outputCollName := "aggregate-read-pref-primary-preferred-output"
+		testCases := []struct {
+			name     string
+			pipeline interface{}
+		}{
+			{
+				"pipeline",
+				mongo.Pipeline{bson.D{{"$out", outputCollName}}},
+			},
+			{
+				"doc slice",
+				[]bson.D{{{"$out", outputCollName}}},
+			},
+			{
+				"bson a",
+				bson.A{bson.D{{"$out", outputCollName}}},
+			},
+			{
+				"valueMarshaler",
+				testValueMarshaler{[]bson.D{{{"$out", outputCollName}}}},
+			},
 		}
-		cursor, err := mt.Coll.Aggregate(mtest.Background, mongo.Pipeline{outStage})
-		assert.Nil(mt, err, "Aggregate error: %v", err)
-		_ = cursor.Close(mtest.Background)
+		for _, tc := range testCases {
+			mt.Run(tc.name, func(mt *mtest.T) {
+				_, err = mt.Coll.InsertOne(mtest.Background, doc)
+				assert.Nil(mt, err, "InsertOne error: %v", err)
 
-		// Assert that the output collection contains the document we expect.
-		outputColl := mt.CreateCollection(mtest.Collection{Name: outputCollName}, false)
-		cursor, err = outputColl.Find(mtest.Background, bson.D{})
-		assert.Nil(mt, err, "Find error: %v", err)
-		defer cursor.Close(mtest.Background)
+				mt.ClearEvents()
 
-		assert.True(mt, cursor.Next(mtest.Background), "expected Next to return true, got false")
-		assert.True(mt, bytes.Equal(doc, cursor.Current), "expected document %s, got %s", bson.Raw(doc), cursor.Current)
-		assert.False(mt, cursor.Next(mtest.Background), "unexpected document returned by Find: %s", cursor.Current)
+				cursor, err := mt.Coll.Aggregate(mtest.Background, tc.pipeline)
+				assert.Nil(mt, err, "Aggregate error: %v", err)
+				_ = cursor.Close(mtest.Background)
 
-		// Assert that no read preference was sent to the server.
-		evt := mt.GetStartedEvent()
-		assert.Equal(mt, "aggregate", evt.CommandName, "expected command 'aggregate', got '%s'", evt.CommandName)
-		_, err = evt.Command.LookupErr("$readPreference")
-		assert.NotNil(mt, err, "expected command %s to not contain $readPreference", evt.Command)
+				// Assert that the output collection contains the document we expect.
+				outputColl := mt.CreateCollection(mtest.Collection{Name: outputCollName}, false)
+				cursor, err = outputColl.Find(mtest.Background, bson.D{})
+				assert.Nil(mt, err, "Find error: %v", err)
+				defer cursor.Close(mtest.Background)
+
+				assert.True(mt, cursor.Next(mtest.Background), "expected Next to return true, got false")
+				assert.True(mt, bytes.Equal(doc, cursor.Current), "expected document %s, got %s", bson.Raw(doc), cursor.Current)
+				assert.False(mt, cursor.Next(mtest.Background), "unexpected document returned by Find: %s", cursor.Current)
+
+				// Assert that no read preference was sent to the server.
+				evt := mt.GetStartedEvent()
+				assert.Equal(mt, "aggregate", evt.CommandName, "expected command 'aggregate', got '%s'", evt.CommandName)
+				_, err = evt.Command.LookupErr("$readPreference")
+				assert.NotNil(mt, err, "expected command %s to not contain $readPreference", evt.Command)
+			})
+		}
 	})
 }
 
@@ -266,5 +262,54 @@ func TestWriteConcernError(t *testing.T) {
 		assert.NotNil(mt, wcError, "expected write-concern error, got %v", err)
 		assert.True(mt, bytes.Equal(wcError.Details, errInfoDoc), "expected errInfo document %v, got %v",
 			bson.Raw(errInfoDoc), wcError.Details)
+	})
+}
+
+func TestErrorsCodeNamePropagated(t *testing.T) {
+	// Ensure the codeName field is propagated for both command and write concern errors.
+
+	mtOpts := mtest.NewOptions().
+		Topologies(mtest.ReplicaSet).
+		CreateClient(false)
+	mt := mtest.New(t, mtOpts)
+	defer mt.Close()
+
+	mt.RunOpts("command error", mtest.NewOptions().MinServerVersion("3.4"), func(mt *mtest.T) {
+		// codeName is propagated in an ok:0 error.
+
+		cmd := bson.D{
+			{"insert", mt.Coll.Name()},
+			{"documents", []bson.D{}},
+		}
+		err := mt.DB.RunCommand(mtest.Background, cmd).Err()
+		assert.NotNil(mt, err, "expected RunCommand error, got nil")
+
+		ce, ok := err.(mongo.CommandError)
+		assert.True(mt, ok, "expected error of type %T, got %v of type %T", mongo.CommandError{}, err, err)
+		expectedCodeName := "InvalidLength"
+		assert.Equal(mt, expectedCodeName, ce.Name, "expected error code name %q, got %q", expectedCodeName, ce.Name)
+	})
+
+	wcCollOpts := options.Collection().
+		SetWriteConcern(impossibleWc)
+	wcMtOpts := mtest.NewOptions().
+		CollectionOptions(wcCollOpts)
+	mt.RunOpts("write concern error", wcMtOpts, func(mt *mtest.T) {
+		// codeName is propagated for write concern errors.
+
+		_, err := mt.Coll.InsertOne(mtest.Background, bson.D{})
+		assert.NotNil(mt, err, "expected InsertOne error, got nil")
+
+		we, ok := err.(mongo.WriteException)
+		assert.True(mt, ok, "expected error of type %T, got %v of type %T", mongo.WriteException{}, err, err)
+		wce := we.WriteConcernError
+		assert.NotNil(mt, wce, "expected write concern error, got %v", we)
+
+		var expectedCodeName string
+		if codeNameVal, err := mt.GetSucceededEvent().Reply.LookupErr("writeConcernError", "codeName"); err == nil {
+			expectedCodeName = codeNameVal.StringValue()
+		}
+
+		assert.Equal(mt, expectedCodeName, wce.Name, "expected code name %q, got %q", expectedCodeName, wce.Name)
 	})
 }

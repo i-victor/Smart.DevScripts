@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 )
 
@@ -111,6 +112,9 @@ func VerifyConnStringOptions(t *testing.T, cs connstring.ConnString, options map
 		case "journal":
 			require.True(t, cs.JSet)
 			require.Equal(t, value, cs.J)
+		case "loadbalanced":
+			require.True(t, cs.LoadBalancedSet)
+			require.Equal(t, value, cs.LoadBalanced)
 		case "localthresholdms":
 			require.True(t, cs.LocalThresholdSet)
 			require.Equal(t, value, float64(cs.LocalThreshold/time.Millisecond))
@@ -185,6 +189,27 @@ func VerifyConnStringOptions(t *testing.T, cs connstring.ConnString, options map
 			require.Contains(t, opt, fmt.Sprint(value))
 		}
 	}
+}
+
+// RawSliceToInterfaceSlice converts a []bson.Raw to []interface{}.
+func RawSliceToInterfaceSlice(elems []bson.Raw) []interface{} {
+	out := make([]interface{}, 0, len(elems))
+	for _, elem := range elems {
+		out = append(out, elem)
+	}
+	return out
+}
+
+// RawToInterfaceSlice converts a bson.Raw that is internally an array to []interface{}.
+func RawToInterfaceSlice(doc bson.Raw) []interface{} {
+	values, _ := doc.Values()
+
+	out := make([]interface{}, 0, len(values))
+	for _, val := range values {
+		out = append(out, val.Document())
+	}
+
+	return out
 }
 
 // Convert each interface{} value in the map to a string.
