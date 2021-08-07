@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210604 :: STABLE
+// r.20210807 :: STABLE
 
 package smartgo
 
@@ -81,6 +81,8 @@ func (writer logWriterWithColors) Write(bytes []byte) (int, error) {
 			theMsg = color.HiBlueString(theMsg)
 		} else if(StrIPos(theMsg, "[DEBUG]") == 0) {
 			theMsg = color.HiMagentaString(theMsg)
+		} else if(StrIPos(theMsg, "[DATA]") == 0) {
+			theMsg = color.YellowString(theMsg)
 		} else { // ALL OTHER CASES
 			if(StrIPos(theMsg, "[OK]") == 0) {
 				theMsg = color.HiGreenString(theMsg)
@@ -90,7 +92,7 @@ func (writer logWriterWithColors) Write(bytes []byte) (int, error) {
 		} //end if else
 	} //end if
 	//--
-	return fmt.Println("LOG | " + DateNowUtc() + " | " + theMsg)
+	return fmt.Println(color.GreyString("LOG | " + DateNowUtc() + " | ") + theMsg)
 	//--
 } //END FUNCTION
 
@@ -138,6 +140,8 @@ func (writer logWriterFile) Write(bytes []byte) (int, error) {
 		if(logColoredOnConsole) {
 			if(StrIPos(theMsg, "[OK]") == 0) {
 				colorMsg = color.HiGreenString(colorMsg)
+			} else if(StrIPos(theMsg, "[DATA]") == 0) {
+				colorMsg = color.YellowString(colorMsg)
 			} else {
 				colorMsg = color.HiCyanString(colorMsg)
 			} //end if else
@@ -203,7 +207,7 @@ func (writer logWriterFile) Write(bytes []byte) (int, error) {
 	} //end if
 	//--
 	if(logToFileAlsoOnConsole) {
-		return fmt.Println("LOG | " + DateNowUtc() + " | " + colorMsg)
+		return fmt.Println(color.GreyString("LOG | " + DateNowUtc() + " | ") + colorMsg)
 	} //end if
 	//--
 	return len(bytes), nil
@@ -1311,9 +1315,37 @@ func ConvertIntToStr(i int) string {
 } //END FUNCTION
 
 
+func ConvertUIntToStr(i uint) string {
+	//--
+	return strconv.Itoa(int(i))
+	//--
+} //END FUNCTION
+
+
+func ConvertInt32ToStr(i int32) string {
+	//--
+	return strconv.FormatInt(int64(i), 10)
+	//--
+} //END FUNCTION
+
+
+func ConvertUInt32ToStr(i uint32) string {
+	//--
+	return strconv.FormatUint(uint64(i), 10)
+	//--
+} //END FUNCTION
+
+
 func ConvertInt64ToStr(i int64) string {
 	//--
 	return strconv.FormatInt(i, 10)
+	//--
+} //END FUNCTION
+
+
+func ConvertUInt64ToStr(i uint64) string {
+	//--
+	return strconv.FormatUint(i, 10)
 	//--
 } //END FUNCTION
 
@@ -1343,6 +1375,15 @@ func ParseIntegerStrAsInt(s string) int {
 } //END FUNCTION
 
 
+func ParseIntegerStrAsUInt(s string) uint {
+	//--
+	var Int int = ParseIntegerStrAsInt(s)
+	//--
+	return uint(Int)
+	//--
+} //END FUNCTION
+
+
 func ParseIntegerStrAsInt64(s string) int64 {
 	//--
 	var Int64 int64 = 0 // set the integer as zero Int64, in the case of parseInt Error
@@ -1353,6 +1394,15 @@ func ParseIntegerStrAsInt64(s string) int64 {
 	} //end if else
 	//--
 	return Int64
+	//--
+} //END FUNCTION
+
+
+func ParseIntegerStrAsUInt64(s string) uint64 {
+	//--
+	var Int64 int64 = ParseIntegerStrAsInt64(s)
+	//--
+	return uint64(Int64)
 	//--
 } //END FUNCTION
 
@@ -1522,9 +1572,15 @@ func Hex2Bin(str string) string { // inspired from: https://www.php2golang.com/
 } //END FUNCTION
 
 
-func JsonEncode(data interface{}) string { // inspired from: https://www.php2golang.com/method/function.json-encode.html
+func jsonEncode(data interface{}, prettyprint bool) string { // inspired from: https://www.php2golang.com/method/function.json-encode.html
 	//--
-	jsons, err := json.Marshal(data)
+	var jsons []byte = nil
+	var err error = nil
+	if(prettyprint == true) {
+		jsons, err = json.MarshalIndent(data, "", "\t")
+	} else {
+		jsons, err = json.Marshal(data)
+	}
 	if(err != nil) {
 		log.Println("[NOTICE] JsonEncode: ", err)
 		return ""
@@ -1545,6 +1601,20 @@ func JsonEncode(data interface{}) string { // inspired from: https://www.php2gol
 	json.HTMLEscape(&out, []byte(safeJson)) // just in case, HTMLEscape appends to dst the JSON-encoded src with <, >, &, U+2028 and U+2029 characters inside string literals changed to \u003c, \u003e, \u0026, \u2028, \u2029 so that the JSON will be safe to embed inside HTML
 	safeJson = ""
 	return out.String()
+	//--
+} //END FUNCTION
+
+
+func JsonEncodePretty(data interface{}) string {
+	//--
+	return jsonEncode(data, true)
+	//--
+} //END FUNCTION
+
+
+func JsonEncode(data interface{}) string {
+	//--
+	return jsonEncode(data, false)
 	//--
 } //END FUNCTION
 
@@ -2659,6 +2729,8 @@ func MarkersTplRender(template string, arrobj map[string]string, isEncoded bool,
 								tmp_marker_val = Bin2Hex(tmp_marker_val)
 							} else if(escaping == "|b64") { // Apply Base64 Encode
 								tmp_marker_val = Base64Encode(tmp_marker_val)
+							} else if(escaping == "|sha1") { // Apply SHA1 Encode
+								tmp_marker_val = Sha1(tmp_marker_val)
 							} else {
 								log.Println("[WARNING] MarkersTplRender: {### Invalid or Undefined Escaping " + escaping + " [" + ConvertIntToStr(j) + "]" + " for Marker `" + tmp_marker_key + "` " + "[" + ConvertIntToStr(i) + "]: " + " - detected in Replacement Key: " + tmp_marker_id + " ###}")
 							} //end if
