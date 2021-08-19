@@ -22,7 +22,7 @@ func main() {
 	defer w.Destroy()
 	w.SetTitle("Test Loading External URL")
 	w.SetSize(960, 720, webview.HintNone)
-	w.Navigate("http://demo.unix-world.org/smart-framework/")
+	w.Navigate("https://demo.unix-world.org/smart-framework/")
 
 	w.Run()
 

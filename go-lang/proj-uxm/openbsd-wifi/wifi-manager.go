@@ -29,7 +29,7 @@ const (
 
 	THE_VERSION = "r.20200517.2223"
 
-	WIFI_INTERFACE = "iwm0"
+	WIFI_INTERFACE = "iwx0"
 
 	TPL_DOC = `<!DOCTYPE html>
 <html>

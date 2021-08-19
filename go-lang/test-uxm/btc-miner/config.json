@@ -1,0 +1,11 @@
+{
+    "user" : "",
+    "password" : "",
+    "host" : "127.0.0.1:8332",
+    "account" : "",
+    "log": {
+        "Activated": true,
+        "Level": "info",
+        "File": ""
+    }
+}

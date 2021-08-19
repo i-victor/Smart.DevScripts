@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo/Tests :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210604 :: STABLE
+// r.20210819.0346 :: STABLE
 
 package main
 
@@ -9,8 +9,18 @@ import (
 	"os"
 	"log"
 	"fmt"
+	"time"
+
 	smart "github.com/unix-world/smartgo"
 	uid   "github.com/unix-world/smartgo/uuid"
+
+	b32 "github.com/unix-world/smartgo/base32"
+	b36 "github.com/unix-world/smartgo/base36"
+	b58 "github.com/unix-world/smartgo/base58"
+	b62 "github.com/unix-world/smartgo/base62"
+	b85 "github.com/unix-world/smartgo/base85"
+	b92 "github.com/unix-world/smartgo/base92"
+
 )
 
 const (
@@ -33,6 +43,7 @@ func LogToConsoleWithColors() {
 //	smart.LogToFile("DEBUG", "logs/", "json", true, true) // json | plain ; also on console ; colored or not
 	//--
 	log.Println("[DEBUG] Debugging")
+	log.Println("[DATA] Data")
 	log.Println("[NOTICE] Notice")
 	log.Println("[WARNING] Warning")
 	log.Println("[ERROR] Error")
@@ -50,19 +61,32 @@ func fatalError(logMessages ...interface{}) {
 } //END FUNCTION
 
 
-
 func testDTimeNow() {
 
 	dTimeStr := ""
 
 	dtObjUtc := smart.DateTimeStructUtc(dTimeStr)
-	fmt.Println("Date Obj Json", smart.JsonEncode(dtObjUtc))
+	theTestJson := smart.JsonEncode(dtObjUtc)
+	fmt.Println("Date Obj Json (UTC):", theTestJson)
 	if(dtObjUtc.Status != "OK") {
 		fatalError("testDTimeNow ERROR (UTC): " + dtObjUtc.ErrMsg)
 	} //end if
 
+	D := smart.JsonDecode(theTestJson)
+	if(D == nil) {
+		fatalError("[ERROR] JSON: Decode Fail")
+	} //end if
+	keys := []string{"status", "errMsg", "time"} // there are many more, but this is just a test
+	for y, k := range keys {
+		if(D[k] == nil) {
+			log.Println("[ERROR] JSON: Key is missing: #" + smart.ConvertIntToStr(y) + " @ " + k)
+			return;
+		}
+	}
+	fmt.Println("JSON Decode Keys:", "status="+D["status"].(string), "errMsg="+D["errMsg"].(string), "time="+smart.ConvertInt64ToStr(int64(D["time"].(float64)))) // golang general json decode (without a real mapping structure) maps all numbers to float64 automatically ...
+
 	dtObjLoc := smart.DateTimeStructLocal(dTimeStr)
-	fmt.Println("Date Obj Json", smart.JsonEncode(dtObjLoc))
+	fmt.Println("Date Obj Json (LOCAL):", smart.JsonEncode(dtObjLoc))
 	if(dtObjLoc.Status != "OK") {
 		fatalError("testDTimeNow ERROR (LOCAL): " + dtObjLoc.ErrMsg)
 	} //end if
@@ -72,7 +96,7 @@ func testDTimeNow() {
 
 func testDTimeParse() {
 
-	dTimeStr := "2020-05-07 08:03:07 +0300"
+	dTimeStr := "2021-03-16 08:04:07 +0300"
 
 	fmt.Println("Input Date:", dTimeStr)
 
@@ -682,9 +706,11 @@ func testExecTimedProgr() {
 
 func main() {
 
-	var input string = "Lorem Ipsum dolor sit Amet"
-
 	LogToConsoleWithColors()
+
+	var timerStart time.Time
+	var input string = "Lorem Ipsum dolor sit Amet"
+	var unicodeString string = "Unicode String:		şŞţŢăĂîÎâÂșȘțȚ (05-09#"
 
 	fmt.Println("========================= NUMERIC TESTS =========================")
 
@@ -735,13 +761,97 @@ func main() {
 
 	testAllTrimWhitespaces(input)
 
+	fmt.Println("========================= BASE CONVERT TESTS =========================")
+
+	var baseUnicodeTestStr string = unicodeString
+	fmt.Println("Unicode String:", baseUnicodeTestStr)
+
+	strB32Enc := b32.Encode([]byte(baseUnicodeTestStr)) // 000Unicode ... text
+	fmt.Println("Base32-Enc:", strB32Enc)
+	strB32Dec, errB32Dec := b32.Decode(strB32Enc)
+	if(errB32Dec != nil) {
+		fatalError("ERROR: B32 Decode Test Failed with Errors:", errB32Dec)
+	}
+	if(string(strB32Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B32 Decode String does not match `" + string(strB32Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB36Enc := b36.Encode([]byte(baseUnicodeTestStr)) // 0Unicode ... text
+	fmt.Println("Base36-Enc:", strB36Enc)
+	strB36Dec, errB36Dec := b36.Decode(strB36Enc)
+	if(errB36Dec != nil) {
+		fatalError("ERROR: B36 Decode Test Failed with Errors:", errB36Dec)
+	}
+	if(string(strB36Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B36 Decode String does not match `" + string(strB36Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB58Enc := b58.Encode([]byte(baseUnicodeTestStr))
+	fmt.Println("Base58-Enc:", strB58Enc)
+	strB58Dec, errB58Dec := b58.Decode(strB58Enc)
+	if(errB58Dec != nil) {
+		fatalError("ERROR: B58 Decode Test Failed with Errors:", errB58Dec)
+	}
+	if(string(strB58Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B58 Decode String does not match `" + string(strB58Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB62Enc := b62.Encode([]byte(baseUnicodeTestStr)) // 0Unicode ... text
+	fmt.Println("Base62-Enc:", strB62Enc)
+	strB62Dec, errB62Dec := b62.Decode(strB62Enc)
+	if(errB62Dec != nil) {
+		fatalError("ERROR: B62 Decode Test Failed with Errors:", errB62Dec)
+	}
+	if(string(strB62Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B62 Decode String does not match `" + string(strB62Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB64Enc := smart.Base64sEncode(baseUnicodeTestStr)
+	fmt.Println("Base64s-Enc:", strB64Enc)
+	strB64Dec := smart.Base64sDecode(strB64Enc)
+	if(string(strB64Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B64 Decode String does not match `" + string(strB64Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB85Enc := b85.Encode([]byte(baseUnicodeTestStr)) // 0Unicode ... text
+	fmt.Println("Base85-Enc:", strB85Enc)
+	strB85Dec, errB85Dec := b85.Decode(strB85Enc)
+	if(errB85Dec != nil) {
+		fatalError("ERROR: B85 Decode Test Failed with Errors:", errB85Dec)
+	}
+	if(string(strB85Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B85 Decode String does not match `" + string(strB85Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
+	strB92Enc := b92.Encode([]byte(baseUnicodeTestStr)) // 00Unicode ... text
+	fmt.Println("Base92-Enc:", strB92Enc)
+	strB92Dec, errB92Dec := b92.Decode(strB92Enc)
+	if(errB92Dec != nil) {
+		fatalError("ERROR: B92 Decode Test Failed with Errors:", errB92Dec)
+	}
+	if(string(strB92Dec) != baseUnicodeTestStr) {
+		fatalError("ERROR: B92 Decode String does not match `" + string(strB92Dec) + "` :: `" + baseUnicodeTestStr + "`")
+	}
+
 	fmt.Println("========================= HASH TESTS =========================")
 
-	fmt.Println("MD5:", smart.Md5(input))
-	fmt.Println("SHA1:", smart.Sha1(input))
-	fmt.Println("SHA256:", smart.Sha256(input))
-	fmt.Println("SHA384:", smart.Sha384(input))
-	fmt.Println("SHA512:", smart.Sha512(input))
+	fmt.Println("CRC32B Hex:", smart.Crc32b(unicodeString))
+	fmt.Println("CRC32B B36:", smart.Crc32bB36(unicodeString))
+
+	fmt.Println("MD5 Hex:", smart.Md5(unicodeString))
+	fmt.Println("MD5 B64:", smart.Md5B64(unicodeString))
+
+	fmt.Println("SHA1 Hex:", smart.Sha1(unicodeString))
+	fmt.Println("SHA1 B64:", smart.Sha1B64(unicodeString))
+
+	fmt.Println("SHA256 Hex:", smart.Sha256(unicodeString))
+	fmt.Println("SHA256 B64:", smart.Sha256B64(unicodeString))
+
+	fmt.Println("SHA384 Hex:", smart.Sha384(unicodeString))
+	fmt.Println("SHA384 B64:", smart.Sha384B64(unicodeString))
+
+	fmt.Println("SHA512 Hex:", smart.Sha512(unicodeString))
+	fmt.Println("SHA512 B64:", smart.Sha512B64(unicodeString))
 
 	fmt.Println("========================= BASE64 TESTS =========================")
 
@@ -755,11 +865,98 @@ func main() {
 	fmt.Println("HEX-Enc:", hex)
 	fmt.Println("HEX-Dec:", smart.Hex2Bin(hex))
 
-	fmt.Println("========================= DATA ARCH/UNARCH TESTS =========================")
+	fmt.Println("========================= BLOWFISH.CBC TESTS =========================")
 
-	arch := smart.DataArchive(input)
-	fmt.Println("Data-Arch: `" + arch + "`")
-	fmt.Println("Data-UnArch: `" + smart.DataUnArchive(arch) + "`")
+	//--
+	var bfKey string = smart.Hex2Bin("54657374556e6974202f2f205468697320697320612074657374206b657920666f722043727970746f20436970686572202e2e2e2124707269766174652d6b65792330393837363534333231233136323931373335353023313632393137333535302e3538373a3a556e69636f646520537472696e67205b2031363239313733353530205d3a204020536d61727420e382b9e3839ee383bce38388202f2f20436c6f7564204170706c69636174696f6e20506c6174666f726d20e382afe383a9e382a6e38389e382a2e38397e383aae382b1e383bce382b7e383a7e383b3e38397e383a9e38383e38388e38395e382a9e383bce383a02027c3a1c3a2c3a3c3a4c3a5c481c483c485c381c382c383c384c385c480c482c484c487c489c48dc3a7c486c488c48cc387c48fc48ec3a8c3a9c3aac3abc493c495c497c49bc499c388c389c38ac38bc492c494c496c49ac498c49dc4a3c49cc4a2c4a5c4a7c4a4c4a6c3acc3adc3aec3afc4a9c4abc4adc889c88bc4afc38cc38dc38ec38fc4a8c4aac4acc888c88ac4aec4b3c4b5c4b2c4b4c4b7c4b6c4bac4bcc4bec582c4b9c4bbc4bdc581c3b1c584c586c588c391c583c585c587c3b2c3b3c3b4c3b5c3b6c58dc58fc591c3b8c593c392c393c394c395c396c58cc58ec590c398c592c595c597c599c594c596c598c899c59fc5a1c59bc59dc39fc898c59ec5a0c59ac59cc89bc5a3c5a5c89ac5a2c5a4c3b9c3bac3bbc3bcc5a9c5abc5adc5afc5b1c5b3c399c39ac39bc39cc5a8c5aac5acc5aec5b0c5b2c5b5c5b4e1ba8fe1bbb3c5b7c3bfc3bde1ba8ee1bbb2c5b6c5b8c39dc5bac5bcc5bec5b9c5bbc5bd2022203c703e3c2f703e0a09093f2026202a205e2024204020212060207e2025202829205b5d207b7d207c205c202f202b202d205f203a203b202c202e202327302e3538363938343030203136323931373335353023")
+	//fmt.Println("Bf Key: `" + bfKey + "`")
+	//--
+	bfInput := input + " " + smart.DateNowUtc()
+	fmt.Println("Data-To-Encrypt: `" + bfInput + "`")
+	timerStart = time.Now()
+	bfData := smart.BlowfishEncryptCBC(bfInput, bfKey)
+	durationBFishEnc := time.Since(timerStart)
+	fmt.Println("Data-Encrypted: `" + bfData + "`", durationBFishEnc)
+	timerStart = time.Now()
+	testDecBfData := smart.BlowfishDecryptCBC(bfData, bfKey)
+	durationBFishDec := time.Since(timerStart)
+	fmt.Println("Data-Decrypted: `" + testDecBfData + "`", durationBFishDec)
+	if((testDecBfData != bfInput) || (smart.Sha1(testDecBfData) != smart.Sha1(bfInput))) {
+		fatalError("ERROR: BlowfishEncryptCBC TEST Failed ... Decrypted Data is NOT EQUAL with Plain Data")
+	} //end if
+	//--
+	testPhpBfData := `bf448.v2!dpuWjx5-Jq4dcYwUfp3ObqfT6U6_9cbh8Ou3yugC7vbvcfFdobvTtzAQiyUDnG2TzpnJVDC1O45CdhnpmkoDIwGl4YnGqa_T11zdv0zZtSZKuBeE50BP8n5LCbzfWwQ856q1UgS8SOcFgc38sWIM7I0RbP1O7qTbPmPp3-bwHi0.`
+	if(smart.BlowfishEncryptCBC(unicodeString, bfKey) != testPhpBfData) {
+		fatalError("ERROR: BlowfishEncryptCBC TEST Failed ... Encrypted Data is NOT EQUAL with Encrypted Data from PHP", smart.BlowfishEncryptCBC(unicodeString, bfKey))
+	} //end if
+	fmt.Println("Data-Encrypted-PHP: `" + testPhpBfData + "`")
+	testDecPhpBfData := smart.BlowfishDecryptCBC(testPhpBfData, bfKey)
+	fmt.Println("Data-Decrypted-PHP: `" + testDecPhpBfData + "`")
+	if((testDecPhpBfData != unicodeString) || (smart.Sha1(testDecPhpBfData) != smart.Sha1(unicodeString))) {
+		fatalError("ERROR: BlowfishDecryptCBC TEST Failed ... Decrypted Data is NOT EQUAL with Decrypted Data from PHP")
+	} //end if
+	//--
+	bfV1Key := "some.BlowFish! - Key@Test 2ks i782s982 s2hwgsjh2wsvng2wfs2w78s528 srt&^ # *&^&#*# e3hsfejwsfjh"
+	testPhpBfV1Data := `695C491EF3E92DD8975423A91460F05F9DBBFDBE91DC55AE1D96CC43747B096D64CE08F42885D792505A56DF40CEE6B51FC399A3D756FADB4CE9A492BAE157B4B0DB0C6197D0E35B4C69F99266965686CB41628B75EA56CE006518F408CC0AF1`
+	testPhpBfV1XData := "bf384.v1!" + testPhpBfV1Data
+	blowFishV1Decrypt := smart.BlowfishDecryptCBC(testPhpBfV1Data, bfV1Key)
+	if(blowFishV1Decrypt != input) {
+		fatalError("ERROR: BlowfishDecryptCBC v1 TEST Failed ...")
+	} //end if
+	fmt.Println("Data-Decrypted-V1: `" + blowFishV1Decrypt + "`")
+	blowFishV1XDecrypt := smart.BlowfishDecryptCBC(testPhpBfV1XData, bfV1Key)
+	if(blowFishV1XDecrypt != input) {
+		fatalError("ERROR: BlowfishDecryptCBC v1x TEST Failed ...")
+	} //end if
+	fmt.Println("Data-Decrypted-V1x: `" + blowFishV1XDecrypt + "`")
+	//--
+
+	fmt.Println("========================= ULTRA CRYPTO TESTS =========================")
+
+	timerStart = time.Now()
+	argon2idPass := smart.SafePassHashArgon2id824(unicodeString)
+	durationSafePass := time.Since(timerStart)
+	if(argon2idPass != "2#8bkYl7Y1UgK1>wI.<lkVU2gcR+u!-MHNbGW!,z4uzJ&e<%mDnt9ph%okSP!5~[mSEW/cuWDfg`%Y87*X[:UCXe/Uk2*$4$~{k7SU>=hJ6Z-Don2z.^yN!|R.Q^g75'") {
+		fatalError("ERROR: Argon2id SafePass Hash have a wrong value:", argon2idPass)
+	} //end if
+	log.Println("[INFO] Argon2id SafePass Hash (below), Base92 Encoded, (128 Bytes) from raw Argon2id hash (103 Bytes = 824 bits), time=", durationSafePass)
+	log.Println("[DATA] Argon2id SafePass Hash is:", argon2idPass)
+
+	threeFishSecret := "This is a secret ..."
+	var threeFishEnc string = ""
+	var threeFishDec string = ""
+
+	timerStart = time.Now()
+	threeFishEnc = smart.ThreefishEncryptCBC(unicodeString, threeFishSecret, true)
+	durationThreeFishEncA := time.Since(timerStart)
+	timerStart = time.Now()
+	threeFishDec = smart.ThreefishDecryptCBC(threeFishEnc, threeFishSecret, true)
+	durationThreeFishDecA := time.Since(timerStart)
+	fmt.Println("Threefish Encrypted (ARGON2ID):", threeFishEnc)
+	if(threeFishDec == unicodeString) {
+		log.Println("[OK] Threefish ARGON2ID Encrypt/Decrypt Test Passed:", durationThreeFishEncA, durationThreeFishDecA)
+	} else {
+		log.Println("[ERROR] Threefish ARGON2ID Encrypt/Decrypt Test FAILED: `" + threeFishDec + "`")
+		return
+	} //end if else
+
+	timerStart = time.Now()
+	threeFishEnc = smart.ThreefishEncryptCBC(unicodeString, threeFishSecret, false)
+	durationThreeFishEncD := time.Since(timerStart)
+	timerStart = time.Now()
+	threeFishDec = smart.ThreefishDecryptCBC(threeFishEnc, threeFishSecret, false)
+	durationThreeFishDecD := time.Since(timerStart)
+	fmt.Println("Threefish Encrypted (DEFAULT):", threeFishEnc)
+	if(threeFishDec == unicodeString) {
+		log.Println("[OK] Threefish DEFAULT Encrypt/Decrypt Test Passed:", durationThreeFishEncD, durationThreeFishDecD)
+	} else {
+		log.Println("[ERROR] Threefish DEFAULT Encrypt/Decrypt Test FAILED: `" + threeFishDec + "`")
+		return
+	} //end if else
+
+	time.Sleep(5 * time.Second)
+
+	fmt.Println("========================= DATA ARCH/UNARCH TESTS =========================")
 
 	// INFO: enc data difers a little from PHP, maybe by some zlib metadata, but decode must work
 	var phpStrGzEncodedB64 string = "H4sIAAAAAAAAAwvJyCxWAKJEheKSosy8dAA/Y3YIEAAAAA=="
@@ -775,39 +972,21 @@ func main() {
 	} //end if
 	fmt.Println("GzEncode", goStrGzEncodedB64);
 
+	arch := smart.DataArchive(input)
+	if(arch == "") {
+		fatalError("ERROR: Data Arch is Empty")
+	} //end if
+	fmt.Println("Data-Arch: `" + arch + "`")
+	fmt.Println("Data-UnArch: `" + smart.DataUnArchive(arch) + "`")
+
 	// INFO: arch data difers a little from PHP, maybe by some zlib metadata, but decrypt must work
 	testPhpArchData := `HclBDkBAEETRw1hLplupZimDSMRKHMD06Psfgdj9/IfM1ZQ9Z00YLVlnfxNc+Zt+j6Phc+HM3tDkbcn7eR3tuU3SDKGhjwrCUaM4i6dbS7r9qRgEdIsq6i8=` + "\n" + `PHP.SF.151129/B64.ZLibRaw.HEX`;
 	fmt.Println("Data-Arch-PHP: `" + testPhpArchData + "`")
 	testPhpUnArchData := smart.DataUnArchive(testPhpArchData)
+	fmt.Println("Data-Arch-PHP-v2: `" + smart.DataArchive(testPhpUnArchData) + "`")
 	fmt.Println("Data-UnArch-PHP: `" + testPhpUnArchData + "`")
 	if(testPhpUnArchData != input) {
-		fatalError("ERROR: Data Archive/Unarchive TEST Failed ... Archived Data is NOT EQUAL with Archived Data from PHP")
-	} //end if
-
-	fmt.Println("========================= BLOWFISH.CBC TESTS =========================")
-
-	//--
-	bfKey := "some.BlowFish! - Key@Test 2ks i782s982 s2hwgsjh2wsvng2wfs2w78s528 srt&^ # *&^&#*# e3hsfejwsfjh"
-	//--
-	bfInput := input + " " + smart.DateNowUtc()
-	fmt.Println("Data-To-Encrypt: `" + bfInput + "`")
-	bfData := smart.BlowfishEncryptCBC(bfInput, bfKey)
-	fmt.Println("Data-Encrypted: `" + bfData + "`")
-	testDecBfData := smart.BlowfishDecryptCBC(bfData, bfKey)
-	fmt.Println("Data-Decrypted: `" + testDecBfData + "`")
-	if((testDecBfData != bfInput) || (smart.Sha1(testDecBfData) != smart.Sha1(bfInput))) {
-		fatalError("ERROR: BlowfishEncryptCBC TEST Failed ... Decrypted Data is NOT EQUAL with Plain Data")
-	} //end if
-	//--
-	testPhpBfData := `695C491EF3E92DD8975423A91460F05F9DBBFDBE91DC55AE1D96CC43747B096D64CE08F42885D792505A56DF40CEE6B51FC399A3D756FADB4CE9A492BAE157B4B0DB0C6197D0E35B4C69F99266965686CB41628B75EA56CE006518F408CC0AF1`
-	if(smart.BlowfishEncryptCBC(input, bfKey) != testPhpBfData) {
-		fatalError("ERROR: BlowfishEncryptCBC TEST Failed ... Encrypted Data is NOT EQUAL with Encrypted Data from PHP")
-	} //end if
-	fmt.Println("Data-Encrypted-PHP: `" + testPhpBfData + "`")
-	testDecPhpBfData := smart.BlowfishDecryptCBC(testPhpBfData, bfKey)
-	fmt.Println("Data-Decrypted-PHP: `" + testDecPhpBfData + "`")
-	if((testDecPhpBfData != input) || (smart.Sha1(testDecPhpBfData) != smart.Sha1(input))) {
-		fatalError("ERROR: BlowfishDecryptCBC TEST Failed ... Decrypted Data is NOT EQUAL with Decrypted Data from PHP")
+		fatalError("ERROR: Data Archive/Unarchive TEST Failed ... Data from Archive is NOT EQUAL with Data from PHP Archive")
 	} //end if
 
 	fmt.Println("========================= STRING TESTS =========================")
@@ -876,7 +1055,7 @@ func main() {
 
 	testExecProgr()
 
-	fmt.Println("========================= # TESTS DONE # =========================")
+	log.Println("[OK] ========================= # ALL TESTS DONE # ...")
 
 } //END FUNCTION
 

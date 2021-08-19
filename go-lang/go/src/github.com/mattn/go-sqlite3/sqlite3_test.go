@@ -19,6 +19,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -99,6 +100,43 @@ func TestOpen(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestOpenWithVFS(t *testing.T) {
+	filename := t.Name() + ".sqlite"
+
+	if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	defer os.Remove(filename)
+
+	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?vfs=hello", filename))
+	if err != nil {
+		t.Fatal("Failed to open", err)
+	}
+	err = db.Ping()
+	if err == nil {
+		t.Fatal("Failed to open", err)
+	}
+	db.Close()
+
+	defer os.Remove(filename)
+
+	var vfs string
+	if runtime.GOOS == "windows" {
+		vfs = "win32-none"
+	} else {
+		vfs = "unix-none"
+	}
+	db, err = sql.Open("sqlite3", fmt.Sprintf("file:%s?vfs=%s", filename, vfs))
+	if err != nil {
+		t.Fatal("Failed to open", err)
+	}
+	err = db.Ping()
+	if err != nil {
+		t.Fatal("Failed to ping", err)
+	}
+	db.Close()
 }
 
 func TestOpenNoCreate(t *testing.T) {
@@ -1775,6 +1813,45 @@ func TestInsertNilByteSlice(t *testing.T) {
 	zeroLenSlice := []byte{}
 	if _, err := db.Exec("insert into blob_not_null (b) values (?)", zeroLenSlice); err != nil {
 		t.Fatal("failed to insert zero-length slice")
+	}
+}
+
+func TestNamedParam(t *testing.T) {
+	tempFilename := TempFilename(t)
+	defer os.Remove(tempFilename)
+	db, err := sql.Open("sqlite3", tempFilename)
+	if err != nil {
+		t.Fatal("Failed to open database:", err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("drop table foo")
+	_, err = db.Exec("create table foo (id integer, name text, amount integer)")
+	if err != nil {
+		t.Fatal("Failed to create table:", err)
+	}
+
+	_, err = db.Exec("insert into foo(id, name, amount) values(:id, @name, $amount)",
+		sql.Named("bar", 42), sql.Named("baz", "quux"),
+		sql.Named("amount", 123), sql.Named("corge", "waldo"),
+		sql.Named("id", 2), sql.Named("name", "grault"))
+	if err != nil {
+		t.Fatal("Failed to insert record with named parameters:", err)
+	}
+
+	rows, err := db.Query("select id, name, amount from foo")
+	if err != nil {
+		t.Fatal("Failed to select records:", err)
+	}
+	defer rows.Close()
+
+	rows.Next()
+
+	var id, amount int
+	var name string
+	rows.Scan(&id, &name, &amount)
+	if id != 2 || name != "grault" || amount != 123 {
+		t.Errorf("Expected %d, %q, %d for fetched result, but got %d, %q, %d:", 2, "grault", 123, id, name, amount)
 	}
 }
 
