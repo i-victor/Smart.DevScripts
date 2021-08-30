@@ -1,0 +1,8 @@
+[alice]
+Q = {t = 1, m = [{n = "bob"}]}
+
+[bob]
+Q = {t = 1, m = [{n = "carol"}]}
+
+[carol]
+Q = {t = 1, m = [{n = "alice"}]}

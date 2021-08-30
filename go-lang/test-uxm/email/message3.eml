@@ -1,0 +1,26 @@
+Content-Type: multipart/alternative;
+ boundary="===============5769616449556512256=="
+MIME-Version: 1.0
+To: test@test.com
+From: test@gmail.com
+Cc:
+Subject: =?utf-8?b?0J/RgNC40LLQtdGC?=
+Date: Mon, 30 Jun 2014 18:29:38 -0000
+
+--===============5769616449556512256==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+X-Data: =?utf-8?b?AxfhfujropadladnggnfjgwsaiubvnmkadiuhterqHJSFfuAjkfhrqpeorLA?=
+ =?utf-8?b?kFnjNfhgt7Fjd9dfkliodQ==?=
+
+0K3RgtC+INC80L7RkSDRgdC+0L7QsdGJ0LXQvdC40LUu
+
+--===============5769616449556512256==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+
+0K3RgtC+INC80L7RkSDRgdC+0L7QsdGJ0LXQvdC40LUu
+
+--===============5769616449556512256==--

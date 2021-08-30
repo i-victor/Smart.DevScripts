@@ -21,7 +21,12 @@ import (
 	smart "github.com/unix-world/smartgo"
 )
 
-var targetAddr = flag.String("peer", "", "host:port (Ex: localhost:8887)")
+const (
+	msgPeriod 		= 30 * time.Second
+	reconnectPeriod	= 60 * time.Second
+)
+
+var targetAddr = flag.String("peer", "127.0.0.1:8887", "host:port (Ex: localhost:8887)")
 
 func LogToConsoleWithColors() {
 	//--
@@ -123,8 +128,7 @@ func connectToPeer(addr string) {
 	// We send our relevant packets here
 	for {
 		select {
-			case <-time.After(time.Duration(1) * time.Millisecond * 1000):
-				// Send an echo packet every second
+			case <-time.After(time.Duration(1) * msgPeriod):
 				log.Println("[NOTICE] Sending message to server")
 				msg, errMsg := ComposePakMessage("helloworld:" + clientID, smart.JsonEncode("This is a message for HelloWorld, from client"))
 				if(errMsg != "") {
@@ -143,17 +147,15 @@ func connectToPeer(addr string) {
 				}
 				msg = ""
 				errMsg = ""
-			case <-interrupt:
-				// We received a SIGINT (Ctrl + C). Terminate gracefully...
+			case <-interrupt: // received a SIGINT (Ctrl + C). Terminate gracefully...
 				log.Println("[NOTICE] Received SIGINT interrupt signal. Closing all pending connections")
-				// Close our websocket connection
-				err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")) // Close our websocket connection
 				if err != nil {
 					log.Println("[ERROR] Closing websocket Failed:", err)
-				//	conn.Close()
-					delete(connectedPeers, addr)
-					return
 				}
+			//	conn.Close()
+				delete(connectedPeers, addr)
+				return
 				select {
 					case <-done:
 						log.Println("[NOTICE] Receiver Channel Closed...")
@@ -190,23 +192,24 @@ func main() {
 	}
 
 	clientID = GenerateUUID()
-	var pool = []string{"127.0.0.1:8887", "127.0.0.1:8888"}
+//	var pool = []string{"127.0.0.1:8887", "127.0.0.1:8888"}
+	var pool = []string{"127.0.0.1:8887"}
 	var loops int = 0;
 	for {
 		log.Println("[INFO] ... WATCHDOG ...")
 	//	log.Println("[DATA] Connected Peers:", connectedPeers)
 		for _, p := range pool {
 			if _, exist := connectedPeers[p]; exist {
-				log.Println("[OK] Peer Connected:", p)
+				log.Println("[OK] Peer is Connected to:", p)
 			} else {
 				if(loops > 0) {
-					log.Println("[WARNING] Peer Not Connected:", p)
+					log.Println("[WARNING] Peer Not Connected to:", p)
 				}
 				go connectToPeer(p)
 			}
 		}
 		loops++
-		time.Sleep(10 * time.Second)
+		time.Sleep(reconnectPeriod)
 	}
 
 }

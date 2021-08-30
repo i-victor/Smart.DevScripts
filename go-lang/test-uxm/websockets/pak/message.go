@@ -6,6 +6,7 @@ package main
 
 import (
 	"log"
+//	"time"
 
 	"strings"
 	"strconv"
@@ -78,7 +79,7 @@ func HandleMessage(id string, message []byte, conn *websocket.Conn) (ok bool, er
 		log.Println("[DATA] Data:\n", msg.Data, "\n\n")
 		return true, ""
 	}
-	var answer string = "Got Command from [" + id + "]: " + msg.Cmd + "\n" + strings.Repeat(msg.Data, 50)
+	var answer string = "Got Command from [" + id + "]: " + msg.Cmd + "\n" + strings.Repeat(msg.Data, 1) // 50
 	AnswerMsg, errAnswerMsg := ComposePakMessage("OK: " + msg.Cmd, answer + "\n" + "Length=" + strconv.Itoa(len(answer)) + "\n")
 	if(errAnswerMsg != "") {
 		return false, "Answer Message Error: " + errAnswerMsg

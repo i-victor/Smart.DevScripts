@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"fmt"
 	"net/http"
@@ -19,7 +20,11 @@ import (
 	smart "github.com/unix-world/smartgo"
 )
 
-var targetAddr = flag.String("bind", "", "host:port (Ex: localhost:8887)")
+const (
+	msgPeriod 		= 10 * time.Second
+)
+
+var targetAddr = flag.String("bind", "localhost:8887", "host:port (Ex: localhost:8887)")
 
 var serverID string = "default"
 
@@ -47,8 +52,31 @@ var upgrader = websocket.Upgrader{
 //	EnableCompression: true,
 } // use default options
 
+func broadcastMsg(conn *websocket.Conn, rAddr string) {
+	for {
+		msg, errMsg := ComposePakMessage("Hi from Server:" + serverID, smart.JsonEncode("Hi from the Server"))
+		if(errMsg != "") {
+			log.Println("[ERROR] Send Message to Client:", errMsg)
+			conn.Close()
+			return
+		} else {
+			err := conn.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				log.Println("[ERROR] Send Message to Client / Writing to websocket Failed:", err)
+				conn.Close()
+				return
+			} else {
+				log.Println("[OK] Send Message to Client:", rAddr)
+			}
+		}
+		time.Sleep(msgPeriod)
+	}
+}
+
 func socketHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Upgrade our raw HTTP connection to a websocket based one
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true } // this is for ths js client connected from another origin ...
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("[ERROR] Connection Upgrade Failed:", err)
@@ -56,8 +84,10 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	conn.SetReadLimit(10 * 1000 * 1000) // 10 MB
 	defer conn.Close()
+	log.Println("New Connection to:", conn.LocalAddr(), "From:", r.RemoteAddr)
 
 	// The event loop
+	go broadcastMsg(conn, r.RemoteAddr)
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
@@ -107,9 +137,14 @@ func main() {
 
 	serverID = GenerateUUID()
 
+	// Auth: Authenticate as for a plain http request. Upgrade to the websocket protocol after authentication.
+	// Most web applications use a token stored in a cookie for authentication. That also works for the websocket endpoint.
+
 	http.HandleFunc("/messaging", socketHandler)
 	http.HandleFunc("/", home)
 //	log.Fatal("[ERROR]", http.ListenAndServe("localhost:8887", nil))
 	log.Fatal("[ERROR]", http.ListenAndServeTLS(addr, "./cert.crt", "./cert.key", nil))
+
 }
 
+// #END

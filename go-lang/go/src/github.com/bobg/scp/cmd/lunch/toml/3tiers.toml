@@ -1,0 +1,29 @@
+[alice]
+Q = {t = 2, m = [{n = "bob"}, {n = "carol"}, {n = "dave"}]}
+
+[bob]
+Q = {t = 2, m = [{n = "alice"}, {n = "carol"}, {n = "dave"}]}
+
+[carol]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "dave"}]}
+
+[dave]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "carol"}]}
+
+[elsie]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "carol"}, {n = "dave"}]}
+
+[fred]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "carol"}, {n = "dave"}]}
+
+[gwen]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "carol"}, {n = "dave"}]}
+
+[hank]
+Q = {t = 2, m = [{n = "alice"}, {n = "bob"}, {n = "carol"}, {n = "dave"}]}
+
+[inez]
+Q = {t = 2, m = [{n = "elsie"}, {n = "fred"}, {n = "gwen"}, {n = "hank"}]}
+
+[john]
+Q = {t = 2, m = [{n = "elsie"}, {n = "fred"}, {n = "gwen"}, {n = "hank"}]}

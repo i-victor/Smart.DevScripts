@@ -1,7 +1,7 @@
 
 // GO Lang :: SmartGo :: Smart.Go.Framework
 // (c) 2020-2021 unix-world.org
-// r.20210819.0346 :: STABLE
+// r.20210821.0243 :: STABLE
 
 package smartgo
 
@@ -13,25 +13,36 @@ import (
 	"os/exec"
 	"context"
 	"errors"
+
 	"io"
 	"io/ioutil"
-	"log"
+
 	"time"
+
+	"log"
 	"fmt"
+
 	"bytes"
 	"strings"
 	"strconv"
 	"regexp"
-	"html"
 	"unicode"
+	"unicode/utf8"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+
+	"compress/flate"
+	"compress/gzip"
+
 	"path/filepath"
 	"net"
 	"net/url"
+
+	"html"
 	"encoding/json"
 	"encoding/hex"
 	"encoding/base64"
-	"compress/flate"
-	"compress/gzip"
+
 	"hash/crc32"
 	"crypto/md5"
 	"crypto/sha1"
@@ -40,21 +51,16 @@ import (
 	"crypto/cipher"
 	"golang.org/x/crypto/blowfish"
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 
 	"github.com/unix-world/smartgo/threefish"
-
 	"github.com/unix-world/smartgo/base32"
 	"github.com/unix-world/smartgo/base36"
 	"github.com/unix-world/smartgo/base58"
 	"github.com/unix-world/smartgo/base62"
 	"github.com/unix-world/smartgo/base85"
 	"github.com/unix-world/smartgo/base92"
-
 //	"github.com/fatih/color"
 	color "github.com/unix-world/smartgo/colorstring"
-
 	"github.com/unix-world/smartgo/logutils"
 )
 
@@ -105,7 +111,7 @@ func (writer logWriterWithColors) Write(bytes []byte) (int, error) {
 		} else if(StrIPos(theMsg, "[NOTICE]") == 0) {
 			theMsg = color.HiBlueString(theMsg)
 		} else if(StrIPos(theMsg, "[DATA]") == 0) {
-			theMsg = color.HiYellowString(theMsg)
+			theMsg = color.HiYellowString(string(bytes)) // for data preserve the string how it is !
 		} else if(StrIPos(theMsg, "[DEBUG]") == 0) {
 			theMsg = color.HiMagentaString(theMsg)
 		} else { // ALL OTHER CASES
@@ -627,7 +633,6 @@ func SafePassHashArgon2id824(plainTextKey string) string {
 	} //end if
 	//--
 	var salt string = FIXED_CRYPTO_SALT + NULL_BYTE // use a fixed salt with a safe composed derived key to be safe against colissions ; if the salt is random there is no more safety against colissions ...
-	//--
 	salt = Bin2Hex(salt)
 	salt = base32.Encode([]byte(salt))
 	salt = base36.Encode([]byte(salt))
@@ -1482,6 +1487,78 @@ func RightPad2Len(s string, padStr string, overallLen int) string { // RightPad2
 //-----
 
 
+func BaseEncode(data []byte, toBase string) string {
+	//--
+	defer PanicHandler()
+	//--
+	if(toBase == "b92") {
+		return base92.Encode(data)
+	} else if(toBase == "b85") {
+		return base85.Encode(data)
+	} else if(toBase == "b64s") {
+		return Base64sEncode(string(data))
+	} else if(toBase == "b64") {
+		return Base64Encode(string(data))
+	} else if(toBase == "b62") {
+		return base62.Encode(data)
+	} else if(toBase == "b58") {
+		return base58.Encode(data)
+	} else if(toBase == "b36") {
+		return base36.Encode(data)
+	} else if(toBase == "b32") {
+		return base32.Encode(data)
+	} else if((toBase == "b16") || (toBase == "hex")) { // hex (b16)
+		return Bin2Hex(string(data))
+	} //end if else
+	//--
+	log.Println("[ERROR] BaseEncode:", "Invalid Encoding Base: `" + toBase + "`")
+	return ""
+	//--
+} //END FUNCTION
+
+
+func BaseDecode(data string, fromBase string) []byte {
+	//--
+	defer PanicHandler()
+	//--
+	var decoded []byte = nil
+	var err error = nil
+	//--
+	if(fromBase == "b92") {
+		decoded, err = base92.Decode(data)
+	} else if(fromBase == "b85") {
+		decoded, err = base85.Decode(data)
+	} else if(fromBase == "b64s") {
+		decoded = []byte(Base64sDecode(data))
+	} else if(fromBase == "b64") {
+		decoded = []byte(Base64Decode(data))
+	} else if(fromBase == "b62") {
+		decoded, err = base62.Decode(data)
+	} else if(fromBase == "b58") {
+		decoded, err = base58.Decode(data)
+	} else if(fromBase == "b36") {
+		decoded, err = base36.Decode(data)
+	} else if(fromBase == "b32") {
+		decoded, err = base32.Decode(data)
+	} else if((fromBase == "b16") || (fromBase == "hex")) { // hex (b16)
+		decoded = []byte(Hex2Bin(data))
+	} else {
+		err = errors.New("Invalid Decoding Base: `" + fromBase + "`")
+	} //end if else
+	//--
+	if(err != nil) {
+		log.Println("[ERROR] BaseDecode:", err)
+		return nil
+	} //end if
+	//--
+	return decoded
+	//--
+} //END FUNCTION
+
+
+//-----
+
+
 func Base64Encode(data string) string {
 	//--
 	return base64.StdEncoding.EncodeToString([]byte(data))
@@ -2086,6 +2163,58 @@ func ParseFloatAsStrFloat(s string) string {
 	s = strconv.FormatFloat(f, 'g', 14, 64) // use precision 14 as in PHP
 	//--
 	return string(s)
+	//--
+} //END FUNCTION
+
+
+// ChunkSplit chunk_split()
+func StrChunkSplit(body string, chunklen uint, end string) string { // github.com/syyongx/php2go/blob/master/php.go
+	//--
+	if(end == "") {
+		return body
+	} //end if
+	//--
+	runes, erunes := []rune(body), []rune(end)
+	l := uint(len(runes))
+	if((l <= 1) || (l < chunklen)) {
+		return body + end
+	} //end if
+	ns := make([]rune, 0, len(runes)+len(erunes))
+	var i uint
+	for i = 0; i < l; i += chunklen {
+		if(i+chunklen > l) {
+			ns = append(ns, runes[i:]...)
+		} else {
+			ns = append(ns, runes[i:i+chunklen]...)
+		} //end if else
+		ns = append(ns, erunes...)
+	} //end for
+	//--
+	return string(ns)
+	//--
+} //END FUNCTION
+
+
+// StrWordCount str_word_count()
+func StrWordCount(str string) []string { // github.com/syyongx/php2go/blob/master/php.go
+	//--
+	return strings.Fields(str)
+	//--
+} //END FUNCTION
+
+
+// Strlen strlen()
+func StrLen(str string) int {
+	//--
+	return len(str)
+	//--
+} //END FUNCTION
+
+
+// MbStrlen mb_strlen()
+func StrUnicodeLen(str string) int { // github.com/syyongx/php2go/blob/master/php.go
+	//--
+	return utf8.RuneCountInString(str)
 	//--
 } //END FUNCTION
 

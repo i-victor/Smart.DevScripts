@@ -10,6 +10,7 @@ import (
 	"log"
 	"fmt"
 	"time"
+	"strings"
 
 	smart "github.com/unix-world/smartgo"
 	uid   "github.com/unix-world/smartgo/uuid"
@@ -953,6 +954,18 @@ func main() {
 		log.Println("[ERROR] Threefish DEFAULT Encrypt/Decrypt Test FAILED: `" + threeFishDec + "`")
 		return
 	} //end if else
+
+	timerStart = time.Now()
+	var largeTFishEncPak string = smart.ThreefishEncryptCBC(strings.Repeat(unicodeString, 100), threeFishSecret, false)
+	durationThreeFishEncLarge := time.Since(timerStart)
+	log.Println("[DATA] Threefish large packet:", durationThreeFishEncLarge, largeTFishEncPak)
+	timerStart = time.Now()
+	if(smart.ThreefishDecryptCBC(largeTFishEncPak, threeFishSecret, false) != strings.Repeat(unicodeString, 100)) {
+		log.Println("[ERROR] Threefish Large Packet Decrypt Test FAILED !")
+		return
+	} //end if
+	durationThreeFishDecLarge := time.Since(timerStart)
+	log.Println("[OK] Threefish Large Packet Decrypt:", durationThreeFishDecLarge)
 
 	time.Sleep(5 * time.Second)
 
