@@ -109,8 +109,8 @@ func main() {
 	tk.MainLoop(func() {
 		mw := NewWindow()
 		mw.SetTitle("ATK Font Demo")
-		mw.ResizeN(400, 300)
-		mw.Center()
+		mw.ResizeN(500, 300)
+		mw.Center(nil)
 		mw.ShowNormal()
 	})
 }

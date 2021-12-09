@@ -2,7 +2,9 @@
 
 package tk
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (w *Window) ShowMaximized() error {
 	return eval(fmt.Sprintf("wm state %v zoomed", w.id))

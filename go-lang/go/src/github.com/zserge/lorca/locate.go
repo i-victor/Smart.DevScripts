@@ -26,16 +26,20 @@ func LocateChrome() string {
 	switch runtime.GOOS {
 	case "darwin":
 		paths = []string{
+			"/Applications/Iridium.app/Contents/MacOS/Iridium",
+			"/Applications/Chromium.app/Contents/MacOS/Chromium",
 			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 			"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-			"/Applications/Chromium.app/Contents/MacOS/Chromium",
-			"/usr/bin/google-chrome-stable",
-			"/usr/bin/google-chrome",
+			"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 			"/usr/bin/chromium",
 			"/usr/bin/chromium-browser",
+			"/usr/bin/google-chrome-stable",
+			"/usr/bin/google-chrome",
 		}
 	case "windows":
 		paths = []string{
+			os.Getenv("ProgramFiles") + "/Iridium/iridium.exe",
+			os.Getenv("ProgramFiles(x86)") + "/Iridium/iridium.exe",
 			os.Getenv("LocalAppData") + "/Google/Chrome/Application/chrome.exe",
 			os.Getenv("ProgramFiles") + "/Google/Chrome/Application/chrome.exe",
 			os.Getenv("ProgramFiles(x86)") + "/Google/Chrome/Application/chrome.exe",
@@ -43,15 +47,19 @@ func LocateChrome() string {
 			os.Getenv("ProgramFiles") + "/Chromium/Application/chrome.exe",
 			os.Getenv("ProgramFiles(x86)") + "/Chromium/Application/chrome.exe",
 			os.Getenv("ProgramFiles(x86)") + "/Microsoft/Edge/Application/msedge.exe",
+			os.Getenv("ProgramFiles") + "/Microsoft/Edge/Application/msedge.exe",
 		}
 	default:
 		paths = []string{
 			"/usr/local/bin/iridium",
-			"/usr/bin/google-chrome-stable",
-			"/usr/bin/google-chrome",
+			"/usr/bin/iridium",
+			"/usr/bin/iridium-browser",
+			"/usr/local/bin/chromium",
 			"/usr/bin/chromium",
 			"/usr/bin/chromium-browser",
 			"/snap/bin/chromium",
+			"/usr/bin/google-chrome-stable",
+			"/usr/bin/google-chrome",
 		}
 	}
 
@@ -67,8 +75,8 @@ func LocateChrome() string {
 // PromptDownload asks user if he wants to download and install Chrome, and
 // opens a download web page if the user agrees.
 func PromptDownload() {
-	title := "Chrome not found"
-	text := "No Chrome/Chromium installation was found. Would you like to download and install it now?"
+	title := "Iridium / Chromium / Chrome not found"
+	text := "No Iridium/Chromium/Chrome installation was found. Would you like to download and install Iridium now? If Not you need to manually install Chromium or Chrome browser."
 
 	// Ask user for confirmation
 	if !messageBox(title, text) {
@@ -76,7 +84,7 @@ func PromptDownload() {
 	}
 
 	// Open download page
-	url := "https://www.google.com/chrome/"
+	url := "https://iridiumbrowser.de/downloads/"
 	switch runtime.GOOS {
 	case "linux":
 		exec.Command("xdg-open", url).Run()

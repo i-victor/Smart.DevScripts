@@ -1,11 +1,10 @@
 
 // GO Lang
-// go-bindata -o assets.go -prefix assets assets/...
-// go build main.go assets.go
-// on openbsd may need to: CGO_LDFLAGS_ALLOW='-Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib' go build main.go assets.go
+// go build main.go
+// on openbsd may need to: CGO_LDFLAGS_ALLOW='-Wl,-z,wxneeded|-Wl,-rpath-link,/usr/X11R6/lib' go build main.go
 
 // noVNC Viewer
-// (c) 2018 unix-world.org
+// (c) 2018-2021 unix-world.org
 // License: BSD
 
 package main
@@ -27,11 +26,16 @@ import (
 	"os"
 	"golang.org/x/net/websocket"
 
+	"embed"
+
 	"github.com/unix-world/smartgo/webview"
 //	"github.com/zserge/webview"
 )
 
-var uxmScriptVersion = "r.20200423.1313"
+//go:embed assets/*
+var assets embed.FS
+
+var uxmScriptVersion = "r.20211206.1537"
 
 var targetAddr = flag.String("target", "", "vnc-host:vnc-port")
 
@@ -77,7 +81,8 @@ func startServer() string {
 			if path == "" {
 				path = "vnc-auto.html"
 			}
-			if bs, err := Asset(path); err != nil {
+		//	if bs, err := Asset(path); err != nil { // old, using go-bindata
+			if bs, err := assets.ReadFile("assets/" + path); err != nil {
 				w.WriteHeader(http.StatusNotFound)
 			} else {
 				w.Header().Add("Z-No-Vnc-Host-Port-Config", url.QueryEscape(ln.Addr().String()))
@@ -144,7 +149,7 @@ func main() {
 	}
 	vncTcpAddr = *targetAddr
 
-	fmt.Println("##### GO.noVNC [ " + uxmScriptVersion + " ] :: (c) 2018 unix-world.org")
+	fmt.Println("##### GO.noVNC [ " + uxmScriptVersion + " ] :: (c) 2018-2021 unix-world.org")
 
 	url := startServer()
 

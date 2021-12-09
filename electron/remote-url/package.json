@@ -1,0 +1,8 @@
+{
+  "name": "remote-url-app",
+  "version": "1.0.0",
+  "description": "Remote URL",
+  "main": "main.js",
+  "author": "unixman",
+  "license": "BSD"
+}

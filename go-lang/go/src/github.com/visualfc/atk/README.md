@@ -8,9 +8,16 @@ Another Golang Tcl/Tk binding GUI ToolKit
 
 http://www.tcl-lang.org
 
-* MacOS X, Windows
+
+* MacOS X
 
 	https://www.activestate.com/activetcl/downloads
+
+* Windows
+
+	https://www.activestate.com/activetcl/downloads
+	
+	https://github.com/visualfc/tcltk_mingw
 
 * Ubuntu
 

@@ -40,6 +40,7 @@ func InitEx(tk_window_init_hide bool, tcl_library string, tk_library string) (er
 		dumpError(err)
 		return err
 	}
+
 	tkWindowInitAutoHide = tk_window_init_hide
 	//hide console for macOS bundle
 	mainInterp.Eval("if {[info commands console] == \"console\"} {console hide}")
