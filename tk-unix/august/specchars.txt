@@ -1,0 +1,14 @@
+Special characters in August
+
+August 0.40 has an option to automatically insert html code for country
+specific special characters like the Swedish å, ä, ö. You can switch on this
+option in "Edit" --> "August options". Right now, the only characters
+supported are the Swedish ones. To be able to support more countries I need
+help from users. I need to know the special names Tcl/Tk assigns to the
+special character keys, and if you need support for your countrys special
+characters you can help me by running the "keyname.tcl" script included in
+this distribution. Just run "wish keyname.tcl". Then you can hit the keys of
+the special characters you want support for, send me the names, and I will
+include support in the next release. I really don't know how important this
+is, but many other html editors I've seen have support for this so....;-)
+

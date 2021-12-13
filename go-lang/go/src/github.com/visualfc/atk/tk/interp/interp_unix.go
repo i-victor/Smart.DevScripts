@@ -1,4 +1,5 @@
 // Copyright 2018 visualfc. All rights reserved.
+// modified by unixman: add flags for OpenBSD
 
 // +build !windows
 
@@ -19,8 +20,8 @@ import (
 #cgo darwin LDFLAGS: -F/Library/Frameworks -framework tcl -framework tk
 #cgo linux CFLAGS: -I/usr/include/tcl
 #cgo linux LDFLAGS: -ltcl -ltk -lX11 -lm -lz -ldl
-#cgo openbsd CFLAGS: -I/usr/local/include/tcl8.5 -I/usr/local/include/tk8.5 -I/usr/X11R6/include/
-#cgo openbsd LDFLAGS: -L/usr/local/lib -ltcl85 -ltk85
+#cgo openbsd CFLAGS: -I/usr/local/include/tcl8.6 -I/usr/local/include/tk8.6 -I/usr/X11R6/include/
+#cgo openbsd LDFLAGS: -L/usr/local/lib -ltcl86 -ltk86 -lm -lz
 
 #include <tcl.h>
 #include <tk.h>

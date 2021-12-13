@@ -1,0 +1,62 @@
+                 **INSTALLATION INSTRUCTIONS**
+
+REQUIREMENTS FOR:
+
+Wrapped executable version (with "wrp" in distribution filename):
+*  This version does _not_ need Tcl/Tk installed on your system.
+*  Image Magick and Weblint is also recommended (but not necessary). August uses Image Magick
+   commands to determine width and height of images, and Weblint to check html syntax.
+
+Tcl script only version (with "src" in distribution filename + pre 0.60 versions):
+*  This version needs Tcl/Tk version 8.0 or better installed on your system!  I think all Linux distributions
+   have it included as a standard feature.
+* Image Magick and Weblint is also recommended (but not necessary). August uses Image Magick
+   commands to determine width and height of images, and Weblint to check html syntax.
+
+NOTE:
+If you're upgrading to August 0.61b or newer from an older version you may have to delete or edit
+the "Augustoptions.tcl" file that resides in the ~/.August directory. The format of this file has changed
+a bit; a correct line in this file now looks like this:
+
+set August(tpldialog) {yes}
+
+Before it looked like this:
+
+set August(tpldialog) "yes"
+
+If you don't do this you may get a message like this when you try to run august:
+
+"Error in startup script: quoted string doesn't terminate properly
+[...]"
+
+NOTE:
+If you have been running August 0.42, you'd better take a look at the hidden ".August" subdirectory in your
+home directory. This particular release creates a lot of buffer files that isn't erased when August is shut
+down, so there may be large number of files there. Just do "rm *.bf" and they are gone. Hint: Don't do
+this when August is running!
+
+It should very simple to install August on your system, at least if you're running Linux.
+Download the gzipped file with the August wrapped executable or tcl script, unpack it, and put the "august" file in a
+directory that's in your path - I suggest /usr/local/bin. Then you should be able to start August
+by typing "august" at the command line.
+
+If it doesn't work, maybe the path to the wish tcl/tk interpreter is wrong, or you have
+to do "chmod +x" on the "august" executable.NOTE: This is what happens when you get an
+error message like this one:
+
+"couldn't recognize image data while executing
+"image create photo fopen -data $fopen"
+(file "./august" line 856)"
+
+Type "which wish" at the prompt and check that this path is the same as the one at the first line of
+the August script file "/usr/bin/wish". If it's not, change the August script to the path
+you got from the wish command. 
+"/usr/bin/wish" is actually symbolic link to the real wish executable, which can create problems on some systems.
+There may be several versions of the wish interpreter on your system, and maybe the wish symlink points to an
+older version that doesn't work with August. So you may have to change that first line to
+"/usr/bin/wish8.0" (or something similar...) instead! For example, this should work on SUSE Linux 6.2:
+#!/usr/X11R6/bin/wish8.0
+
+*Good luck!*
+
+--99.11.30.-00.06.22.

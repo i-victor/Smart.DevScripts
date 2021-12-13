@@ -1,0 +1,764 @@
+#!/usr/local/bin/wish8.6
+
+#######
+# modified by unixman
+#######
+
+package require Tk
+
+################################################################################
+# VARIABLES
+#
+namespace eval tqemu {
+  variable version   {1.0.2.1}
+# variable bin       [string cat "qemu-system-" $::tcl_platform(machine)]
+  variable bin       [string cat "qemu-system-x86_64"]
+  variable rtcbase   {utc}
+  variable lrtcbase  [list utc localtime]
+  variable rtcclock  {host}
+  variable lrtcclock [list host rt vm]
+  variable machine   {q35}
+  variable lmachine  [list q35 pc isapc microvm none]
+  variable accel     {tcg,thread=multi}
+  variable laccel    [list tcg,thread=multi tcg kvm xen hax hvf whpx]
+  variable cpu       {host}
+  variable lcpu      [list host max base qemu32 qemu64 kvm32 kvm64 486 pentium pentium2 pentium3 coreduo core2duo n270 Broadwell Conroe Deverton Dhyana \
+    EPYC Haswell IvyBridge KnightMill Nehalem Opteron_G1 Opteron_G2 Opteron_G3 Opteron_G4 Opteron_G5 Penryn SandyBridge Snowridge Westmere]
+  variable storage   {ide-hd}
+  variable lstorage  [list ahci ide-hd isa-ide lsi nvme scsi-hd virtio-9p virtio-blk virtio-scsi]
+  variable ram       {2G}
+  variable lram      [list 128M 256M 512M 1G 2G 4G 8G 16G 32G]
+  variable display   {gtk}
+  variable ldisplay  [list sdl gtk curses spice-app egl-headless vnc=:0 vnc=:1 none]
+  variable vga       {VGA}
+  variable lvga      [list VGA cirrus-vga ati-vga qxl-vga virtio-vga vmware-svga ramfb]
+  variable audio     {sndio}
+  variable laudio    [list sndio spice sdl pa wav alsa coreaudio dsound oss none]
+  variable snd       {ac97}
+  variable lsnd      [list ac97 intel-hda sb16 none]
+  variable nic       {none}
+  variable lnic      [list none virtio-net e1000 e1000-82544gc e1000-82545em e1000e i82550 i82551 i82557a i82557b i82557c i82558a i82558b i82559a i82559b i82559c \
+    i82559er i82562 i82801 ne2k_isa ne2k_pci pcnet rocker rtl8139 tulip usb-net vmxnet3]
+  variable menu      {off}
+  variable strict    {off}
+  variable cdrom     {}
+  variable smb       {}
+  variable extra     {}
+  variable hextra    {"-smp 1,cores=2,threads=1,sockets=1,maxcpus=2 -k en-us"}
+  variable filelist  [dict create]
+  variable imgsize   20
+  variable msg       [list]
+  variable snapshot  {false}
+  variable fscreen   {false}
+  variable daemon    {false}
+  variable pause     {false}
+  variable theme     [ttk::style theme use]
+
+  namespace eval DnD {
+    variable timer {}
+    variable start {}
+  }
+}
+
+
+################################################################################
+# PROCEDURES
+#
+proc tqemu::ReadArgs {args} {
+  set i 0
+  foreach option $args {
+    if {[file isfile $option]} {
+      set filetype [string tolower [file extension $option]]
+      switch -- $filetype {
+        .iso {
+          set tqemu::cdrom $option
+        }
+        .qcow2 {
+          dict set tqemu::filelist $i $option
+          incr i
+        }
+      }
+    } else {
+      lappend tqemu::extra $option
+    }
+  }
+  tqemu::Start [tqemu::BuildCmd]
+}
+
+proc tqemu::Message {msg {time 5000}} {
+  after cancel {set tqemu::msg ""}
+  if {[string length $msg] > 50} {
+    set tqemu::msg [string cat [string range $msg 0 20] \
+      "..." [string range $msg end-30 end]]
+  } else {
+    set tqemu::msg $msg
+  }
+  after $time {set tqemu::msg ""}
+}
+
+proc tqemu::StartState {} {
+  set state [expr {$tqemu::cdrom eq "" \
+    && $tqemu::filelist eq "" ? "disabled" : "normal"}]
+  .cmd.start configure -state $state
+  .menu.file entryconfigure "Start QEMU..." -state $state
+}
+
+proc tqemu::SelectISO {w} {
+  set filetypes {
+    {{ISO Files} {.iso .ISO}}
+  }
+  set tqemu::cdrom [tk_getOpenFile -parent . \
+    -title "Select CD-ROM" -filetypes $filetypes -multiple false]
+  if {$tqemu::cdrom ne ""} {
+    $w xview end
+    tqemu::Message "$tqemu::cdrom ready"
+  }
+  tqemu::StartState
+}
+
+proc tqemu::SelectImage {tree} {
+  set filetypes {
+    {{QCOW2}     {.qcow2 .QCOW2}}
+    {{All Files} {*}}
+  }
+  set filelist [tk_getOpenFile -parent . \
+    -title "Select QEMU Image Files" -filetypes $filetypes -multiple true]
+  if {$filelist eq ""} {return 1}
+  foreach file $filelist {
+    if {$file ni [dict values $tqemu::filelist]} {
+      try {
+        tk busy hold .
+        update
+        set statelist [exec -- qemu-img snapshot -l $file]
+      } on error msg {
+        tk_messageBox -title "Error loading [file tail $file]" \
+          -icon error -type ok -parent . \
+          -message [lindex [split $msg ":"] 0] -detail $msg
+        return 1
+      } finally {
+        tk busy forget .
+      }
+      set node [$tree insert {} end -text [file tail $file]]
+      $tree tag add File $node
+      set statelist [lsearch -all -inline \
+        -regexp $statelist {vm-([[:digit:]]){14}\M}]
+      if {$statelist ne ""} {
+        foreach state $statelist {
+          set child [$tree insert $node end -text $state]
+          $tree tag add State $child
+        }
+      }
+      dict set tqemu::filelist $node $file
+      $tree see $node
+      $tree selection set $node
+      tqemu::Message "$file ready"
+    } else {
+      foreach node [$tree children {}] {
+        set item [dict get $tqemu::filelist $node]
+        if {$item eq $file} {
+          $tree see $node
+          $tree selection set $node
+          tqemu::Message "$file already exists"
+        }
+      }
+    }
+  }
+  tqemu::StartState
+}
+
+proc tqemu::CreateImage {} {
+  set filetypes {
+    {{QCOW2}     {.qcow2 .QCOW2}}
+    {{All Files} {*}}
+  }
+  set filename [tk_getSaveFile -parent . \
+    -title "Create QEMU Image File" -filetypes $filetypes \
+    -defaultextension .qcow2]
+  if {$filename eq ""} {return 2}
+  append imgsize $tqemu::imgsize "G"
+  try {
+    tk busy hold .
+    update
+    exec -- qemu-img create -f qcow2 $filename $imgsize
+  } on error msg {
+    tk_messageBox -title "Error creating [file tail $filename]" \
+      -icon error -type ok -parent . \
+      -message [lindex [split $msg ":"] 0] -detail $msg
+    return 1
+  } finally {
+    tk busy forget .
+  }
+  tqemu::Message "$filename created Size:${imgsize}"
+}
+
+proc tqemu::Share {w} {
+  set tqemu::smb [tk_chooseDirectory -parent . \
+    -title "Select Shared Directory" -mustexist true]
+  if {$tqemu::smb eq ""} {
+    tqemu::Message "share disabled"
+    return 2
+  }
+  $w xview end
+  tqemu::Message "$tqemu::smb share enabled"
+}
+
+proc tqemu::Binary {} {
+  set executable [tk_getOpenFile -parent . \
+    -title "Select QEMU Executable File" -multiple false]
+  if {$executable eq ""} {return 2}
+  if {[auto_execok $executable] eq ""} {
+    tk_messageBox -title "Error loading [file tail $executable]" \
+      -icon error -type ok -parent . \
+      -message "[file tail $executable]:" \
+      -detail "Not a valid executable file"
+    return 1
+  }
+  set tqemu::bin $executable
+}
+
+proc tqemu::LoadState {node tree} {
+  set filename [dict get $tqemu::filelist [$tree parent $node]]
+  set loadvm [$tree item $node -text]
+  set command [tqemu::BuildCmd "loadvm"]
+  lappend command --blockdev driver=qcow2,node-name=QEMUDisk0,file.driver=file,file.filename=${filename} \
+    --device ${tqemu::storage},drive=QEMUDisk0 --loadvm $loadvm
+  tqemu::Start $command $loadvm
+}
+
+proc tqemu::RemoveFile {node tree} {
+  set file [dict get $tqemu::filelist $node]
+  $tree tag remove File $node
+  $tree delete $node
+  dict unset tqemu::filelist $node
+  tqemu::Message "$file removed"
+  tqemu::StartState
+}
+
+proc tqemu::DeleteState {node tree} {
+  set state [$tree item $node -text]
+  set file [dict get $tqemu::filelist [$tree parent $node]]
+  try {
+    tk busy hold .
+    update
+    exec -- qemu-img snapshot -d $state $file
+  } on error msg {
+    tk_messageBox -title "Error deleting $state" \
+      -icon error -type ok -parent . \
+      -message [lindex [split $msg ":"] 0] -detail $msg
+    return 1
+  } finally {
+    tk busy forget .
+  }
+  $tree tag remove State $node
+  $tree delete $node
+  tqemu::Message "$state deleted"
+}
+
+proc tqemu::BuildCmd {{loadvm ""}} {
+  set command [list $tqemu::bin --name tQEMU --display $tqemu::display \
+    --rtc base=${tqemu::rtcbase},clock=${tqemu::rtcclock} \
+    --machine $tqemu::machine --accel $tqemu::accel \
+    --boot order=dc,menu=${tqemu::menu},strict=${tqemu::strict} \
+    --cpu $tqemu::cpu --m $tqemu::ram --device $tqemu::vga]
+  if {$tqemu::snapshot eq "true"} {
+    lappend command --snapsnot
+  }
+  if {$tqemu::pause eq "true"} {
+    lappend command --S
+  }
+  if {$tqemu::daemon eq "true"} {
+    lappend command --daemonize
+  }
+  if {$tqemu::fscreen eq "true"} {
+    lappend command --full-screen
+  }
+  switch -glob -- $tqemu::snd {
+    none {}
+    *intel-hda {
+      lappend command --audiodev ${tqemu::audio},id=QEMUAudio \
+        --device $tqemu::snd --device hda-duplex,audiodev=QEMUAudio
+    }
+    default {
+      lappend command --audiodev ${tqemu::audio},id=QEMUAudio \
+        --device ${tqemu::snd},audiodev=QEMUAudio
+    }
+  }
+  if {$tqemu::nic eq "none"} {
+    lappend command --nic none
+  } else {
+    lappend command --device ${tqemu::nic},netdev=QEMUNet
+    if {$tqemu::smb eq ""} {
+      lappend command --netdev user,id=QEMUNet
+    } else {
+      lappend command --netdev user,id=QEMUNet,smb=${tqemu::smb}
+    }
+  }
+  if {$tqemu::filelist ne "" && $loadvm eq ""} {
+    set i 0
+    foreach filename [dict values $tqemu::filelist] {
+      lappend command --blockdev driver=qcow2,node-name=QEMUDisk${i},file.driver=file,file.filename=${filename} \
+        --device ${tqemu::storage},drive=QEMUDisk${i}
+      incr i
+    }
+  }
+  if {$tqemu::cdrom ne ""} {
+    lappend command --cdrom $tqemu::cdrom
+  }
+  if {$tqemu::extra ne ""} {
+    foreach option $tqemu::extra {
+      lappend command $option
+    }
+  }
+  return $command
+}
+
+proc tqemu::Start {command {loadvm ""}} {
+  set command [file nativename [tqemu::BuildCmd]]
+  if {$tqemu::cdrom ne ""} {
+    tqemu::Message "QEMU is starting $tqemu::cdrom"
+  } else {
+    tqemu::Message "QEMU is starting [lindex $tqemu::filelist 1]"
+  }
+  if {$loadvm ne ""} {
+    tqemu::Message "QEMU is loading $loadvm" 10000
+  }
+  try {
+    tk busy hold .
+    update
+    exec  -- {*}$command
+  } on error msg {
+    tk_messageBox -title "Error executing $tqemu::bin" \
+      -icon error -type ok -parent . \
+      -message [lindex [split $msg ":"] 0] -detail $msg
+    return 1
+  } finally {
+    tk busy forget .
+  }
+}
+
+proc tqemu::DnD::Start {W x y X Y} {
+  set tqemu::DnD::timer [list tqemu::DnD::Drag $W $x $y $X $Y]
+  after 200 $tqemu::DnD::timer
+}
+
+proc tqemu::DnD::Drag {W x y X Y } {
+  set tqemu::DnD::timer ""
+  set tqemu::DnD::start [$W selection]
+  set node [$W identify item $x $y]
+  set nodetext [$W item $node -text]
+  toplevel .dnd
+  tk::label .dnd.node -relief raised -padx 5 -pady 5 \
+    -background "white" -text $nodetext
+  pack .dnd.node -in .dnd -expand true -fill both
+  wm resizable .dnd 0 0
+  wm geometry .dnd "+${X}+${Y}"
+  wm overrideredirect .dnd true
+  wm attributes .dnd -topmost true
+  $W tag bind File <Motion> {tqemu::DnD::Move %W %x %y %X %Y}
+  $W configure -cursor "hand2"
+}
+
+proc tqemu::DnD::Drop {W x y} {
+  if {$tqemu::DnD::timer ne ""} {
+    after cancel $tqemu::DnD::timer
+    return 0
+  }
+  $W configure -cursor "left_ptr"
+  set from $tqemu::DnD::start
+  if {$from eq ""} {return 0}
+  set node [$W identify item $x $y]
+  set to [$W index $node]
+  if {[string is integer -strict $to]} {
+    $W move $from {} $to
+    $W selection set [$W identify item $x $y]
+  }
+  # update filelist dict with new boot order
+  foreach key [$W children {}] {
+    set value [dict get $tqemu::filelist $key]
+    dict unset tqemu::filelist $key
+    dict set tqemu::filelist $key $value
+  }
+  set tqemu::DnD::start ""
+  $W tag bind File <Motion> {return 0}
+  destroy .dnd
+}
+
+proc tqemu::DnD::Move {W x y X Y} {
+  if {[winfo exists .dnd]} {
+    set to [$W index [$W identify item $x $y]]
+    if {[string is integer -strict $to]} {
+      wm geometry .dnd "+${X}+${Y}"
+      $W selection set [$W identify item $x $y]
+    }
+  }
+}
+
+proc tqemu::DnD::Cancel {W} {
+  if {[winfo exists .dnd]} {
+    $W configure -cursor "left_ptr"
+    set tqemu::DnD::start ""
+    $W tag bind File <Motion> {return 0}
+    destroy .dnd
+  }
+}
+
+proc tqemu::SaveHistory {extra} {
+  if {$extra eq ""} {return 1}
+  if {$extra in $tqemu::hextra} {return 2}
+  lappend tqemu::hextra $extra
+  tqemu::Message "$extra added to history"
+}
+
+proc tqemu::History {w extra} {
+  set index [lsearch -exact $tqemu::hextra $extra]
+  if  {($index - 1) < 0} {
+    set index "end"
+  } else {
+    incr index -1
+  }
+  set tqemu::extra [lindex $tqemu::hextra $index]
+  $w xview end
+  $w icursor end
+}
+
+proc tqemu::ShowCommand {} {
+  set command [file nativename [tqemu::BuildCmd]]
+  tk_messageBox -title "Show Command" -icon info -type ok -parent . \
+    -message "QEMU Command:" -detail $command
+}
+
+proc tqemu::CopyCommand {} {
+  set command [file nativename [tqemu::BuildCmd]]
+  clipboard clear
+  clipboard append -type STRING -- $command
+  tqemu::Message "Command copied to clipboard"
+}
+
+proc tqemu::AboutHost {} {
+  tk_messageBox -title "About Host" -icon info -type ok -parent . \
+    -message "Tcl/Tk Version: [info patchlevel]" \
+    -detail "\
+      User Name:\t${::tcl_platform(user)}\n\
+      Hostname:\t[info hostname]\n\
+      OS Family:\t${::tcl_platform(platform)}\n\
+      OS Identifier:\t${::tcl_platform(os)}\n\
+      OS Version:\t${::tcl_platform(osVersion)}\n\
+      Architecture:\t${::tcl_platform(machine)}\n\
+      Window System:\t[tk windowingsystem]"
+}
+
+proc tqemu::About {version} {
+  tk_messageBox -title "About tQEMU" -icon info -type ok -parent . \
+    -message "tQEMU $version" -detail \
+{A simple QEMU frontend,
+written in core Tcl/Tk.
+
+MIT License
+
+Copyright © Thanos Zygouris
+<athanasios.zygouris@gmail.com>
+
+Copyright © Unixman
+<iradu@unix-world.org>
+}
+}
+
+proc tqemu::AboutQEMU {} {
+  set uxmQemuCmd [tqemu::BuildCmd]
+  tk_messageBox -title "About QEMU" -icon info -type ok -parent . \
+    -message "About QEMU" -detail \
+"QEMU is a generic and open source
+machine emulator and virtualizer.
+
+For more informations, visit:
+    https://www.qemu.org
+
+$uxmQemuCmd
+"
+}
+
+################################################################################
+# MENUS
+#
+proc tqemu::Menus {} {
+  option add *tearOff false
+  . configure -menu [menu .menu]
+  .menu add cascade -label "File" -underline 0 -menu [menu .menu.file]
+    .menu.file add command -label "Start QEMU..." -underline 6 -state disabled \
+      -accelerator "F5" -command {tqemu::Start [tqemu::BuildCmd]}
+    .menu.file add separator
+    .menu.file add command -label "Select CD-ROM..." -underline 10 \
+      -accelerator "F3" -command {tqemu::SelectISO .cdrom.entry}
+    .menu.file add command -label "Select Images..." -underline 0 \
+      -accelerator "F4" -command {tqemu::SelectImage .files.tree}
+    .menu.file add command -label "Create Image..." -underline 0 \
+      -accelerator "F6" -command {tqemu::CreateImage}
+    .menu.file add separator
+    .menu.file add command -label "Shared Directory..." -underline 7 \
+      -accelerator "F7" -command {tqemu::Share .smb.entry}
+    .menu.file add separator
+    .menu.file add command -label "QEMU Executable..." -underline 5 \
+      -accelerator "F8" -command {tqemu::Binary}
+    .menu.file add separator
+    .menu.file add command -label "Exit" -underline 1 \
+      -accelerator "Ctrl+Q" -command {exit}
+  .menu add cascade -label "Options" -underline 0 -menu [menu .menu.options]
+    .menu.options add checkbutton -label "Snapshot" -underline 0 \
+      -accelerator "Ctrl+S" \
+      -variable tqemu::snapshot -onvalue "true" -offvalue "false"
+    .menu.options add checkbutton -label "Fullscreen" -underline 0 \
+      -accelerator "Ctrl+F" \
+      -variable tqemu::fscreen -onvalue "true" -offvalue "false"
+    .menu.options add checkbutton -label "Daemonize" -underline 7 \
+      -accelerator "Ctrl+Z" \
+      -variable tqemu::daemon -onvalue "true" -offvalue "false"
+    .menu.options add checkbutton -label "Start Paused" -underline 6 \
+      -accelerator "Ctrl+P" \
+      -variable tqemu::pause -onvalue "true" -offvalue "false"
+    .menu.options add separator
+    .menu.options add cascade -label "Boot" -underline 0 -menu [menu .menu.options.boot]
+      .menu.options.boot add checkbutton -label "Boot Menu" -underline 0 \
+        -variable tqemu::menu -onvalue "on" -offvalue "off"
+      .menu.options.boot add checkbutton -label "Strict Boot" -underline 0 \
+        -variable tqemu::strict -onvalue "on" -offvalue "off"
+    .menu.options add cascade -label "Audio" -underline 0 -menu [menu .menu.options.audio]
+      foreach audio $tqemu::laudio {
+        .menu.options.audio add radiobutton -label $audio \
+          -variable tqemu::audio -value $audio
+      }
+    .menu.options add cascade -label "Display" -underline 0 -menu [menu .menu.options.display]
+      foreach display $tqemu::ldisplay {
+      .menu.options.display add radiobutton -label $display \
+        -variable tqemu::display -value $display
+      }
+    .menu.options add cascade -label "Storage" -underline 0 -menu [menu .menu.options.storage]
+      foreach storage $tqemu::lstorage {
+        .menu.options.storage add radiobutton -label $storage \
+          -variable tqemu::storage -value $storage
+      }
+    .menu.options add cascade -label "Machine" -underline 0 -menu [menu .menu.options.machine]
+      foreach machine $tqemu::lmachine {
+        .menu.options.machine add radiobutton -label $machine \
+          -variable tqemu::machine -value $machine
+      }
+    .menu.options add cascade -label "Acceleration" -underline 0 -menu [menu .menu.options.accel]
+      foreach accel $tqemu::laccel {
+        .menu.options.accel add radiobutton -label $accel \
+          -variable tqemu::accel -value $accel
+      }
+    .menu.options add cascade -label "Real Time Clock" -underline 10 -menu [menu .menu.options.rtc]
+        .menu.options.rtc add cascade -label "Base" -underline 0 -menu [menu .menu.options.rtcbase]
+        foreach rtcbase $tqemu::lrtcbase {
+          .menu.options.rtcbase add radiobutton -label $rtcbase \
+            -variable tqemu::rtcbase -value $rtcbase
+        }
+        .menu.options.rtc add cascade -label "Clock" -underline 0 -menu [menu .menu.options.rtcclock]
+        foreach rtcclock $tqemu::lrtcclock {
+          .menu.options.rtcclock add radiobutton -label $rtcclock \
+            -variable tqemu::rtcclock -value $rtcclock
+        }
+    .menu.options add separator
+    .menu.options add cascade -label "Themes" -underline 0 -menu [menu .menu.options.themes]
+      foreach theme [ttk::style theme names] {
+        .menu.options.themes add radiobutton -label $theme \
+          -variable tqemu::theme -value $theme \
+          -command [list ttk::style theme use $theme]
+      }
+  .menu add cascade -label "Help" -underline 0 -menu [menu .menu.help]
+    .menu.help add command -label "About Host..." -underline 6 \
+      -accelerator "F2" -command {tqemu::AboutHost}
+    .menu.help add separator
+    .menu.help add command -label "Copy Command" -underline 0 \
+      -accelerator "F9" -command {tqemu::CopyCommand}
+    .menu.help add command -label "Show Command..." -underline 0 \
+      -accelerator "F10" -command {tqemu::ShowCommand}
+    .menu.help add separator
+    .menu.help add command -label "About tQEMU..." -underline 0 \
+      -accelerator "F1" -command {tqemu::About $tqemu::version}
+    .menu.help add command -label "About QEMU..." -underline 6 \
+      -command {tqemu::AboutQEMU}
+
+  # popup menu for combobox
+  menu .popup
+    .popup add command -label "Cut" -underline 2 \
+      -accelerator "Ctrl+X" -command {event generate [focus] <<Cut>>}
+    .popup add command -label "Copy" -underline 0 \
+      -accelerator "Ctrl+C" -command {event generate [focus] <<Copy>>}
+    .popup add command -label "Paste" -underline 0 \
+      -accelerator "Ctrl+V" -command {event generate [focus] <<Paste>>}
+}
+
+################################################################################
+# WIDGETS
+#
+proc tqemu::Widgets {} {
+  ttk::labelframe .vm -relief flat -text "\u2022 Virtual Machine Configuration:"
+    ttk::label .vm.machine -text "Machine:"
+    ttk::combobox .vm.lmachine -takefocus 0 -state readonly \
+      -textvariable tqemu::machine -values $tqemu::lmachine
+    ttk::label .vm.cpu -text "CPU:"
+    ttk::combobox .vm.lcpu -takefocus 0 -state readonly \
+      -textvariable tqemu::cpu -values $tqemu::lcpu
+    ttk::label .vm.ram -text "RAM:"
+    ttk::combobox .vm.lram -takefocus 0 -state readonly \
+      -textvariable tqemu::ram -values $tqemu::lram
+    ttk::label .vm.vga -text "VGA:"
+    ttk::combobox .vm.lvga -takefocus 0 -state readonly \
+      -textvariable tqemu::vga -values $tqemu::lvga
+    ttk::label .vm.snd -text "Sound:"
+    ttk::combobox .vm.lsnd -takefocus 0 -state readonly \
+      -textvariable tqemu::snd -values $tqemu::lsnd
+    ttk::label .vm.nic -text "Network:"
+    ttk::combobox .vm.lnic -takefocus 0 -state readonly \
+      -textvariable tqemu::nic -values $tqemu::lnic
+    grid .vm.machine  -in .vm -row 0 -column 0 -sticky we
+    grid .vm.lmachine -in .vm -row 0 -column 1 -sticky we
+    grid .vm.cpu      -in .vm -row 1 -column 0 -sticky we
+    grid .vm.lcpu     -in .vm -row 1 -column 1 -sticky we
+    grid .vm.ram      -in .vm -row 2 -column 0 -sticky we
+    grid .vm.lram     -in .vm -row 2 -column 1 -sticky we
+    grid .vm.vga      -in .vm -row 3 -column 0 -sticky we
+    grid .vm.lvga     -in .vm -row 3 -column 1 -sticky we
+    grid .vm.snd      -in .vm -row 4 -column 0 -sticky we
+    grid .vm.lsnd     -in .vm -row 4 -column 1 -sticky we
+    grid .vm.nic      -in .vm -row 5 -column 0 -sticky we
+    grid .vm.lnic     -in .vm -row 5 -column 1 -sticky we
+    grid columnconfigure .vm .vm.lcpu -weight 1
+
+  ttk::labelframe .cdrom -relief flat -text "\u2022 CD-ROM Device:"
+    ttk::checkbutton .cdrom.chk -text "Host CD-ROM" -variable tqemu::cdrom \
+      -onvalue "/dev/cdrom" -offvalue "" -command {tqemu::StartState}
+    ttk::entry .cdrom.entry -takefocus 0 -state readonly -textvariable tqemu::cdrom
+    grid .cdrom.chk -in .cdrom -row 0 -column 0 -sticky we
+    grid .cdrom.entry   -in .cdrom -row 1 -column 0 -sticky we
+    grid columnconfigure .cdrom .cdrom.entry -weight 1
+
+  ttk::labelframe .smb -relief flat -text "\u2022 Shared Directory\n(smb://10.0.2.4/qemu):"
+    ttk::entry .smb.entry -takefocus 0 -state readonly \
+      -textvariable tqemu::smb
+    grid .smb.entry -in .smb -row 0 -column 0 -sticky we
+    grid columnconfigure .smb .smb.entry -weight 1
+
+  ttk::frame .cmd
+    ttk::label .cmd.label -text "Create Image (GB):" -anchor e
+    ttk::spinbox .cmd.size -takefocus 0 -state readonly \
+      -width 3 -textvariable tqemu::imgsize \
+      -from 10 -to 200 -increment 5 -format "%2.f"
+    ttk::button .cmd.create -takefocus 0 -text "Create..." -underline 0 \
+      -command {.menu.file invoke "Create Image..."}
+    ttk::button .cmd.start -takefocus 0 -text "Start" -underline 0 \
+      -command {.menu.file invoke "Start QEMU..."} -state disabled
+    ttk::button .cmd.exit  -takefocus 0 -text "Exit" -underline 1 \
+      -command {.menu.file invoke "Exit"}
+    grid .cmd.label  -in .cmd -row 0 -column 0 -sticky we -columnspan 2
+    grid .cmd.size   -in .cmd -row 0 -column 2 -sticky we
+    grid .cmd.exit   -in .cmd -row 1 -column 0 -sticky w
+    grid .cmd.start  -in .cmd -row 1 -column 1
+    grid .cmd.create -in .cmd -row 1 -column 2 -sticky e
+    grid columnconfigure .cmd .cmd.start -weight 1
+
+  ttk::labelframe .extra -relief flat -text "\u2022 Extra options:"
+    ttk::combobox .extra.cbb -takefocus 1 -state normal \
+      -textvariable tqemu::extra -values $tqemu::hextra \
+      -postcommand {.extra.cbb configure -values $tqemu::hextra}
+    grid .extra.cbb -in .extra -row 0 -column 0 -sticky we
+    grid columnconfigure .extra .extra.cbb -weight 1
+
+  ttk::frame .files
+    ttk::treeview .files.tree -takefocus 0 -selectmode browse \
+      -xscrollcommand {.files.xscroll set} \
+      -yscrollcommand {.files.yscroll set}
+      .files.tree heading #0 -text "\u2022 Images & Saved States:" \
+        -anchor w -command {.menu.file invoke "Select Images..."}
+    ttk::scrollbar .files.xscroll -orient horizontal \
+      -command {.files.tree xview}
+    ttk::scrollbar .files.yscroll -orient vertical \
+      -command {.files.tree yview}
+    grid .files.tree    -in .files -row 0 -column 0 -sticky news
+    grid .files.xscroll -in .files -row 1 -column 0 -sticky we
+    grid .files.yscroll -in .files -row 0 -column 1 -sticky ns
+    grid columnconfigure .files .files.tree -weight 1
+
+  ttk::frame .status -borderwidth 1 -relief sunken
+    ttk::label .status.msg -relief flat -anchor w -textvariable tqemu::msg
+    ttk::label .status.bin -relief flat -anchor w -textvariable tqemu::bin
+    grid .status.msg  -in .status -row 0 -column 0 -sticky w
+    grid .status.bin  -in .status -row 0 -column 1 -sticky e
+    grid columnconfigure .status .status.msg -weight 1
+
+  grid .vm     -in . -row 0 -column 0 -sticky we -rowspan 2
+  grid .cdrom  -in . -row 2 -column 0 -sticky we
+  grid .smb    -in . -row 3 -column 0 -sticky we
+  grid .cmd    -in . -row 4 -column 0 -sticky we
+  grid .extra  -in . -row 0 -column 1 -sticky we
+  grid .files  -in . -row 1 -column 1 -sticky we -rowspan 4
+  grid .status -in . -row 5 -column 0 -sticky we -columnspan 2
+  grid rowconfigure    . .files -weight 1
+  grid columnconfigure . .files -weight 1
+}
+
+################################################################################
+# BINDINGS
+#
+proc tqemu::Bindings {} {
+  foreach keysym {<Escape> <ButtonRelease-1>} {
+    bind all $keysym {tqemu::DnD::Cancel .files.tree}
+  }
+  bind all <KP_Enter>  {event generate %W <Return>}
+  bind all <F1>        {.menu.help invoke "About tQEMU..."}
+  bind all <F2>        {.menu.help invoke "About Host..."}
+  bind all <F3>        {.menu.file invoke "Select CD-ROM..."}
+  bind all <F4>        {.menu.file invoke "Select Images..."}
+  bind all <F6>        {.menu.file invoke "Create Image..."}
+  bind all <F5>        {.menu.file invoke "Start QEMU..."}
+  bind all <F7>        {.menu.file invoke "Shared Directory..."}
+  bind all <F8>        {.menu.file invoke "QEMU Executable..."}
+  bind all <F9>        {.menu.help invoke "Copy Command"}
+  bind all <F10>       {.menu.help invoke "Show Command..."}
+  bind all <Control-q> {.menu.file invoke "Exit"}
+  bind all <Control-s> {.menu.options invoke "Snapshot"}
+  bind all <Control-f> {.menu.options invoke "Fullscreen"}
+  bind all <Control-z> {.menu.options invoke "Daemonize"}
+  bind all <Control-p> {.menu.options invoke "Start Paused"}
+  bind all <Control-C> {tqemu::CopyCommand}
+  # clear selection of all Comboboxes
+  bind TCombobox <<ComboboxSelected>> {%W selection clear}
+
+  bind .cdrom.entry <ButtonRelease-3> {.menu.file invoke "Select CD-ROM..."}
+  bind .smb.entry   <ButtonRelease-3> {.menu.file invoke "Shared Directory..."}
+  bind .files.tree  <ButtonRelease-3> {.menu.file invoke "Select Images..."}
+  bind .status.bin  <Double-ButtonRelease-1> {.menu.file invoke "QEMU Executable..."}
+
+  bind .extra.cbb <Up>            {tqemu::History %W $tqemu::extra}
+  bind .extra.cbb <Return>        {tqemu::SaveHistory $tqemu::extra}
+  bind .extra.cbb <ButtonPress-3> {focus %W; tk_popup .popup %X %Y}
+
+  .files.tree tag bind File  <ButtonPress-1>   {tqemu::DnD::Start %W %x %y %X %Y}
+  .files.tree tag bind File  <ButtonRelease-1> {tqemu::DnD::Drop %W %x %y}
+  .files.tree tag bind File  <Delete>          {tqemu::RemoveFile [%W focus] %W}
+  .files.tree tag bind State <Delete>          {tqemu::DeleteState [%W focus] %W}
+  foreach keysym {<Return> <Double-ButtonRelease-1>} {
+    .files.tree tag bind State $keysym {tqemu::LoadState [%W focus] %W}
+  }
+}
+
+################################################################################
+# MAIN PROGRAM
+#
+if {$::argc > 0} {
+  # try to avoid drawing the main window
+  wm withdraw .
+  tqemu::ReadArgs $::argv
+  exit
+}
+
+tqemu::Menus
+tqemu::Widgets
+tqemu::Bindings
+
+wm title     . "tQEMU $tqemu::bin"
+wm minsize   . 640 290
+wm resizable . 1 0
+wm protocol  . WM_DELETE_WINDOW {exit}
+
+#END
